@@ -28,6 +28,7 @@ DEFAULT_WEIGHTS = {"revenue": 0.40, "RHIN_TYP": 0.15, "MOBU_SPP": 0.10, "CARC_SP
 
 MIN_POSITIVES = 5           # below this a species model is not fitted
 MIN_POSITIVES_KG = 30
+MIN_POSITIVES_SCORE = 40    # ETP layers with fewer training positives stay out of the score (power analysis)
 FOOTPRINT_KM = 40.0         # cells farther than this from any training set = extrapolation
 
 
@@ -116,7 +117,7 @@ def predicted_layers(fits, F):
             ekg = predict_expected_kg(fit, F)
             out[f"ekg_{code}"] = ekg
             layers["revenue"] += np.nan_to_num(ekg) * PRICES_THB_KG.get(code, 0.0)
-        elif fit.group == "etp":
+        elif fit.group == "etp" and fit.n_pos >= MIN_POSITIVES_SCORE:
             layers[code] = p
     return layers, out
 

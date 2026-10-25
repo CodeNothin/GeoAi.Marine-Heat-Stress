@@ -681,6 +681,76 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   border-radius:999px;
 }
 
+/* ---------- EcoCast page ---------- */
+.ecocast-layout{
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:1rem;
+  align-items:start;
+}
+#ecocastMap{
+  height:600px;
+  width:100%;
+  border-radius:7px;
+  border:1px solid var(--border);
+  overflow:hidden;
+  background:#d8ecf7;
+}
+.eco-pixelated{image-rendering:pixelated;image-rendering:crisp-edges}
+.eco-legend{margin-top:.8rem}
+.eco-legend-bar{
+  height:12px;
+  border-radius:3px;
+  border:1px solid var(--border);
+}
+.eco-legend-labels{
+  display:flex;
+  justify-content:space-between;
+  font-family:var(--font-num);
+  font-size:11.5px;
+  color:var(--muted);
+  margin-top:.25rem;
+}
+.eco-legend-note{font-size:12px;color:var(--muted);margin-top:.35rem}
+.eco-side .card{margin-bottom:1rem}
+.eco-kv{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:.3rem .8rem;
+  font-size:13px;
+}
+.eco-kv dt{color:var(--muted)}
+.eco-kv dd{font-family:var(--font-num);font-weight:700;text-align:right}
+.eco-badge{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+.eco-badge.good{background:var(--teal-pale);color:var(--teal)}
+.eco-badge.limited{background:var(--amber-pale);color:var(--amber)}
+.eco-badge.unreliable,.eco-badge.none{background:var(--coral-pale);color:var(--coral)}
+.eco-popup table{border-collapse:collapse;font-size:12px}
+.eco-popup td{padding:1px 6px;border-bottom:1px solid #eee}
+.eco-popup td:last-child{text-align:right;font-family:var(--font-num)}
+.eco-error{
+  display:none;
+  background:#fff0eb;
+  border:1px solid #e7b7a7;
+  color:#8a3d2b;
+  border-radius:6px;
+  padding:.75rem .9rem;
+  font-size:13px;
+  margin-bottom:1rem;
+}
+.eco-opacity{width:110px}
+
+@media(max-width:1100px){
+  .ecocast-layout{grid-template-columns:1fr}
+  #ecocastMap{height:480px}
+}
 @media(max-width:1100px){
   .method-depth,.pipeline-steps{grid-template-columns:repeat(2,1fr)}
   .status-grid{grid-template-columns:repeat(2,1fr)}
@@ -716,6 +786,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   <div class="nav-inner">
     <div class="nav-tab active" onclick="showPage('home',this)">ภาพรวม</div>
     <div class="nav-tab" onclick="showPage('map',this)">แผนที่ GeoAI</div>
+    <div class="nav-tab" onclick="showPage('ecocast',this)">EcoCast · Bycatch</div>
     <div class="nav-tab" onclick="showPage('pipeline',this)">Real Data Pipeline</div>
     <div class="nav-tab" onclick="showPage('profile',this)">ข้อมูลรายจังหวัด</div>
     <div class="nav-tab" onclick="showPage('alert',this)">จัดอันดับความเสี่ยง</div>
@@ -856,6 +927,68 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     <div class="card">
       <div class="card-title">แนวโน้ม Risk Score เฉลี่ย</div>
       <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<section id="page-ecocast" class="page">
+  <div class="section-title">EcoCast · แผนที่ความหนาแน่นสัตว์น้ำและความเสี่ยง Bycatch</div>
+  <div class="section-sub">
+    โมเดล GAM รายชนิดจากข้อมูลการล้อมอวน (purse seine) + ข้อมูลดาวเทียม ทำนายว่าแต่ละพื้นที่มีปลาเป้าหมายมากแค่ไหน และเสี่ยงติดสัตว์คุ้มครองเท่าไร
+    แล้วรวมเป็นคะแนนเดียวแบบ NOAA EcoCast: <b style="color:#2166ac">บวก = จับปลาได้ดีและ bycatch ต่ำ</b> · <b style="color:#b2182b">ลบ = พื้นที่เสี่ยง bycatch</b>
+  </div>
+
+  <div class="notice">
+    <b>ข้อมูลจำลอง (simulated):</b> โมเดลในหน้านี้ฝึกจาก logbook เรือจำลอง (<code>purse_seine_sim</code>) เพื่อพิสูจน์ workflow
+    ค่าพารามิเตอร์ชนิดสัตว์น้ำ ราคา และน้ำหนักคะแนนเป็นค่าสมมติ ยังไม่ใช่ผลจริงของอ่าวไทย เมื่อได้ logbook จริงจากเรือ ให้รัน pipeline เดิมแล้ว export ใหม่
+  </div>
+  <div class="eco-error" id="ecoError"></div>
+
+  <div class="grid-4" style="margin-bottom:1rem">
+    <div class="stat-box"><div class="stat-label">ข้อมูลฝึกโมเดล</div><div class="stat-val" id="ecoStatTrain">—</div><div class="stat-sub" id="ecoStatTrainSub">sets (การล้อมอวน)</div></div>
+    <div class="stat-box amber"><div class="stat-label">ปีทดสอบ (held-out)</div><div class="stat-val" id="ecoStatYear">—</div><div class="stat-sub" id="ecoStatYearSub">ไม่ได้ใช้ฝึกโมเดล</div></div>
+    <div class="stat-box"><div class="stat-label">คะแนน EcoCast vs ค่าจริง</div><div class="stat-val" id="ecoStatSkill">—</div><div class="stat-sub">Spearman ในพื้นที่ที่มีข้อมูล</div></div>
+    <div class="stat-box red"><div class="stat-label">ชนิดที่ใช้ในคะแนน</div><div class="stat-val" id="ecoStatSpecies">—</div><div class="stat-sub" id="ecoStatSpeciesSub">ชนิดที่ข้อมูลไม่พอถูกตัดออก</div></div>
+  </div>
+
+  <div class="ecocast-layout">
+    <div class="card">
+      <div class="card-title">Interactive EcoCast Map · คลิกบนแผนที่เพื่อดูค่าทุกชนิดในจุดนั้น</div>
+      <div class="controls">
+        <label for="ecoMonthSelect">เดือน:</label>
+        <select id="ecoMonthSelect" onchange="renderEcocast()"></select>
+        <label for="ecoLayerSelect">ชั้นข้อมูล:</label>
+        <select id="ecoLayerSelect" onchange="renderEcocast()"></select>
+        <label class="layer-check"><input type="checkbox" id="ecoFootprintOnly" checked onchange="renderEcocast()"> แสดงเฉพาะพื้นที่ที่มีข้อมูล</label>
+        <label class="layer-check">ความทึบ <input type="range" id="ecoOpacity" class="eco-opacity" min="0.2" max="1" step="0.05" value="0.85" oninput="setEcocastOpacity()"></label>
+      </div>
+      <div id="ecocastMap"></div>
+      <div class="eco-legend">
+        <div class="eco-legend-bar" id="ecoLegendBar"></div>
+        <div class="eco-legend-labels"><span id="ecoLegendMin">—</span><span id="ecoLegendMid">—</span><span id="ecoLegendMax">—</span></div>
+        <div class="eco-legend-note" id="ecoLegendNote">—</div>
+      </div>
+    </div>
+
+    <div class="eco-side">
+      <div class="card">
+        <div class="card-title" id="ecoInfoTitle">ชั้นข้อมูลที่เลือก</div>
+        <div id="ecoInfo">—</div>
+      </div>
+      <div class="card">
+        <div class="card-title">เฉลี่ยรายพื้นที่ทะเลจังหวัด · <span id="ecoZoneMonth">—</span></div>
+        <table class="table" id="ecoZoneTable"></table>
+        <div class="grid-note">แต่ละช่องกริดถูกจัดให้จังหวัดที่ท่าเรือใกล้ที่สุด เฉลี่ยเฉพาะพื้นที่ทำประมงถูกกฎหมาย (≥3 ไมล์ทะเล, ลึก ≥15 ม.)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <div class="card-title">ความน่าเชื่อถือของโมเดลรายชนิด · Model Validation (held-out year)</div>
+    <table class="table" id="ecoModelTable"></table>
+    <div class="grid-note">
+      <b>Test AUC</b> = ความแม่นในการแยก set ที่จับได้/จับไม่ได้ในปีทดสอบ (0.5 = เดาสุ่ม) · <b>เพดาน</b> = AUC สูงสุดที่ทำได้ถ้ารู้ความน่าจะเป็นจริง (การจับมีโชคช่วยเสมอ) ·
+      <b>Map ρ</b> = ความสอดคล้องของแผนที่ทำนายกับความหนาแน่นจริงในตัวจำลอง · ชนิดสัตว์คุ้มครองที่มี set ที่จับได้ในข้อมูลฝึกน้อยกว่า <span id="ecoMinPos">40</span> ครั้ง ไม่ถูกใช้ในคะแนน EcoCast
     </div>
   </div>
 </section>
@@ -1199,6 +1332,10 @@ window.showPage = function(id, tab){
       else map.invalidateSize();
       updateAll();
     }, 80);
+  }
+
+  if(id === "ecocast"){
+    setTimeout(ensureEcocast, 80);
   }
 
   if(id === "profile"){
@@ -1989,6 +2126,334 @@ function renderPipelineMap(){
   if(pipelineMap){
     pipelineMap.fitBounds([[6.15,98.65],[11.15,101.90]], {padding:[20,20]});
   }
+}
+
+/* ---------- EcoCast Page ---------- */
+/* Data: ecocast_data.js, generated by export_ecocast_web.py from the trained bycatch model. */
+let ecoMap = null, ecoOverlay = null, eco = null, ecoLoading = false;
+const ecoCache = {};
+
+const ECO_CMAPS = {
+  diverging: ["#b2182b", "#ef8a62", "#f7f7f7", "#67a9cf", "#2166ac"],
+  sequential: ["#440154", "#3b528b", "#21918c", "#5ec962", "#fde725"],
+  risk: ["#fff5eb", "#fdbe85", "#fd8d3c", "#d94701", "#7f2704"]
+};
+const ECO_TH_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const ECO_RELIABILITY = {
+  good: ["ดี", "ข้อมูลพอ ใช้วางแผนได้"],
+  limited: ["ปานกลาง", "ใช้ประกอบได้ แต่ความแม่นยำจำกัด"],
+  unreliable: ["ไม่น่าเชื่อถือ", "จับได้น้อยเกินไป แผนที่อาจผิด ไม่ใช้ในคะแนน"],
+  none: ["ไม่มีโมเดล", "ไม่มีข้อมูลการจับเลย"]
+};
+
+function ecoMonthLabel(m){
+  const [y, mm] = m.split("-").map(Number);
+  return `${ECO_TH_MONTHS[mm - 1]} ${y + 543}`;
+}
+
+function ecoB64(s){
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function ecoHex(h){
+  return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+}
+
+function ecoColor(cmap, t){
+  const stops = ECO_CMAPS[cmap];
+  const x = Math.min(Math.max(t, 0), 1) * (stops.length - 1);
+  const i = Math.min(Math.floor(x), stops.length - 2);
+  const f = x - i;
+  const a = ecoHex(stops[i]), b = ecoHex(stops[i + 1]);
+  return [0,1,2].map(k => Math.round(a[k] + f * (b[k] - a[k])));
+}
+
+function ecoFormat(layer, v){
+  if(v === null || Number.isNaN(v)) return "—";
+  if(layer.cmap === "diverging") return (v >= 0 ? "+" : "") + v.toFixed(2);
+  if(layer.unit === "probability/set") return (v * 100).toFixed(v < 0.01 ? 2 : 1) + "%";
+  if(layer.unit === "THB/set") return "฿" + Math.round(v).toLocaleString();
+  return Math.round(v).toLocaleString() + " kg";
+}
+
+function ecoShowError(html){
+  const box = document.getElementById("ecoError");
+  box.style.display = "block";
+  box.innerHTML = html;
+}
+
+window.ensureEcocast = function(){
+  if(eco){
+    ecoMap.invalidateSize();
+    renderEcocast();
+    return;
+  }
+  if(window.ECOCAST_DATA){
+    initEcocast(window.ECOCAST_DATA);
+    return;
+  }
+  if(ecoLoading) return;
+  ecoLoading = true;
+  const s = document.createElement("script");
+  s.src = "ecocast_data.js";
+  s.onload = () => {
+    ecoLoading = false;
+    if(window.ECOCAST_DATA) initEcocast(window.ECOCAST_DATA);
+  };
+  s.onerror = () => {
+    ecoLoading = false;
+    ecoShowError("โหลด <code>ecocast_data.js</code> ไม่สำเร็จ ให้เช็กว่าไฟล์อยู่โฟลเดอร์เดียวกับ index.html " +
+                 "หรือสร้างใหม่ด้วย <code>python export_ecocast_web.py</code>");
+  };
+  document.body.appendChild(s);
+};
+
+function initEcocast(data){
+  const g = data.grid;
+  const cells = new Uint16Array(ecoB64(data.cells).buffer);
+  const lookup = new Int32Array(g.nlat * g.nlon).fill(-1);
+  cells.forEach((flat, k) => { lookup[flat] = k; });
+  eco = {
+    data, grid: g, cells, lookup,
+    footprint: ecoB64(data.footprint),
+    zone: ecoB64(data.zone),
+    layers: Object.fromEntries(data.layers.map(l => [l.key, l])),
+    species: Object.fromEntries(data.species.map(s => [s.code, s]))
+  };
+
+  const monthSel = document.getElementById("ecoMonthSelect");
+  data.months.forEach(m => {
+    const o = document.createElement("option");
+    o.value = m;
+    o.textContent = ecoMonthLabel(m);
+    if(m.endsWith("-04")) o.selected = true;
+    monthSel.appendChild(o);
+  });
+
+  const layerSel = document.getElementById("ecoLayerSelect");
+  const groups = [
+    ["ภาพรวม EcoCast", l => !l.code],
+    ["ปลาเป้าหมาย · ความหนาแน่น (kg/set)", l => l.code && eco.species[l.code].group === "target"],
+    ["สัตว์คุ้มครอง · โอกาสติดอวน", l => l.code && eco.species[l.code].group === "etp"]
+  ];
+  groups.forEach(([label, test]) => {
+    const og = document.createElement("optgroup");
+    og.label = label;
+    data.layers.filter(test).forEach(l => {
+      const o = document.createElement("option");
+      o.value = l.key;
+      o.textContent = l.code ? `${eco.species[l.code].name_th} (${eco.species[l.code].name_en})` : l.label_th;
+      og.appendChild(o);
+    });
+    layerSel.appendChild(og);
+  });
+
+  const m = data.meta;
+  const inScore = data.species.filter(s => s.in_score);
+  document.getElementById("ecoStatTrain").textContent = (m.train_sets || 0).toLocaleString();
+  document.getElementById("ecoStatTrainSub").textContent =
+    `sets จากเรือ ${m.n_vessels ?? "?"} ลำ` + (m.simulated ? " (จำลอง)" : "");
+  document.getElementById("ecoStatYear").textContent = Number(m.test_year) + 543;
+  document.getElementById("ecoStatYearSub").textContent = `${(m.test_sets || 0).toLocaleString()} sets · ไม่ได้ใช้ฝึกโมเดล`;
+  document.getElementById("ecoStatSkill").textContent = m.ecocast_skill === null ? "—" : m.ecocast_skill.toFixed(2);
+  document.getElementById("ecoStatSpecies").textContent = `${inScore.length}/${data.species.length}`;
+  document.getElementById("ecoMinPos").textContent = m.min_positives_score;
+
+  ecoMap = L.map("ecocastMap", { zoomControl:true }).setView([8.9, 100.6], 7);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:12,
+    attribution:"&copy; OpenStreetMap contributors"
+  }).addTo(ecoMap);
+  const half = g.res / 2;
+  eco.bounds = [[g.lat0 - half, g.lon0 - half], [g.lat0 + (g.nlat - 1) * g.res + half, g.lon0 + (g.nlon - 1) * g.res + half]];
+  ecoMap.fitBounds(eco.bounds, {padding:[10,10]});
+  ecoMap.on("click", ecoCellPopup);
+
+  renderEcoModelTable();
+  renderEcocast();
+}
+
+function ecoValues(key, month){
+  const id = key + "|" + month;
+  if(!ecoCache[id]){
+    const layer = eco.layers[key];
+    const q = ecoB64(layer.data[month]);
+    const out = new Float32Array(q.length);
+    const span = layer.vmax - layer.vmin;
+    for(let i = 0; i < q.length; i++){
+      out[i] = q[i] === 255 ? NaN : layer.vmin + (q[i] / 254) * span;
+    }
+    ecoCache[id] = out;
+  }
+  return ecoCache[id];
+}
+
+window.setEcocastOpacity = function(){
+  if(ecoOverlay) ecoOverlay.setOpacity(Number(document.getElementById("ecoOpacity").value));
+};
+
+window.renderEcocast = function(){
+  if(!eco) return;
+  const month = document.getElementById("ecoMonthSelect").value;
+  const key = document.getElementById("ecoLayerSelect").value;
+  const footprintOnly = document.getElementById("ecoFootprintOnly").checked;
+  const layer = eco.layers[key];
+  const vals = ecoValues(key, month);
+  const g = eco.grid;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = g.nlon;
+  canvas.height = g.nlat;
+  const ctx = canvas.getContext("2d");
+  const img = ctx.createImageData(g.nlon, g.nlat);
+  for(let k = 0; k < eco.cells.length; k++){
+    const flat = eco.cells[k];
+    const row = Math.floor(flat / g.nlon), col = flat % g.nlon;
+    const p = ((g.nlat - 1 - row) * g.nlon + col) * 4;
+    const v = vals[k];
+    if(Number.isNaN(v)) continue;
+    if(footprintOnly && !eco.footprint[k]){
+      img.data.set([120, 120, 120, 70], p);
+      continue;
+    }
+    const c = ecoColor(layer.cmap, (v - layer.vmin) / (layer.vmax - layer.vmin));
+    img.data.set([c[0], c[1], c[2], 235], p);
+  }
+  ctx.putImageData(img, 0, 0);
+  const url = canvas.toDataURL();
+  const opacity = Number(document.getElementById("ecoOpacity").value);
+  if(ecoOverlay) ecoOverlay.setUrl(url);
+  else ecoOverlay = L.imageOverlay(url, eco.bounds, {opacity, className:"eco-pixelated"}).addTo(ecoMap);
+
+  document.getElementById("ecoLegendBar").style.background =
+    `linear-gradient(to right, ${ECO_CMAPS[layer.cmap].join(",")})`;
+  document.getElementById("ecoLegendMin").textContent = layer.cmap === "diverging" ? "เสี่ยง bycatch" : ecoFormat(layer, layer.vmin);
+  document.getElementById("ecoLegendMid").textContent = layer.cmap === "diverging" ? "0" : ecoFormat(layer, (layer.vmin + layer.vmax) / 2);
+  document.getElementById("ecoLegendMax").textContent = layer.cmap === "diverging" ? "ปลาดี + bycatch ต่ำ" : ecoFormat(layer, layer.vmax) + "+";
+  document.getElementById("ecoLegendNote").textContent =
+    `${layer.label_en} · ${ecoMonthLabel(month)} · การล้อมอวนฝูงปลาอิสระ (free-school set)` +
+    (footprintOnly ? ` · สีเทา = ไม่มีข้อมูลฝึกภายใน ${eco.data.meta.footprint_km} กม. (การทำนายเป็นการคาดเดานอกข้อมูล)` : "");
+
+  renderEcoInfo(layer);
+  renderEcoZones(layer, vals, month, footprintOnly);
+};
+
+function ecoBadge(rel){
+  const [label] = ECO_RELIABILITY[rel] || ECO_RELIABILITY.none;
+  return `<span class="eco-badge ${rel}">${label}</span>`;
+}
+
+function ecoNum(v, d){
+  return v === null || v === undefined ? "—" : Number(v).toFixed(d);
+}
+
+function renderEcoInfo(layer){
+  const box = document.getElementById("ecoInfo");
+  const title = document.getElementById("ecoInfoTitle");
+  const meta = eco.data.meta;
+  if(layer.code){
+    const s = eco.species[layer.code];
+    const [, relText] = ECO_RELIABILITY[s.reliability] || ECO_RELIABILITY.none;
+    title.textContent = s.group === "target" ? "ปลาเป้าหมาย" : "สัตว์คุ้มครอง (ETP bycatch)";
+    box.innerHTML = `
+      <div style="font-size:17px;font-weight:900">${s.name_th}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:.7rem">${s.name_en} · <i>${s.sci_name}</i></div>
+      <div style="margin-bottom:.7rem">${ecoBadge(s.reliability)} <span style="font-size:12.5px;color:var(--muted)">${relText}</span></div>
+      <dl class="eco-kv">
+        <dt>ค่าที่แสดง</dt><dd>${s.group === "target" ? "kg ต่อการล้อมอวน" : "โอกาสติดต่อการล้อมอวน"}</dd>
+        <dt>set ที่จับได้ (ข้อมูลฝึก)</dt><dd>${(s.train_positives ?? 0).toLocaleString()}</dd>
+        <dt>Test AUC / เพดาน</dt><dd>${ecoNum(s.test_auc, 2)} / ${ecoNum(s.ceiling_auc, 2)}</dd>
+        <dt>Map ρ กับค่าจริง</dt><dd>${ecoNum(s.map_rho, 2)}</dd>
+        ${s.price_thb_kg ? `<dt>ราคาสมมติ</dt><dd>฿${s.price_thb_kg}/kg</dd>` : ""}
+        ${s.group === "etp" ? `<dt>น้ำหนักในคะแนน</dt><dd>${s.in_score ? "−" + (meta.weights[s.code] ?? 0) : "ไม่ใช้"}</dd>` : ""}
+      </dl>`;
+    return;
+  }
+  title.textContent = layer.label_th;
+  if(layer.key === "revenue"){
+    box.innerHTML = `<p style="font-size:13px">รายได้คาดหวังต่อการล้อมอวน 1 ครั้ง = Σ (โอกาสจับได้ × kg ที่คาดว่าจับได้ × ราคา) ของปลาเป้าหมายทุกชนิด
+      <br><span style="color:var(--muted)">ราคาเป็นค่าสมมติ ควรแทนด้วยราคาตลาดจริง</span></p>`;
+    return;
+  }
+  const rows = Object.entries(meta.weights).map(([k, w]) => {
+    const s = eco.species[k];
+    const used = k === "revenue" || (s && s.in_score && s.has_layer);
+    const name = k === "revenue" ? "รายได้ปลาเป้าหมาย" : (s ? s.name_th : k);
+    return `<dt>${name}</dt><dd>${used ? (k === "revenue" ? "+" : "−") + w : '<span style="color:var(--coral)">ไม่ใช้ (ข้อมูลไม่พอ)</span>'}</dd>`;
+  }).join("");
+  box.innerHTML = `
+    <p style="font-size:13px;margin-bottom:.7rem">
+      ${layer.key === "true_score" ? "<b>คะแนนจริงจากตัวจำลอง</b> ใช้เทียบความแม่นของโมเดลเท่านั้น (ข้อมูลจริงจะไม่มีชั้นนี้)<br>" : ""}
+      คะแนน = น้ำหนัก × รายได้ (ปรับเป็น 0–1) − Σ น้ำหนัก × โอกาสติด bycatch (ปรับเป็น 0–1)
+      แล้วปรับสเกลรายเดือนเป็น −1 ถึง +1 แบบ EcoCast: เป็นการเทียบพื้นที่ภายในเดือนเดียวกัน
+      (+1 = ดีที่สุดของเดือน, −1 = เสี่ยง bycatch มากที่สุดเมื่อเทียบกับปลาที่ได้)
+    </p>
+    <dl class="eco-kv">${rows}</dl>
+    <div class="grid-note">น้ำหนักเป็นค่าสมมติ: EcoCast ของ NOAA ให้หน่วยงานและชาวประมงกำหนดร่วมกัน</div>`;
+}
+
+function renderEcoZones(layer, vals, month, footprintOnly){
+  document.getElementById("ecoZoneMonth").textContent = ecoMonthLabel(month);
+  const zones = eco.data.zones.map(z => ({...z, sum:0, n:0}));
+  for(let k = 0; k < vals.length; k++){
+    if(Number.isNaN(vals[k]) || (footprintOnly && !eco.footprint[k])) continue;
+    const z = zones[eco.zone[k]];
+    z.sum += vals[k];
+    z.n += 1;
+  }
+  const rows = zones.filter(z => z.n > 0).map(z => ({...z, mean: z.sum / z.n})).sort((a, b) => b.mean - a.mean);
+  const maxAbs = Math.max(...rows.map(r => Math.abs(r.mean)), 1e-12);
+  document.getElementById("ecoZoneTable").innerHTML =
+    `<tr><th>พื้นที่ทะเล</th><th>ค่าเฉลี่ย</th><th></th></tr>` +
+    rows.map(r => {
+      const t = layer.cmap === "diverging" ? (r.mean - layer.vmin) / (layer.vmax - layer.vmin) : r.mean / layer.vmax;
+      const c = ecoColor(layer.cmap, layer.cmap === "risk" ? Math.max(t, 0.35) : t);
+      return `<tr><td>${r.name_th}</td><td><b>${ecoFormat(layer, r.mean)}</b></td>
+        <td><div class="bar"><span style="width:${Math.round(Math.abs(r.mean) / maxAbs * 100)}%;background:rgb(${c.join(",")})"></span></div></td></tr>`;
+    }).join("");
+}
+
+function renderEcoModelTable(){
+  const rows = eco.data.species.map(s => `
+    <tr>
+      <td><b>${s.name_th}</b><br><span style="font-size:11.5px;color:var(--muted)">${s.name_en}</span></td>
+      <td>${s.group === "target" ? "เป้าหมาย" : "สัตว์คุ้มครอง"}</td>
+      <td>${(s.train_positives ?? 0).toLocaleString()}</td>
+      <td>${ecoNum(s.test_auc, 2)}</td>
+      <td>${ecoNum(s.ceiling_auc, 2)}</td>
+      <td>${ecoNum(s.map_rho, 2)}</td>
+      <td>${ecoBadge(s.reliability)}</td>
+      <td>${s.in_score ? "✓" : "—"}</td>
+    </tr>`).join("");
+  document.getElementById("ecoModelTable").innerHTML =
+    `<tr><th>ชนิด</th><th>กลุ่ม</th><th>set ที่จับได้ (ฝึก)</th><th>Test AUC</th><th>เพดาน</th><th>Map ρ</th><th>ความน่าเชื่อถือ</th><th>ใช้ในคะแนน</th></tr>` + rows;
+}
+
+function ecoCellPopup(e){
+  const g = eco.grid;
+  const row = Math.round((e.latlng.lat - g.lat0) / g.res);
+  const col = Math.round((e.latlng.lng - g.lon0) / g.res);
+  const k = row >= 0 && row < g.nlat && col >= 0 && col < g.nlon ? eco.lookup[row * g.nlon + col] : -1;
+  let html;
+  if(k < 0){
+    html = "<b>ไม่ใช่พื้นที่ทำประมงอวนล้อมที่ถูกกฎหมาย</b><br>บนบก, ห่างฝั่ง &lt; 3 ไมล์ทะเล หรือน้ำลึก &lt; 15 ม.";
+  } else {
+    const month = document.getElementById("ecoMonthSelect").value;
+    const lines = eco.data.layers.filter(l => l.key !== "true_score").map(l => {
+      const s = l.code ? eco.species[l.code] : null;
+      const name = s ? s.name_th : l.label_th;
+      const warn = s && s.reliability === "unreliable" ? ' <span style="color:#b2182b" title="ข้อมูลไม่พอ">⚠</span>' : "";
+      return `<tr><td>${name}${warn}</td><td>${ecoFormat(l, ecoValues(l.key, month)[k])}</td></tr>`;
+    }).join("");
+    html = `<div class="eco-popup"><b>${e.latlng.lat.toFixed(2)}°N, ${e.latlng.lng.toFixed(2)}°E</b> · ${ecoMonthLabel(month)}<br>
+      พื้นที่ทะเล${eco.data.zones[eco.zone[k]].name_th}
+      ${eco.footprint[k] ? "" : '<br><span style="color:#b2182b">⚠ ไม่มีข้อมูลฝึกใกล้จุดนี้ (คาดเดานอกข้อมูล)</span>'}
+      <table style="margin-top:.4rem">${lines}</table></div>`;
+  }
+  L.popup().setLatLng(e.latlng).setContent(html).openOn(ecoMap);
 }
 
 /* ---------- Start ---------- */

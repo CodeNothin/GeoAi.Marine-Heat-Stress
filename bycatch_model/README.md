@@ -37,6 +37,22 @@ and the fishers, as EcoCast did with managers.
 The **data footprint** is the set of cells within 40 km of a training set. Cells outside it are
 extrapolation and are greyed out.
 
+Protected-species layers with fewer than **40 sets with a catch** in the training data are left out
+of the score (`MIN_POSITIVES_SCORE`), because the power analysis shows their maps are noise. In the
+10-vessel run this raised the score's agreement with the truth from 0.49 to 0.56.
+
+## Website
+
+`python export_ecocast_web.py` turns `model_output/maps/*.npz` into `ecocast_data.js`. The
+**EcoCast · Bycatch** tab in `index.html` loads that file when the tab is opened. The page has:
+
+- a monthly map of the EcoCast score, revenue, kg per set for each target species, and bycatch
+  probability for each protected species;
+- a click popup showing every species at a point;
+- per-province sea-zone averages and the model-reliability table.
+
+As in EcoCast, the score is rescaled to −1…+1 each month: it shows *relatively* good and bad areas.
+
 ## Validation
 
 - **Held-out year:** train on every year except the last, then test on the last.

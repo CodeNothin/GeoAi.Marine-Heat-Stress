@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 sim_output/
+model_output/
+power_output/

@@ -15,17 +15,30 @@ METRIC_COLS = ["species_code", "group", "train_sets", "train_positives", "test_s
                "test_auc", "ceiling_auc", "map_spearman", "map_spearman_all", "edf", "smoothing_lambda", "note"]
 
 
+HOLDOUT_MONTHS = 3      # with only one year of data, the last 3 months are held out instead
+
+
 def split_by_year(ds, test_year=None):
+    """Held-out year; with a single year, the last HOLDOUT_MONTHS months. Returns train, test, test months."""
     years = sorted(set(ds.year.tolist()))
     if len(years) < 2:
-        raise ValueError("need at least two years of data for a held-out-year test")
+        ym = (ds.time // 1).astype("int64").astype("datetime64[D]").astype("datetime64[M]")
+        months = sorted(set(ym.tolist()))
+        if len(months) <= HOLDOUT_MONTHS:
+            raise ValueError("need more than three months of data for a held-out test")
+        test = np.isin(ym, months[-HOLDOUT_MONTHS:])
+        label = [str(np.datetime64(m, "M")) for m in months[-HOLDOUT_MONTHS:]]
+        return ds.subset(np.flatnonzero(~test)), ds.subset(np.flatnonzero(test)), label
     test_year = test_year or years[-1]
     return ds.subset(np.flatnonzero(ds.year != test_year)), ds.subset(np.flatnonzero(ds.year == test_year)), test_year
 
 
 def load_test_grids(data_dir, test_year, months=None):
     folder = Path(data_dir) / "truth" / "maps"
-    paths = sorted(folder.glob(f"truth_{test_year}-*.npz")) if folder.exists() else []
+    if isinstance(test_year, list):            # single-year data: the held-out months
+        paths = [folder / f"truth_{m}.npz" for m in test_year if (folder / f"truth_{m}.npz").exists()]
+    else:
+        paths = sorted(folder.glob(f"truth_{test_year}-*.npz")) if folder.exists() else []
     if months:
         paths = [p for p in paths if int(p.stem[-2:]) in months]
     return [load_grid(p) for p in paths]
@@ -99,6 +112,15 @@ def train_and_evaluate(data_dir, out_dir, test_year=None, plot_months=(4, 10), w
 
     rows = evaluate_fits(fits, test, grids, footprints)
     write_rows(out / "metrics.csv", rows, METRIC_COLS)
+    held_out = None
+    if isinstance(test_year, list):
+        # Single year: score on the held-out months, but map every month of the year.
+        held_out = set(test_year)
+        grids = load_test_grids(data_dir, test_year[0][:4])
+        footprints = grid_footprints(grids, train)
+    with open(out / "holdout.json", "w", encoding="utf-8") as fh:
+        json.dump({"test_year": None if held_out else int(test_year),
+                   "test_months": sorted(held_out) if held_out else None}, fh)
     models = {c: {"presence": f.presence.to_dict() if f.presence else None,
                   "amount": f.amount.to_dict() if f.amount else None,
                   "group": f.group, "train_positives": f.n_pos} for c, f in fits.items()}
@@ -117,8 +139,9 @@ def train_and_evaluate(data_dir, out_dir, test_year=None, plot_months=(4, 10), w
         if g.truth_lambda:
             true, _ = ecocast_score(true_layers(g.truth_lambda), {k: weights[k] for k in used}, fp)
             arrays["true_ecocast_score"] = g.to_2d(true)
-            skill.append({"month": g.month, "ecocast_spearman": spearman(score[fp], true[fp]),
-                          "layers_used": "+".join(used)})
+            if held_out is None or g.month in held_out:
+                skill.append({"month": g.month, "ecocast_spearman": spearman(score[fp], true[fp]),
+                              "layers_used": "+".join(used)})
         np.savez_compressed(out / "maps" / f"pred_{g.month}.npz", lat=g.lat, lon=g.lon, mask=g.mask, **arrays)
     write_rows(out / "ecocast_skill.csv", skill, ["month", "ecocast_spearman", "layers_used"])
 
@@ -130,7 +153,7 @@ def train_and_evaluate(data_dir, out_dir, test_year=None, plot_months=(4, 10), w
 
     if verbose:
         print(f"Trained on {len(train)} sets ({', '.join(map(str, sorted(set(train.year.tolist()))))}), "
-              f"tested on {len(test)} sets ({test_year})\n")
+              f"tested on {len(test)} sets ({test_year if not isinstance(test_year, list) else ', '.join(test_year)})\n")
         if footprints:
             print(f"map rho = rank correlation of predicted vs true density inside the data footprint "
                   f"({np.mean([f.mean() for f in footprints]) * 100:.0f}% of legal cells); 'all' = whole area\n")

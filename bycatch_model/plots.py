@@ -105,3 +105,33 @@ def plot_power(out, summary, eco):
     fig.tight_layout()
     fig.savefig(Path(out) / "power_curves.png", dpi=130)
     plt.close(fig)
+
+
+CURVE_LABELS = {"sst_anom_l1": "SST anomaly last month (°C)", "heat_3m": "Heat stress, last 3 months (°C·months)",
+                "anom_trend": "SST anomaly change (°C)", "sst_l1": "SST last month (°C)",
+                "log10chl_l1": "log10 CHL-a last month", "wind_l1": "Wind last month (m/s)"}
+
+
+def plot_response_curves(out, curves):
+    """One panel per heat/climate term; one line per species (odds multiplier, log scale)."""
+    plt = _plt()
+    terms = [t for t in CURVE_LABELS if any(t in c for c in curves.values())]
+    cols = 3
+    rows = math.ceil(len(terms) / cols)
+    fig, axes = plt.subplots(rows, cols, figsize=(4 * cols, 3 * rows), squeeze=False)
+    for ax, term in zip(axes.ravel(), terms):
+        for code, c in curves.items():
+            if term in c:
+                ax.plot(c[term]["x"], c[term]["odds"], lw=1.2, label=code)
+        ax.axhline(1.0, color="#999", lw=0.6, ls="--")
+        ax.set_yscale("log")
+        ax.set_xlabel(CURVE_LABELS[term], fontsize=8)
+        ax.set_ylabel("odds of catch (x)", fontsize=8)
+        ax.tick_params(labelsize=7)
+    for ax in axes.ravel()[len(terms):]:
+        ax.axis("off")
+    axes.ravel()[0].legend(fontsize=6, ncol=2)
+    fig.tight_layout()
+    (Path(out) / "plots").mkdir(parents=True, exist_ok=True)
+    fig.savefig(Path(out) / "plots" / "response_curves.png", dpi=130)
+    plt.close(fig)

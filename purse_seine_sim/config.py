@@ -142,8 +142,11 @@ class EnvConfig:
                                       0.45, 0.45, 0.45, 0.50, 0.65, 0.65)
     wind_obs_noise_ms: float = 0.8
     depth_obs_noise_m: float = 2.0
-    # Optional real SST: .npz with arrays time (unix days or datetime64), lat, lon, sst[time, lat, lon]
+    # Optional real data (e.g. written by fetch_env_data.py): .npz with arrays time (unix days or
+    # datetime64), lat, lon and sst[time, lat, lon] (+ optional sst_anom), chl[...] in mg/m3, wind[...] in m/s
     sst_override_npz: str | None = None
+    chl_override_npz: str | None = None
+    wind_override_npz: str | None = None
 
 
 # =========================

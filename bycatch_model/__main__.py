@@ -1,6 +1,7 @@
 """CLI:
     python -m bycatch_model train  --data sim_output --out model_output
     python -m bycatch_model power  --out power_output            (simulates its own data)
+    python -m bycatch_model forecast --data sim_output --out forecast_output
 """
 from __future__ import annotations
 
@@ -18,6 +19,12 @@ def main(argv=None):
     t.add_argument("--out", default="model_output")
     t.add_argument("--test-year", type=int)
 
+    f = sub.add_parser("forecast", help="one-month-ahead species forecast from lagged heat/climate inputs")
+    f.add_argument("--data", required=True, help="folder in the logbook/env schema with monthly grids")
+    f.add_argument("--out", default="forecast_output")
+    f.add_argument("--start-month", help="first month to forecast in the rolling test (default: Jan of the 2nd year)")
+    f.add_argument("--bootstrap", type=int, default=10, help="refits for the upcoming month's uncertainty")
+
     w = sub.add_parser("power", help="how many sets are needed? (learning curves)")
     w.add_argument("--data", help="existing simulated folder; omitted = simulate one")
     w.add_argument("--out", default="power_output")
@@ -32,6 +39,11 @@ def main(argv=None):
     if a.cmd == "train":
         from .train import train_and_evaluate
         train_and_evaluate(a.data, a.out, test_year=a.test_year)
+        return 0
+
+    if a.cmd == "forecast":
+        from .forecast import run_forecast
+        run_forecast(a.data, a.out, start_month=a.start_month, n_boot=a.bootstrap)
         return 0
 
     from .power import power_analysis

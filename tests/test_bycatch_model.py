@@ -1,4 +1,5 @@
 """Run with:  python -m unittest discover -s tests -v"""
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,6 +8,7 @@ import numpy as np
 
 from bycatch_model.data import load_dataset, load_grid
 from bycatch_model.ecocast import auc, ecocast_score, spearman
+from bycatch_model.forecast import EnvArchive, kernel_rate, run_forecast
 from bycatch_model.gam import GAM, pspline_basis
 from bycatch_model.train import train_and_evaluate
 from purse_seine_sim import SimConfig, run_simulation
@@ -61,6 +63,36 @@ class MetricTest(unittest.TestCase):
         self.assertLess(score[2], score[1])
 
 
+class ForecastTest(unittest.TestCase):
+    def test_kernel_rate_is_local_and_shrunk(self):
+        lat = np.array([7.0, 7.0, 9.0, 9.0])
+        lon = np.array([100.0, 100.0, 100.0, 100.0])
+        y = np.array([1, 1, 0, 0])
+        p = kernel_rate(lat, lon, y, np.array([7.0, 9.0, 11.0]), np.array([100.0, 100.0, 100.0]))
+        self.assertGreater(p[0], 0.6)
+        self.assertLess(p[1], 0.4)
+        self.assertAlmostEqual(p[2], 0.5, places=2)     # far from every set: overall rate
+
+    def test_rolling_forecast_on_simulated_logbooks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data, out = Path(tmp) / "data", Path(tmp) / "fc"
+            cfg = SimConfig.from_dict({"start": "2024-01-01", "end": "2025-03-31", "seed": 5, "write_track": False,
+                                       "fleet": {"n_vessels": 4}})
+            run_simulation(cfg, data, write_maps=True, verbose=False)
+            archive = EnvArchive(data)
+            self.assertFalse(archive.has_lags("2024-03"))
+            self.assertTrue(archive.has_lags("2024-04"))
+            summary = run_forecast(data, out, start_month="2025-01", n_boot=2, plots=False, verbose=False)
+            fc = {r["species_code"]: r for r in summary if r["method"] == "forecast"}
+            self.assertGreater(fc["RAST_BRA"]["auc"], 0.6)
+            self.assertGreater(fc["RAST_BRA"]["map_rho"], 0.5)
+            self.assertTrue((out / "maps" / "forecast_2025-02.npz").exists())
+            upcoming = np.load(out / "maps" / "forecast_2025-04.npz")      # the month after the last grid
+            self.assertIn("p_RAST_BRA", upcoming.files)
+            self.assertIn("sd_RAST_BRA", upcoming.files)
+            self.assertTrue((out / "response_curves.json").exists())
+
+
 class EndToEndTest(unittest.TestCase):
     def test_train_on_simulated_logbooks(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -79,6 +111,17 @@ class EndToEndTest(unittest.TestCase):
             self.assertGreater(by_code["RAST_BRA"]["map_spearman"], 0.5)
             self.assertTrue((out / "metrics.csv").exists())
             self.assertTrue(list((out / "maps").glob("pred_2025-*.npz")))
+
+    def test_single_year_holds_out_last_months(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data, out = Path(tmp) / "data", Path(tmp) / "model"
+            cfg = SimConfig.from_dict({"start": "2024-01-01", "end": "2024-08-31", "seed": 4, "write_track": False,
+                                       "fleet": {"n_vessels": 3}})
+            run_simulation(cfg, data, write_maps=True, verbose=False)
+            train_and_evaluate(data, out, plot_months=(), verbose=False)
+            holdout = json.loads((out / "holdout.json").read_text())
+            self.assertEqual(holdout["test_months"], ["2024-06", "2024-07", "2024-08"])
+            self.assertEqual(len(list((out / "maps").glob("pred_2024-*.npz"))), 8)     # every month is mapped
 
 
 if __name__ == "__main__":

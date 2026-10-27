@@ -3,3 +3,5 @@ __pycache__/
 sim_output/
 model_output/
 power_output/
+forecast_output/
+real_env/*.nc

@@ -59,7 +59,7 @@ Training rows = `logbook/sets.csv` + `logbook/catch.csv` (pivoted per species) +
 | Vessels | Trips of 5–12 days from 5 ports. Free-school, own-FAD and light-luring sets (light luring only on dark-moon nights). Skippers pick spots by noisy knowledge of fish value minus steaming distance. Rules: no sets within 3 nm of the coast, Feb–May closure box (approximate), weather limits |
 | Catch | One dominant school species plus mixed species, a net capacity cap, water hauls, juvenile fraction (higher at FADs), and ETP encounters as a Poisson process with group size and condition |
 | Logbook errors | Optional kg rounding, mackerel misidentification, ETP under-reporting, and dropped pings (`reporting` config) |
-| Real SST | `env.sst_override_npz` takes an npz (`time`, `lat`, `lon`, `sst[t,lat,lon]`), e.g. exported from the OISST notebook |
+| Real data | `--sst-npz` / `env.sst_override_npz` takes an npz (`time`, `lat`, `lon`, `sst[t,lat,lon]`, optional `sst_anom`); `--chl-npz` and `--wind-npz` do the same for CHL-a (mg/m3) and monthly wind (m/s). `fetch_env_data.py` writes all three from NOAA OISST, satellite CHL-a and ERA5 |
 
 ## Known limitations
 

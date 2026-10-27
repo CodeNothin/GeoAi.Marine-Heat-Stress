@@ -89,6 +89,9 @@ def main():
         skill = {r["method"]: {k: num(r[k]) for k in ("auc", "brier", "map_rho", "brier_skill_vs_persistence",
                                                      "brier_skill_vs_climatology")}
                  for r in summary if r["species_code"] == code}
+        # The maps use the no-heat model when the heat terms did not earn their place; score that one.
+        if not meta["heat_terms_kept"].get(code) and "forecast_no_heat" in skill:
+            skill["forecast"] = skill["forecast_no_heat"]
         species.append({
             "code": code, "group": info["group"], "name_en": info["name_en"], "name_th": info["name_th"],
             "heat_terms_kept": bool(meta["heat_terms_kept"].get(code)),
@@ -100,13 +103,13 @@ def main():
             "curves": curves.get(code, {}),
         })
 
-    real_sst = False
+    env_cfg = {}
     if a.data and (Path(a.data) / "config_used.json").exists():
-        cfg = json.loads((Path(a.data) / "config_used.json").read_text(encoding="utf-8"))
-        real_sst = bool(cfg.get("env", {}).get("sst_override_npz"))
+        env_cfg = json.loads((Path(a.data) / "config_used.json").read_text(encoding="utf-8")).get("env", {})
     ny, nx = coarsen(np.zeros(mask.shape), mask).shape
     payload = {
-        "meta": {"generated": date.today().isoformat(), "simulated": meta.get("simulated", True), "real_sst": real_sst,
+        "meta": {"generated": date.today().isoformat(), "simulated": meta.get("simulated", True), "real_sst": bool(env_cfg.get("sst_override_npz")),
+                 "real_chl": bool(env_cfg.get("chl_override_npz")), "real_wind": bool(env_cfg.get("wind_override_npz")),
                  "train_sets": meta["train_sets"], "kernel_km": meta["kernel_km"], "n_boot": meta["n_boot"],
                  "upcoming_month": meta.get("upcoming_month")},
         "grid": {"lat0": lat0, "lon0": lon0, "res": res, "nlat": int(ny), "nlon": int(nx)},

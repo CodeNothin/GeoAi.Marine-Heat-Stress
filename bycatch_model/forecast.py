@@ -46,6 +46,7 @@ CURVE_TERMS = ["sst_anom_l1", "heat_3m", "anom_trend", "sst_l1", "log10chl_l1", 
 
 KERNEL_KM = 30.0            # bandwidth of the persistence / climatology baselines
 KERNEL_PRIOR = 2.0          # pseudo-sets pulling sparse areas towards the overall rate
+MIN_TEST_SETS = 30          # a month with fewer sets is too thin to score a forecast on
 MIN_HEAT_GAIN = 0.005       # heat terms are kept only if they cut the Brier score by at least 0.5%
 
 
@@ -327,7 +328,9 @@ def run_forecast(data_dir, out_dir, start_month=None, n_boot=10, seed=0, plots=T
     if start_month is None:
         years = sorted({m[:4] for m in data_months})
         start_month = f"{years[1] if len(years) > 1 else years[0]}-01"
-    target_months = [m for m in data_months if m >= start_month]
+    # Only months with an environment grid (and so a map to score) and enough sets to test on.
+    target_months = [m for m in data_months if m >= start_month and m in archive.grids
+                     and int((months == m).sum()) >= MIN_TEST_SETS]
     if verbose:
         print(f"Rolling one-month-ahead forecast: {target_months[0]} .. {target_months[-1]} "
               f"({len(target_months)} months, {int(valid.sum())} sets with full lags)")

@@ -2264,6 +2264,16 @@ function ecoShowError(html){
   box.innerHTML = html;
 }
 
+function ecoRealDataNote(m){
+  // Which environment layers came from real data in this run (see the export scripts).
+  const real = [], sim = [];
+  (m.real_sst ? real : sim).push(m.real_sst ? "SST และค่าผิดปกติ (NOAA OISST v2.1)" : "SST");
+  (m.real_wind ? real : sim).push(m.real_wind ? "ลม (ERA5)" : "ลม");
+  (m.real_chl ? real : sim).push(m.real_chl ? "CHL-a (ดาวเทียม NOAA)" : "CHL-a");
+  if(!real.length) return "";
+  return `<br><b>ข้อมูลจริง:</b> ${real.join(", ")} · <b>ยังเป็นค่าจำลอง:</b> ${sim.concat(["logbook และการตอบสนองของสัตว์น้ำ"]).join(", ")}`;
+}
+
 window.ensureEcocast = function(){
   if(eco){
     ecoMap.invalidateSize();
@@ -2345,10 +2355,7 @@ function initEcocast(data){
     document.getElementById("ecoStatYear").textContent = Number(m.test_year) + 543;
     document.getElementById("ecoStatYearSub").textContent = `${(m.test_sets || 0).toLocaleString()} sets · ไม่ได้ใช้ฝึกโมเดล`;
   }
-  if(m.real_sst){
-    document.getElementById("ecoNotice").insertAdjacentHTML("beforeend",
-      "<br><b>SST จริง:</b> อุณหภูมิผิวน้ำทะเลในรอบนี้มาจาก NOAA OISST v2.1 รายวัน (ข้อมูลจริง) ส่วน CHL-a, ลม และการตอบสนองของสัตว์น้ำยังเป็นค่าจำลอง");
-  }
+  document.getElementById("ecoNotice").insertAdjacentHTML("beforeend", ecoRealDataNote(m));
   document.getElementById("ecoStatSkill").textContent = m.ecocast_skill === null ? "—" : m.ecocast_skill.toFixed(2);
   document.getElementById("ecoStatSpecies").textContent = `${inScore.length}/${data.species.length}`;
   document.getElementById("ecoMinPos").textContent = m.min_positives_score;
@@ -2605,10 +2612,7 @@ function initForecast(data){
     o.textContent = `${s.name_th} (${s.name_en})`;
     spSel.appendChild(o);
   });
-  if(data.meta.real_sst){
-    document.getElementById("fcNotice").insertAdjacentHTML("beforeend",
-      "<br><b>SST จริง:</b> อุณหภูมิผิวน้ำทะเลมาจาก NOAA OISST v2.1 รายวัน ส่วน CHL-a และลมยังเป็นค่าจำลอง");
-  }
+  document.getElementById("fcNotice").insertAdjacentHTML("beforeend", ecoRealDataNote(data.meta));
 
   fcMap = L.map("forecastMap", { zoomControl:true }).setView([8.9, 100.6], 7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {

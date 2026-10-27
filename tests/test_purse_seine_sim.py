@@ -140,6 +140,7 @@ class EnvironmentTest(unittest.TestCase):
             self.assertAlmostEqual(s["sst_anom"][0], 1.7, places=6)
             self.assertAlmostEqual(s["chl"][0], 2.0, places=6)
             self.assertGreater(s["wind"][0], 5.0)      # monthly level 9 m/s plus the analytic gust anomaly
+            self.assertGreater(env.wind(8.0, 101.0, to_unix_days("2024-03-20")), 5.0)   # scalar path used by the fleet
             far = env.sample([8.0], [101.0], to_unix_days("2024-09-20"))   # outside the monthly cube
             self.assertNotAlmostEqual(far["chl"][0], 2.0, places=3)
 

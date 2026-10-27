@@ -16,11 +16,14 @@ METRIC_COLS = ["species_code", "group", "train_sets", "train_positives", "test_s
 
 
 HOLDOUT_MONTHS = 3      # with only one year of data, the last 3 months are held out instead
+STRAY_YEAR_FRACTION = 0.05   # a year with fewer sets than this share of the busiest year is not a test year
 
 
 def split_by_year(ds, test_year=None):
     """Held-out year; with a single year, the last HOLDOUT_MONTHS months. Returns train, test, test months."""
-    years = sorted(set(ds.year.tolist()))
+    # Ignore stray years (e.g. a trip that runs past 31 Dec leaves a few sets in the next year).
+    counts = {y: int((ds.year == y).sum()) for y in set(ds.year.tolist())}
+    years = sorted(y for y, n in counts.items() if n >= STRAY_YEAR_FRACTION * max(counts.values()))
     if len(years) < 2:
         ym = (ds.time // 1).astype("int64").astype("datetime64[D]").astype("datetime64[M]")
         months = sorted(set(ym.tolist()))

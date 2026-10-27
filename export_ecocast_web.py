@@ -158,6 +158,8 @@ def main():
     skill = [s for s in skill if s is not None]
     summary_path = data_dir / "summary.json"
     sim_summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}
+    cfg_path = data_dir / "config_used.json"
+    env_cfg = json.loads(cfg_path.read_text(encoding="utf-8")).get("env", {}) if cfg_path.exists() else {}
     holdout_path = model_dir / "holdout.json"
     holdout = json.loads(holdout_path.read_text(encoding="utf-8")) if holdout_path.exists() else {}
     train_sets = num(next(iter(metrics.values())).get("train_sets"))
@@ -171,9 +173,9 @@ def main():
             "train_sets": train_sets, "test_sets": test_sets,
             "test_year": str(holdout["test_year"]) if holdout.get("test_year") else months[0][:4],
             "test_months": holdout.get("test_months"),
-            "real_sst": (data_dir / "config_used.json").exists()
-                        and bool(json.loads((data_dir / "config_used.json").read_text(encoding="utf-8"))
-                                 .get("env", {}).get("sst_override_npz")),
+            "real_sst": bool(env_cfg.get("sst_override_npz")),
+            "real_chl": bool(env_cfg.get("chl_override_npz")),
+            "real_wind": bool(env_cfg.get("wind_override_npz")),
             "ecocast_skill": float(np.mean(skill)) if skill else None,
             "footprint_km": 40,
             "weights": {"revenue": 0.40, "RHIN_TYP": 0.15, "MOBU_SPP": 0.10, "CARC_SPP": 0.15,

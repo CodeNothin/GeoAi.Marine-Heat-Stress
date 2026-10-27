@@ -113,7 +113,7 @@ class GriddedField:
 
     def __call__(self, lat, lon, t, key=None):
         cube = self.values if key is None else self.extra.get(key)
-        lat, lon, t = (np.asarray(v, float) for v in (lat, lon, t))
+        lat, lon, t = np.broadcast_arrays(*(np.asarray(v, float) for v in (lat, lon, t)))
         out = np.full(lat.shape, np.nan)
         if cube is None:
             return out

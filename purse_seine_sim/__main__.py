@@ -24,6 +24,9 @@ def main(argv=None):
     p.add_argument("--no-track", action="store_true", help="skip track.csv (much smaller output)")
     p.add_argument("--no-maps", action="store_true", help="skip monthly truth maps")
     p.add_argument("--plots", action="store_true", help="write quick-look PNGs (needs matplotlib)")
+    p.add_argument("--sst-npz", help="real daily SST cube (from fetch_env_data.py) instead of the analytic SST")
+    p.add_argument("--chl-npz", help="real CHL-a cube instead of the analytic CHL-a")
+    p.add_argument("--wind-npz", help="real monthly wind cube (ERA5) instead of the analytic wind level")
     p.add_argument("--bycatch-avoidance", type=float, help="skipper avoids ETP hotspots (0 = status quo)")
     p.add_argument("--write-spec", metavar="PATH", help="write the data specification markdown and exit")
     p.add_argument("--validate", metavar="DIR", help="validate a folder of real or simulated data and exit")
@@ -53,6 +56,12 @@ def main(argv=None):
         cfg.track_ping_min = a.ping_min
     if a.no_track:
         cfg.write_track = False
+    if a.sst_npz:
+        cfg.env.sst_override_npz = a.sst_npz
+    if a.chl_npz:
+        cfg.env.chl_override_npz = a.chl_npz
+    if a.wind_npz:
+        cfg.env.wind_override_npz = a.wind_npz
     if a.bycatch_avoidance is not None:
         cfg.fleet.bycatch_avoidance = a.bycatch_avoidance
     run_simulation(cfg, a.out, write_maps=not a.no_maps, plots=a.plots)

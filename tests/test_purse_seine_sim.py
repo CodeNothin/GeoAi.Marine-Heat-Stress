@@ -123,6 +123,26 @@ class EnvironmentTest(unittest.TestCase):
             self.assertAlmostEqual(inside, 31.5, places=6)
             self.assertNotAlmostEqual(outside, 31.5, places=2)
 
+    def test_chl_wind_and_anomaly_override(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lat, lon = np.arange(6.0, 12.01, 0.25), np.arange(99.0, 102.51, 0.25)
+            shape = (2, lat.size, lon.size)
+            month = np.array([np.datetime64("2024-03-15"), np.datetime64("2024-04-15")])
+            np.savez(Path(tmp) / "sst.npz", time=month, lat=lat, lon=lon,
+                     sst=np.full(shape, 30.0), sst_anom=np.full(shape, 1.7))
+            np.savez(Path(tmp) / "chl.npz", time=month, lat=lat, lon=lon, chl=np.full(shape, 2.0))
+            np.savez(Path(tmp) / "wind.npz", time=month, lat=lat, lon=lon, wind=np.full(shape, 9.0))
+            cfg = SimConfig.from_dict({"env": {"sst_override_npz": str(Path(tmp) / "sst.npz"),
+                                               "chl_override_npz": str(Path(tmp) / "chl.npz"),
+                                               "wind_override_npz": str(Path(tmp) / "wind.npz")}})
+            env = Environment(cfg, Geography(cfg.region, np.random.default_rng(0)), np.random.default_rng(1))
+            s = env.sample([8.0], [101.0], to_unix_days("2024-03-20"))
+            self.assertAlmostEqual(s["sst_anom"][0], 1.7, places=6)
+            self.assertAlmostEqual(s["chl"][0], 2.0, places=6)
+            self.assertGreater(s["wind"][0], 5.0)      # monthly level 9 m/s plus the analytic gust anomaly
+            far = env.sample([8.0], [101.0], to_unix_days("2024-09-20"))   # outside the monthly cube
+            self.assertNotAlmostEqual(far["chl"][0], 2.0, places=3)
+
     def test_unknown_config_key_rejected(self):
         with self.assertRaises(KeyError):
             SimConfig.from_dict({"fleet": {"n_vesels": 3}})

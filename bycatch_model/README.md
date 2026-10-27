@@ -41,6 +41,46 @@ Protected-species layers with fewer than **40 sets with a catch** in the trainin
 of the score (`MIN_POSITIVES_SCORE`), because the power analysis shows their maps are noise. In the
 10-vessel run this raised the score's agreement with the truth from 0.49 to 0.56.
 
+## One-month-ahead forecast
+
+```bash
+python -m bycatch_model forecast --data sim_output --out forecast_output
+python export_forecast_web.py --forecast forecast_output --data sim_output
+```
+
+`bycatch_model/forecast.py` predicts next month's P(caught) per species using only what is known at
+the end of the current month: last month's SST, SST anomaly, CHL-a and wind at the cell, the heat
+accumulated over the last 3 months (sum of positive SST anomaly, a monthly stand-in for degree heating
+weeks), the change in anomaly, static habitat, and the seasonal cycle of the target month (dropped
+when there is less than a year of training data, because it cannot be learned from part of a year).
+
+- **Rolling validation:** for each month M, train on every set before M, forecast M, score against the
+  sets fished in M (AUC, Brier) and against the true density map (simulations only).
+- **Baselines:** *persistence* (catch rate within ~30 km last month) and *climatology* (same calendar
+  month in earlier years). The forecast is only worth showing where it beats both.
+- **Heat terms** (heat accumulation and anomaly change) are kept for a species only if they lower the
+  Brier score by at least 0.5% compared with the same model without them.
+- **Upcoming month:** a final model on all data forecasts the month after the last grid, with an
+  uncertainty layer from refits on resampled trips (`--bootstrap`, default 10).
+- **Response curves:** `response_curves.json` and `plots/response_curves.png` show how the odds of a
+  catch change with each heat/climate input.
+
+The web export averages the 0.05 deg maps onto 0.25 deg cells (the OISST/ERA5 resolution) and the
+**Forecast** tab draws them smoothed, as a cloud map.
+
+## Real ocean data
+
+`fetch_env_data.py` (repo root) cuts the area of interest out of real data:
+NOAA OISST v2.1 daily SST (ERDDAP download, or already-downloaded PSL `sst.day.mean.YYYY.nc` files via
+`--oisst-nc`), monthly satellite CHL-a (ERDDAP), and ERA5 monthly 10 m wind (`--era5`, needs a CDS key).
+The simulator then runs on those fields (`--sst-npz`, `--chl-npz`, `--wind-npz`), so the training data,
+the maps and the forecast all see the real ocean. Fish behaviour and the logbooks stay simulated.
+`real_env/sst_daily.npz` holds the 2024 OISST cut-out. Without the PSL long-term-mean file
+(`--oisst-ltm`) the SST anomaly is measured against the simulator's assumed climatology.
+
+With a single year of data, `train` holds out the last 3 months instead of a year and still maps
+every month.
+
 ## Website
 
 `python export_ecocast_web.py` turns `model_output/maps/*.npz` into `ecocast_data.js`. The

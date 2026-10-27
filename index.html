@@ -747,6 +747,23 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 }
 .eco-opacity{width:110px}
 
+/* ---------- Forecast page ---------- */
+#forecastMap{
+  height:600px;
+  width:100%;
+  border-radius:7px;
+  border:1px solid var(--border);
+  overflow:hidden;
+  background:#d8ecf7;
+}
+.fc-cloud{filter:blur(5px)}
+.fc-skill td:not(:first-child),.fc-skill th:not(:first-child){text-align:right;font-family:var(--font-num)}
+.fc-best{font-weight:900;color:var(--teal)}
+.fc-chart-wrap{position:relative;height:230px}
+@media(max-width:1100px){
+  #forecastMap{height:480px}
+}
+
 @media(max-width:1100px){
   .ecocast-layout{grid-template-columns:1fr}
   #ecocastMap{height:480px}
@@ -787,6 +804,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     <div class="nav-tab active" onclick="showPage('home',this)">ภาพรวม</div>
     <div class="nav-tab" onclick="showPage('map',this)">แผนที่ GeoAI</div>
     <div class="nav-tab" onclick="showPage('ecocast',this)">EcoCast · Bycatch</div>
+    <div class="nav-tab" onclick="showPage('forecast',this)">พยากรณ์ปลา · Forecast</div>
     <div class="nav-tab" onclick="showPage('pipeline',this)">Real Data Pipeline</div>
     <div class="nav-tab" onclick="showPage('profile',this)">ข้อมูลรายจังหวัด</div>
     <div class="nav-tab" onclick="showPage('alert',this)">จัดอันดับความเสี่ยง</div>
@@ -938,7 +956,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     แล้วรวมเป็นคะแนนเดียวแบบ NOAA EcoCast: <b style="color:#2166ac">บวก = จับปลาได้ดีและ bycatch ต่ำ</b> · <b style="color:#b2182b">ลบ = พื้นที่เสี่ยง bycatch</b>
   </div>
 
-  <div class="notice">
+  <div class="notice" id="ecoNotice">
     <b>ข้อมูลจำลอง (simulated):</b> โมเดลในหน้านี้ฝึกจาก logbook เรือจำลอง (<code>purse_seine_sim</code>) เพื่อพิสูจน์ workflow
     ค่าพารามิเตอร์ชนิดสัตว์น้ำ ราคา และน้ำหนักคะแนนเป็นค่าสมมติ ยังไม่ใช่ผลจริงของอ่าวไทย เมื่อได้ logbook จริงจากเรือ ให้รัน pipeline เดิมแล้ว export ใหม่
   </div>
@@ -989,6 +1007,63 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     <div class="grid-note">
       <b>Test AUC</b> = ความแม่นในการแยก set ที่จับได้/จับไม่ได้ในปีทดสอบ (0.5 = เดาสุ่ม) · <b>เพดาน</b> = AUC สูงสุดที่ทำได้ถ้ารู้ความน่าจะเป็นจริง (การจับมีโชคช่วยเสมอ) ·
       <b>Map ρ</b> = ความสอดคล้องของแผนที่ทำนายกับความหนาแน่นจริงในตัวจำลอง · ชนิดสัตว์คุ้มครองที่มี set ที่จับได้ในข้อมูลฝึกน้อยกว่า <span id="ecoMinPos">40</span> ครั้ง ไม่ถูกใช้ในคะแนน EcoCast
+    </div>
+  </div>
+</section>
+
+<section id="page-forecast" class="page">
+  <div class="section-title">พยากรณ์การกระจายตัวของปลาเดือนถัดไป · One-month-ahead Forecast</div>
+  <div class="section-sub">
+    ใช้สภาพทะเลของเดือนที่ผ่านมา (SST, ค่าผิดปกติของ SST, ความร้อนสะสม 3 เดือน, CHL-a, ลม) ทำนายโอกาสจับได้ของแต่ละชนิดในเดือนถัดไป
+    แสดงเป็นแผนที่หยาบ 0.25° แบบ "เมฆ" ตามความละเอียดของข้อมูลดาวเทียม ไม่ใช่ค่ารายช่องที่แม่นยำ
+  </div>
+  <div class="notice" id="fcNotice">
+    <b>ข้อมูลจำลอง (simulated):</b> logbook และการตอบสนองของสัตว์น้ำต่อสภาพแวดล้อมยังเป็นค่าสมมติจากตัวจำลอง
+    โมเดลจึงเรียนรู้ความสัมพันธ์ที่เราสมมติไว้ ใช้ทดสอบ pipeline ไม่ใช่ข้อค้นพบทางชีววิทยา
+  </div>
+  <div class="eco-error" id="fcError"></div>
+
+  <div class="ecocast-layout">
+    <div class="card">
+      <div class="card-title">แผนที่พยากรณ์ · Forecast cloud map</div>
+      <div class="controls">
+        <label for="fcMonthSelect">เดือน:</label>
+        <select id="fcMonthSelect" onchange="renderForecast()"></select>
+        <label for="fcSpeciesSelect">ชนิด:</label>
+        <select id="fcSpeciesSelect" onchange="renderForecast()"></select>
+        <label for="fcViewSelect">แสดง:</label>
+        <select id="fcViewSelect" onchange="renderForecast()">
+          <option value="forecast">ค่าพยากรณ์ (โอกาสจับได้)</option>
+          <option value="truth">ค่าจริงในตัวจำลอง</option>
+          <option value="sd">ความไม่แน่นอน (เดือนล่วงหน้า)</option>
+        </select>
+      </div>
+      <div id="forecastMap"></div>
+      <div class="eco-legend">
+        <div class="eco-legend-bar" id="fcLegendBar"></div>
+        <div class="eco-legend-labels"><span id="fcLegendMin">—</span><span id="fcLegendMax">—</span></div>
+        <div class="eco-legend-note" id="fcLegendNote">—</div>
+      </div>
+    </div>
+
+    <div class="eco-side">
+      <div class="card">
+        <div class="card-title">ความแม่นของการพยากรณ์ · <span id="fcSkillName">—</span></div>
+        <table class="table fc-skill" id="fcSkillTable"></table>
+        <div class="grid-note">
+          ทดสอบแบบเดินหน้าทีละเดือน: ฝึกด้วยข้อมูลก่อนเดือนนั้นเท่านั้น แล้วเทียบกับ set ที่จับจริง ·
+          <b>คงที่</b> = ใช้อัตราการจับเดือนก่อน · <b>ค่าเฉลี่ยฤดู</b> = อัตราการจับเดือนเดียวกันของปีก่อน ·
+          AUC สูงดี, Brier ต่ำดี
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">ความสัมพันธ์กับสภาพทะเล · Response curve</div>
+        <div class="controls" style="margin-bottom:.4rem">
+          <select id="fcCurveSelect" onchange="renderForecastCurve()"></select>
+        </div>
+        <div class="fc-chart-wrap"><canvas id="fcCurveChart"></canvas></div>
+        <div class="grid-note">แกนตั้ง = โอกาสจับได้เพิ่มขึ้นกี่เท่า (odds) เมื่อค่านี้เปลี่ยน โดยตัวแปรอื่นคงที่ · เส้นประ = ไม่มีผล</div>
+      </div>
     </div>
   </div>
 </section>
@@ -1336,6 +1411,10 @@ window.showPage = function(id, tab){
 
   if(id === "ecocast"){
     setTimeout(ensureEcocast, 80);
+  }
+
+  if(id === "forecast"){
+    setTimeout(ensureForecast, 80);
   }
 
   if(id === "profile"){
@@ -2256,8 +2335,20 @@ function initEcocast(data){
   document.getElementById("ecoStatTrain").textContent = (m.train_sets || 0).toLocaleString();
   document.getElementById("ecoStatTrainSub").textContent =
     `sets จากเรือ ${m.n_vessels ?? "?"} ลำ` + (m.simulated ? " (จำลอง)" : "");
-  document.getElementById("ecoStatYear").textContent = Number(m.test_year) + 543;
-  document.getElementById("ecoStatYearSub").textContent = `${(m.test_sets || 0).toLocaleString()} sets · ไม่ได้ใช้ฝึกโมเดล`;
+  if(m.test_months && m.test_months.length){
+    const first = m.test_months[0], last = m.test_months[m.test_months.length - 1];
+    document.getElementById("ecoStatYear").textContent =
+      `${ECO_TH_MONTHS[Number(first.slice(5)) - 1]}–${ECO_TH_MONTHS[Number(last.slice(5)) - 1]} ${Number(last.slice(0, 4)) + 543}`;
+    document.getElementById("ecoStatYearSub").textContent =
+      `${(m.test_sets || 0).toLocaleString()} sets · มีข้อมูลปีเดียว จึงกันเดือนท้ายไว้ทดสอบ`;
+  } else {
+    document.getElementById("ecoStatYear").textContent = Number(m.test_year) + 543;
+    document.getElementById("ecoStatYearSub").textContent = `${(m.test_sets || 0).toLocaleString()} sets · ไม่ได้ใช้ฝึกโมเดล`;
+  }
+  if(m.real_sst){
+    document.getElementById("ecoNotice").insertAdjacentHTML("beforeend",
+      "<br><b>SST จริง:</b> อุณหภูมิผิวน้ำทะเลในรอบนี้มาจาก NOAA OISST v2.1 รายวัน (ข้อมูลจริง) ส่วน CHL-a, ลม และการตอบสนองของสัตว์น้ำยังเป็นค่าจำลอง");
+  }
   document.getElementById("ecoStatSkill").textContent = m.ecocast_skill === null ? "—" : m.ecocast_skill.toFixed(2);
   document.getElementById("ecoStatSpecies").textContent = `${inScore.length}/${data.species.length}`;
   document.getElementById("ecoMinPos").textContent = m.min_positives_score;
@@ -2454,6 +2545,204 @@ function ecoCellPopup(e){
       <table style="margin-top:.4rem">${lines}</table></div>`;
   }
   L.popup().setLatLng(e.latlng).setContent(html).openOn(ecoMap);
+}
+
+/* ---------- Forecast Page ---------- */
+/* Data: forecast_data.js, generated by export_forecast_web.py from bycatch_model.forecast. */
+let fcMap = null, fcOverlay = null, fc = null, fcLoading = false, fcChart = null;
+const FC_TERMS = {
+  sst_anom_l1: "ค่าผิดปกติ SST เดือนก่อน (°C)",
+  heat_3m: "ความร้อนสะสม 3 เดือน (°C·เดือน)",
+  anom_trend: "การเปลี่ยนของค่าผิดปกติ SST (°C)",
+  sst_l1: "SST เดือนก่อน (°C)",
+  log10chl_l1: "log10 CHL-a เดือนก่อน",
+  wind_l1: "ลมเดือนก่อน (ม./วินาที)"
+};
+const FC_METHODS = [["forecast", "โมเดลพยากรณ์"], ["persistence", "คงที่ (เดือนก่อน)"], ["climatology", "ค่าเฉลี่ยฤดู"]];
+
+window.ensureForecast = function(){
+  if(fc){
+    fcMap.invalidateSize();
+    renderForecast();
+    return;
+  }
+  if(window.FORECAST_DATA){
+    initForecast(window.FORECAST_DATA);
+    return;
+  }
+  if(fcLoading) return;
+  fcLoading = true;
+  const s = document.createElement("script");
+  s.src = "forecast_data.js";
+  s.onload = () => {
+    fcLoading = false;
+    if(window.FORECAST_DATA) initForecast(window.FORECAST_DATA);
+  };
+  s.onerror = () => {
+    fcLoading = false;
+    const box = document.getElementById("fcError");
+    box.style.display = "block";
+    box.innerHTML = "โหลด <code>forecast_data.js</code> ไม่สำเร็จ ให้สร้างใหม่ด้วย <code>python export_forecast_web.py</code>";
+  };
+  document.body.appendChild(s);
+};
+
+function initForecast(data){
+  fc = {data, grid:data.grid, species:Object.fromEntries(data.species.map(s => [s.code, s]))};
+  const up = data.meta.upcoming_month;
+  const monthSel = document.getElementById("fcMonthSelect");
+  data.months.forEach(m => {
+    const o = document.createElement("option");
+    o.value = m;
+    o.textContent = ecoMonthLabel(m) + (m === up ? " · พยากรณ์ล่วงหน้า" : "");
+    if(m === up) o.selected = true;
+    monthSel.appendChild(o);
+  });
+  const spSel = document.getElementById("fcSpeciesSelect");
+  data.species.forEach(s => {
+    const o = document.createElement("option");
+    o.value = s.code;
+    o.textContent = `${s.name_th} (${s.name_en})`;
+    spSel.appendChild(o);
+  });
+  if(data.meta.real_sst){
+    document.getElementById("fcNotice").insertAdjacentHTML("beforeend",
+      "<br><b>SST จริง:</b> อุณหภูมิผิวน้ำทะเลมาจาก NOAA OISST v2.1 รายวัน ส่วน CHL-a และลมยังเป็นค่าจำลอง");
+  }
+
+  fcMap = L.map("forecastMap", { zoomControl:true }).setView([8.9, 100.6], 7);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:12,
+    attribution:"&copy; OpenStreetMap contributors"
+  }).addTo(fcMap);
+  const g = data.grid, half = g.res / 2;
+  fc.bounds = [[g.lat0 - half, g.lon0 - half], [g.lat0 + (g.nlat - 1) * g.res + half, g.lon0 + (g.nlon - 1) * g.res + half]];
+  fcMap.fitBounds(fc.bounds, {padding:[10,10]});
+  fcMap.on("click", fcCellPopup);
+  renderForecast();
+}
+
+function fcValues(sp, view, month){
+  const src = sp[view] && sp[view][month];
+  if(!src) return null;
+  const q = ecoB64(src);
+  const vmax = view === "forecast" ? sp.vmax : view === "truth" ? sp.tmax : sp.smax;
+  return Array.from(q, v => v === 255 ? NaN : (v / 254) * vmax);
+}
+
+window.renderForecast = function(){
+  if(!fc) return;
+  const month = document.getElementById("fcMonthSelect").value;
+  const sp = fc.species[document.getElementById("fcSpeciesSelect").value];
+  const view = document.getElementById("fcViewSelect").value;
+  const g = fc.grid;
+  const vals = fcValues(sp, view, month);
+  const vmax = view === "forecast" ? sp.vmax : view === "truth" ? sp.tmax : sp.smax;
+  const cmap = view === "sd" ? "risk" : "sequential";
+
+  const canvas = document.createElement("canvas");
+  canvas.width = g.nlon;
+  canvas.height = g.nlat;
+  const ctx = canvas.getContext("2d");
+  const img = ctx.createImageData(g.nlon, g.nlat);
+  if(vals){
+    for(let row = 0; row < g.nlat; row++){
+      for(let col = 0; col < g.nlon; col++){
+        const v = vals[row * g.nlon + col];
+        if(Number.isNaN(v)) continue;
+        const t = Math.min(v / vmax, 1);
+        const c = ecoColor(cmap, t);
+        // Low values fade out so the high-probability areas read as clouds.
+        img.data.set([c[0], c[1], c[2], Math.round(40 + 200 * Math.sqrt(t))], ((g.nlat - 1 - row) * g.nlon + col) * 4);
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const url = canvas.toDataURL();
+  if(fcOverlay) fcOverlay.setUrl(url);
+  else fcOverlay = L.imageOverlay(url, fc.bounds, {opacity:0.85, className:"fc-cloud"}).addTo(fcMap);
+
+  const fmt = v => view === "truth" ? (v / sp.tmax).toFixed(2) : (v * 100).toFixed(0) + "%";
+  document.getElementById("fcLegendBar").style.background = `linear-gradient(to right, ${ECO_CMAPS[cmap].join(",")})`;
+  document.getElementById("fcLegendMin").textContent = view === "truth" ? "0" : "0%";
+  document.getElementById("fcLegendMax").textContent = view === "truth" ? "สูงสุด" : fmt(vmax) + "+";
+  const viewNote = {
+    forecast: "โอกาสที่การล้อมอวนฝูงปลาอิสระ 1 ครั้งจะจับชนิดนี้ได้",
+    truth: "ความหนาแน่นจริงในตัวจำลอง (ใช้ตรวจความแม่นเท่านั้น ข้อมูลจริงจะไม่มีชั้นนี้)",
+    sd: `ความไม่แน่นอน = ส่วนเบี่ยงเบนของค่าพยากรณ์จากการฝึกซ้ำ ${fc.data.meta.n_boot} รอบ (สุ่มเที่ยวเรือ)`
+  }[view];
+  document.getElementById("fcLegendNote").textContent = vals
+    ? `${viewNote} · ${ecoMonthLabel(month)} · ช่อง 0.25°`
+    : (view === "sd" ? "ความไม่แน่นอนมีเฉพาะเดือนพยากรณ์ล่วงหน้า" : "เดือนพยากรณ์ล่วงหน้ายังไม่มีค่าจริงให้เทียบ");
+
+  renderForecastSkill(sp);
+  renderForecastCurveOptions(sp);
+};
+
+function renderForecastSkill(sp){
+  document.getElementById("fcSkillName").textContent = sp.name_th;
+  const rows = FC_METHODS.filter(([k]) => sp.skill[k]).map(([k, label]) => ({k, label, ...sp.skill[k]}));
+  const bestAuc = Math.max(...rows.map(r => r.auc ?? -1));
+  const bestBrier = Math.min(...rows.map(r => r.brier ?? 9));
+  document.getElementById("fcSkillTable").innerHTML =
+    `<tr><th>วิธี</th><th>AUC</th><th>Brier</th><th>Map ρ</th></tr>` +
+    rows.map(r => `<tr><td>${r.label}</td>
+      <td class="${r.auc === bestAuc ? "fc-best" : ""}">${ecoNum(r.auc, 2)}</td>
+      <td class="${r.brier === bestBrier ? "fc-best" : ""}">${ecoNum(r.brier, 3)}</td>
+      <td>${ecoNum(r.map_rho, 2)}</td></tr>`).join("") +
+    `<tr><td colspan="4" style="font-size:12px;color:var(--muted)">ตัวแปรความร้อน (ความร้อนสะสม, แนวโน้ม): ${sp.heat_terms_kept ? "ใช้ เพราะช่วยลด Brier ≥0.5%" : "ไม่ใช้ เพราะไม่ช่วยให้แม่นขึ้น"}</td></tr>`;
+}
+
+function renderForecastCurveOptions(sp){
+  const sel = document.getElementById("fcCurveSelect");
+  const prev = sel.value;
+  sel.innerHTML = Object.keys(FC_TERMS).filter(t => sp.curves[t])
+    .map(t => `<option value="${t}">${FC_TERMS[t]}</option>`).join("");
+  if([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  renderForecastCurve();
+}
+
+window.renderForecastCurve = function(){
+  const sp = fc.species[document.getElementById("fcSpeciesSelect").value];
+  const term = document.getElementById("fcCurveSelect").value;
+  const c = sp.curves[term];
+  if(fcChart) fcChart.destroy();
+  if(!c) return;
+  fcChart = new Chart(document.getElementById("fcCurveChart"), {
+    type:"line",
+    data:{
+      labels:c.x.map(v => v.toFixed(2)),
+      datasets:[
+        {data:c.odds, borderColor:"#21918c", borderWidth:2, pointRadius:0, tension:.3},
+        {data:c.x.map(() => 1), borderColor:"#999", borderDash:[4,4], borderWidth:1, pointRadius:0}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{legend:{display:false}, tooltip:{filter:i => i.datasetIndex === 0,
+        callbacks:{label:i => `×${i.parsed.y.toFixed(2)}`}}},
+      scales:{
+        x:{title:{display:true, text:FC_TERMS[term]}, ticks:{maxTicksLimit:6}},
+        y:{type:"logarithmic", title:{display:true, text:"odds ×"}}
+      }
+    }
+  });
+};
+
+function fcCellPopup(e){
+  const g = fc.grid;
+  const row = Math.round((e.latlng.lat - g.lat0) / g.res);
+  const col = Math.round((e.latlng.lng - g.lon0) / g.res);
+  if(row < 0 || row >= g.nlat || col < 0 || col >= g.nlon) return;
+  const month = document.getElementById("fcMonthSelect").value;
+  const lines = fc.data.species.map(sp => {
+    const v = fcValues(sp, "forecast", month);
+    const x = v ? v[row * g.nlon + col] : NaN;
+    return `<tr><td>${sp.name_th}</td><td>${Number.isNaN(x) ? "—" : (x * 100).toFixed(0) + "%"}</td></tr>`;
+  }).join("");
+  L.popup().setLatLng(e.latlng).setContent(
+    `<div class="eco-popup"><b>${e.latlng.lat.toFixed(2)}°N, ${e.latlng.lng.toFixed(2)}°E</b> · ${ecoMonthLabel(month)}<br>
+     โอกาสจับได้ต่อการล้อมอวน 1 ครั้ง (ช่อง 0.25°)<table style="margin-top:.4rem">${lines}</table></div>`).openOn(fcMap);
 }
 
 /* ---------- Start ---------- */

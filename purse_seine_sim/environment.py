@@ -90,15 +90,15 @@ def local_day_of(t) -> int:
 # OPTIONAL REAL SST
 # =========================
 
-class GriddedSST:
-    """Bilinear lookup in a real SST cube (e.g. exported from the OISST notebook).
+class GriddedField:
+    """Bilinear lookup in a real gridded cube (e.g. NOAA OISST, CHL-a or ERA5 wind).
 
-    npz keys: time (unix days or datetime64), lat (ascending), lon (ascending),
-    sst[time, lat, lon] in deg C. Returns NaN outside the cube or on land so the
-    analytic field is used as fallback.
+    npz keys: time (unix days or datetime64), lat (ascending), lon (ascending) and
+    `key`[time, lat, lon]. Returns NaN outside the cube or on land so the analytic
+    field is used as fallback.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, key="sst"):
         data = np.load(path)
         time = data["time"]
         if np.issubdtype(time.dtype, np.datetime64):
@@ -106,10 +106,17 @@ class GriddedSST:
         self.time = np.asarray(time, float)
         self.lat = np.asarray(data["lat"], float)
         self.lon = np.asarray(data["lon"], float)
-        self.sst = np.asarray(data["sst"], float)
+        self.values = np.asarray(data[key], float)
+        self.extra = {k: np.asarray(data[k], float) for k in data.files
+                      if k not in ("time", "lat", "lon", key) and data[k].shape == self.values.shape}
+        self.max_gap = max(float(np.median(np.diff(self.time))), 1.0) if len(self.time) > 1 else 1.0
 
-    def __call__(self, lat, lon, t):
+    def __call__(self, lat, lon, t, key=None):
+        cube = self.values if key is None else self.extra.get(key)
         lat, lon, t = (np.asarray(v, float) for v in (lat, lon, t))
+        out = np.full(lat.shape, np.nan)
+        if cube is None:
+            return out
         # Nearest time step.
         if len(self.time) == 1:
             k = np.zeros(t.shape, int)
@@ -118,17 +125,24 @@ class GriddedSST:
             k = np.where(np.abs(t - self.time[hi - 1]) <= np.abs(self.time[hi] - t), hi - 1, hi)
         fi = np.interp(lat, self.lat, np.arange(len(self.lat)), left=np.nan, right=np.nan)
         fj = np.interp(lon, self.lon, np.arange(len(self.lon)), left=np.nan, right=np.nan)
-        out = np.full(lat.shape, np.nan)
-        ok = np.isfinite(fi) & np.isfinite(fj) & (t >= self.time[0] - 1) & (t <= self.time[-1] + 1)
+        pad = self.max_gap
+        ok = np.isfinite(fi) & np.isfinite(fj) & (t >= self.time[0] - pad) & (t <= self.time[-1] + pad)
         if ok.any():
             i0 = np.clip(np.floor(fi[ok]).astype(int), 0, len(self.lat) - 2)
             j0 = np.clip(np.floor(fj[ok]).astype(int), 0, len(self.lon) - 2)
             wi, wj = fi[ok] - i0, fj[ok] - j0
             kk = k[ok]
-            c = self.sst
+            c = cube
             out[ok] = ((1 - wi) * (1 - wj) * c[kk, i0, j0] + wi * (1 - wj) * c[kk, i0 + 1, j0]
                        + (1 - wi) * wj * c[kk, i0, j0 + 1] + wi * wj * c[kk, i0 + 1, j0 + 1])
         return out
+
+
+class GriddedSST(GriddedField):
+    """Real SST cube; an optional `sst_anom` array of the same shape is used as the observed anomaly."""
+
+    def __init__(self, path):
+        super().__init__(path, "sst")
 
 
 # =========================
@@ -169,6 +183,8 @@ class Environment:
         self._storms = np.array(storms, float).reshape(-1, 3)
 
         self.sst_override = GriddedSST(ec.sst_override_npz) if ec.sst_override_npz else None
+        self.chl_override = GriddedField(ec.chl_override_npz, "chl") if ec.chl_override_npz else None
+        self.wind_override = GriddedField(ec.wind_override_npz, "wind") if ec.wind_override_npz else None
 
     # ---------- components ----------
 
@@ -200,7 +216,9 @@ class Environment:
         if self.sst_override is not None:
             obs = self.sst_override(lat, lon, t)
             sst = np.where(np.isfinite(obs), obs, sst)
-            anom = sst - clim
+            # Prefer the observed anomaly (e.g. OISST vs its own 1971-2000 climatology) when supplied.
+            obs_anom = self.sst_override(lat, lon, t, key="sst_anom")
+            anom = np.where(np.isfinite(obs_anom), obs_anom, sst - clim)
         return sst, clim, anom
 
     def _log10chl(self, lat, lon, t, dist, x, y, sst_anom):
@@ -210,15 +228,26 @@ class Environment:
         for _, rlat, rlon, strength in RIVER_MOUTHS:
             d = distance_km(lat, lon, rlat, rlon)
             plume += 0.6 * strength * runoff * np.exp(-(d / 45.0) ** 2)
-        return (-0.55 + 0.9 * np.exp(-dist / 30.0) + plume
-                + 0.12 * np.cos(2 * np.pi * (fy - 15.0 / 365.25))          # monsoon mixing peak ~Jan
-                - 0.12 * sst_anom                                            # heatwaves suppress productivity
-                + self.chl_meso(x, y, t))
+        out = (-0.55 + 0.9 * np.exp(-dist / 30.0) + plume
+               + 0.12 * np.cos(2 * np.pi * (fy - 15.0 / 365.25))          # monsoon mixing peak ~Jan
+               - 0.12 * sst_anom                                            # heatwaves suppress productivity
+               + self.chl_meso(x, y, t))
+        if self.chl_override is not None:
+            obs = self.chl_override(lat, lon, t)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                obs = np.where(obs > 0, np.log10(obs), np.nan)
+            out = np.where(np.isfinite(obs), obs, out)
+        return out
 
-    def _wind(self, t, dist, x, y):
+    def _wind(self, t, dist, x, y, lat=None, lon=None):
         offshore = 1.0 - np.exp(-dist / 60.0)
         w = (monthly_interp(WIND_CLIM_MONTHLY_MS, t) * (0.85 + 0.3 * offshore)
              + self.wind_field(x, y, t) + self._storm_wind(t) * (0.8 + 0.4 * offshore))
+        if self.wind_override is not None and lat is not None:
+            # Monthly reanalysis wind sets the level; the analytic storms and gusts keep the day-to-day spread.
+            obs = self.wind_override(lat, lon, t)
+            anomaly = w - monthly_interp(WIND_CLIM_MONTHLY_MS, t) * (0.85 + 0.3 * offshore)
+            w = np.where(np.isfinite(obs), obs + anomaly, w)
         return np.clip(w, 0.3, None)
 
     # ---------- public ----------
@@ -226,7 +255,7 @@ class Environment:
     def wind(self, lat, lon, t):
         dist = self.geo.lookup("dist_coast_km", lat, lon)
         x, y = project_km(lat, lon)
-        return float(np.asarray(self._wind(t, dist, x, y)).ravel()[0])
+        return float(np.asarray(self._wind(t, dist, x, y, np.atleast_1d(lat), np.atleast_1d(lon))).ravel()[0])
 
     def sample(self, lat, lon, t) -> dict:
         lat = np.atleast_1d(np.asarray(lat, float))
@@ -256,7 +285,7 @@ class Environment:
             "seagrass_idx": geo.lookup("seagrass_idx", lat, lon),
             "sst": sst, "sst_clim": clim, "sst_anom": anom, "front": front,
             "log10chl": log10chl, "chl": 10.0 ** log10chl,
-            "wind": self._wind(t, dist, x, y),
+            "wind": self._wind(t, dist, x, y, lat, lon),
             "moon": moon_illumination(t),
         }
 

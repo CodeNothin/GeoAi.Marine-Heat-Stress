@@ -114,8 +114,16 @@ def download(url, path):
             if total:
                 print(f"\r  {path.name}: {done / total:5.1%} of {total / 1e6:.0f} MB", end="", flush=True)
     print()
-    tmp.replace(path)
-    return path
+    if total and done != total:
+        raise IOError(f"{path.name}: download stopped at {done} of {total} bytes; run again to retry")
+    # On Windows an antivirus scan can hold the new file for a few seconds: retry the rename.
+    for attempt in range(30):
+        try:
+            tmp.replace(path)
+            return path
+        except PermissionError:
+            time.sleep(2)
+    raise PermissionError(f"{tmp} is still locked by another program; rename it to {path.name} and run again")
 
 
 def parse_griddap_csv(text, var):

@@ -2,12 +2,15 @@
 
     python fetch_env_data.py --start 2023-01 --end 2025-12 --out real_env          # NOAA SST + CHL-a
     python fetch_env_data.py --start 2023-01 --end 2025-12 --out real_env --era5   # + ERA5 wind
+    python fetch_env_data.py --start 2023-01 --end 2025-12 --out real_env --psl --era5   # SST from NOAA PSL files
     python fetch_env_data.py --oisst-nc sst.day.mean.2024.nc --oisst-ltm sst.day.mean.ltm.1991-2020.nc \
         --no-chl --out real_env                     # already-downloaded NOAA PSL OISST files (needs netCDF4)
 
 Sources:
-  - SST and SST anomaly: NOAA OISST v2.1 daily, 0.25 deg, via NOAA CoastWatch ERDDAP (no account).
-    The anomaly is OISST's own, relative to its 1971-2000 climatology.
+  - SST and SST anomaly: NOAA OISST v2.1 daily, 0.25 deg, via NOAA CoastWatch ERDDAP (no account;
+    tries a mirror if the main server does not answer). The anomaly is OISST's own, relative to
+    its 1971-2000 climatology. If ERDDAP is unreachable, --psl downloads the yearly NOAA PSL files
+    (about 470 MB each, plus the 1991-2020 daily mean for the anomaly) and cuts them instead.
   - CHL-a: monthly satellite chlorophyll via the same ERDDAP server (no account). Tries the
     datasets in CHL_DATASETS in order; if none answers, CHL-a is skipped and the simulator keeps
     its analytic CHL-a.
@@ -37,7 +40,12 @@ import numpy as np
 
 from purse_seine_sim.config import RegionConfig
 
-ERDDAP = "https://coastwatch.pfeg.noaa.gov/erddap/griddap"
+ERDDAP_SERVERS = [
+    "https://coastwatch.pfeg.noaa.gov/erddap/griddap",
+    "https://upwell.pfeg.noaa.gov/erddap/griddap",          # mirror with the same datasets
+]
+PSL_URL = "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres"
+PSL_LTM = "sst.day.mean.ltm.1991-2020.nc"
 OISST_DATASET = "ncdcOisst21Agg_LonPM180"
 # (dataset id, variable, has an altitude dimension) tried in order.
 CHL_DATASETS = [
@@ -60,19 +68,54 @@ def unix_days(iso):
     return float(np.datetime64(iso.rstrip("Z"), "s").astype("int64")) / 86400.0
 
 
-def fetch(url, retries=4):
+def fetch(url, retries=4, timeout=120):
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(url, timeout=120) as r:
+            with urllib.request.urlopen(url, timeout=timeout) as r:
                 return r.read().decode("utf-8")
         except urllib.error.HTTPError as e:
             if e.code in (400, 404):
                 raise                                   # bad request: retrying will not help
             err = e
-        except (urllib.error.URLError, TimeoutError) as e:
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
             err = e
         time.sleep(2 ** (attempt + 1))
     raise err
+
+
+def erddap(query):
+    """griddap request, trying each server in ERDDAP_SERVERS until one answers."""
+    err = None
+    for server in ERDDAP_SERVERS:
+        try:
+            return fetch(f"{server}/{query}", retries=2, timeout=60)
+        except urllib.error.HTTPError:
+            raise
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            print(f"  {server.split('/')[2]} did not answer ({e}); trying the next server")
+            err = e
+    raise ConnectionError("no NOAA ERDDAP server answered. Try --psl (downloads the yearly NOAA PSL files) "
+                          "or --oisst-nc with files downloaded in a browser") from err
+
+
+def download(url, path):
+    """Stream a large file to disk (skipped if it is already there)."""
+    path = Path(path)
+    if path.exists() and path.stat().st_size > 0:
+        print(f"  {path.name}: already downloaded")
+        return path
+    tmp = path.with_suffix(path.suffix + ".part")
+    with urllib.request.urlopen(url, timeout=120) as r, open(tmp, "wb") as f:
+        total = int(r.headers.get("Content-Length", 0))
+        done = 0
+        while chunk := r.read(1 << 20):
+            f.write(chunk)
+            done += len(chunk)
+            if total:
+                print(f"\r  {path.name}: {done / total:5.1%} of {total / 1e6:.0f} MB", end="", flush=True)
+    print()
+    tmp.replace(path)
+    return path
 
 
 def parse_griddap_csv(text, var):
@@ -117,7 +160,7 @@ def fetch_oisst(region, months, verbose=True):
     for m in months:
         last = str((np.datetime64(m, "M") + np.timedelta64(1, "M")).astype("datetime64[D]") - np.timedelta64(1, "D"))
         box = f"[({m}-01T12:00:00Z):1:({last}T12:00:00Z)][(0.0)][({lat0}):1:({lat1})][({lon0}):1:({lon1})]"
-        text = fetch(f"{ERDDAP}/{OISST_DATASET}.csv?sst{box},anom{box}")
+        text = erddap(f"{OISST_DATASET}.csv?sst{box},anom{box}")
         t, la, lo, sst = parse_griddap_csv(text, "sst")
         _, _, _, anom = parse_griddap_csv(text, "anom")
         parts.append((t, sst, anom))
@@ -174,11 +217,14 @@ def fetch_chl(region, months, res=0.05, verbose=True):
         # Some datasets store latitude north-to-south; ERDDAP wants the range in storage order.
         for lat0, lat1 in ((region.lat_max + PAD_DEG, region.lat_min - PAD_DEG),
                            (region.lat_min - PAD_DEG, region.lat_max + PAD_DEG)):
-            url = f"{ERDDAP}/{dataset}.csv?{var}[({t0}):1:({t1})]{alt}[({lat0}):1:({lat1})][({lon0}):1:({lon1})]"
+            query = f"{dataset}.csv?{var}[({t0}):1:({t1})]{alt}[({lat0}):1:({lat1})][({lon0}):1:({lon1})]"
             try:
-                text = fetch(url)
+                text = erddap(query)
             except urllib.error.HTTPError:
                 continue
+            except ConnectionError:
+                print("  CHL-a: ERDDAP unreachable; skipping (the simulator keeps its analytic CHL-a)")
+                return None
             t, la, lo, chl = parse_griddap_csv(text, var)
             la, lo, chl = bin_to_grid(la, lo, chl, res)
             if verbose:
@@ -230,13 +276,23 @@ def main(argv=None):
     p.add_argument("--no-chl", action="store_true")
     p.add_argument("--oisst-nc", nargs="+", help="read these NOAA PSL OISST files instead of downloading SST")
     p.add_argument("--oisst-ltm", help="PSL daily long-term mean file, for the SST anomaly")
+    p.add_argument("--psl", action="store_true",
+                   help="download the yearly NOAA PSL OISST files (+ 1991-2020 mean) instead of using ERDDAP")
     a = p.parse_args(argv)
     if not a.oisst_nc and not (a.start and a.end):
         p.error("--start and --end are required unless --oisst-nc is given")
+    if a.psl and not (a.start and a.end):
+        p.error("--psl needs --start and --end")
 
     region = RegionConfig()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
+    if a.psl:
+        first = np.datetime64(a.start, "M") - np.timedelta64(1, "M")
+        years = range(int(str(first)[:4]), int(a.end[:4]) + 1)
+        (out / "nc").mkdir(exist_ok=True)
+        a.oisst_nc = [download(f"{PSL_URL}/sst.day.mean.{y}.nc", out / "nc" / f"sst.day.mean.{y}.nc") for y in years]
+        a.oisst_ltm = a.oisst_ltm or download(f"{PSL_URL}/{PSL_LTM}", out / "nc" / PSL_LTM)
     if a.oisst_nc:
         sst = read_oisst_nc(a.oisst_nc, region, a.oisst_ltm)
         span = sst["time"][[0, -1]].astype("int64").astype("datetime64[D]").astype("datetime64[M]")

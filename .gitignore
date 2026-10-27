@@ -5,3 +5,8 @@ model_output/
 power_output/
 forecast_output/
 real_env/*.nc
+real_env/nc/sst.day.mean.2022.nc
+real_env/nc/sst.day.mean.2023.nc
+real_env/nc/sst.day.mean.2024.nc
+real_env/nc/sst.day.mean.2025.nc
+real_env/nc/sst.day.mean.ltm.1991-2020.nc

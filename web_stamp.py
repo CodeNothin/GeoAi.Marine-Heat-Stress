@@ -13,7 +13,7 @@ import hashlib
 import re
 
 INDEX_FILE = Path(__file__).with_name("index.html")
-DATA_FILES = ["forecast_data.js", "study_area_data.js", "ecocast_data.js"]
+DATA_FILES = ["forecast_data.js", "study_area_data.js"]
 
 
 def stamp_index(data_file, index_file=INDEX_FILE):

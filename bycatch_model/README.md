@@ -98,15 +98,10 @@ every month.
 
 ## Website
 
-`python export_ecocast_web.py` turns `model_output/maps/*.npz` into `ecocast_data.js`. The
-**EcoCast · Bycatch** tab in `index.html` loads that file when the tab is opened. The page has:
-
-- a monthly map of the EcoCast score, revenue, kg per set for each target species, and bycatch
-  probability for each protected species;
-- a click popup showing every species at a point;
-- per-province sea-zone averages and the model-reliability table.
-
-As in EcoCast, the score is rescaled to −1…+1 each month: it shows *relatively* good and bad areas.
+Only the **Forecast** tab of `index.html` comes from this package (`export_forecast_web.py`, above).
+The EcoCast score maps that `train` writes to `model_output/` (PNG and `maps/*.npz`) are not shown
+on the website. As in EcoCast, the score is rescaled to −1…+1 each month: it shows *relatively*
+good and bad areas.
 
 ## Validation
 

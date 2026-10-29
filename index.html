@@ -732,6 +732,26 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 .fc-skill td:not(:first-child),.fc-skill th:not(:first-child){text-align:right;font-family:var(--font-num)}
 .fc-best{font-weight:900;color:var(--teal)}
 .fc-chart-wrap{position:relative;height:230px}
+
+/* ---------- Fishing effort page ---------- */
+#effortMap{
+  height:600px;
+  width:100%;
+  border-radius:7px;
+  border:1px solid var(--border);
+  overflow:hidden;
+  background:#d8ecf7;
+}
+.ef-area td:not(:first-child),.ef-area th:not(:first-child){text-align:right;font-family:var(--font-num)}
+.ef-area td,.ef-area th{padding:.4rem .45rem}
+.ef-side-alert{display:block}
+.ef-side-alert h4{font-size:14px}
+.ef-side-alert p{margin-top:.3rem}
+.ef-link{color:var(--teal);cursor:pointer;text-decoration:underline}
+.fc-risk-toggle{display:inline-flex;align-items:center;gap:.35rem;font-size:13px;cursor:pointer}
+@media(max-width:1100px){
+  #effortMap{height:480px}
+}
 @media(max-width:1100px){
   #forecastMap{height:480px}
 }
@@ -775,6 +795,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     <div class="nav-tab active" onclick="showPage('home',this)">ภาพรวม</div>
     <div class="nav-tab" onclick="showPage('map',this)">แผนที่ GeoAI</div>
     <div class="nav-tab" onclick="showPage('forecast',this)">พยากรณ์ปลา · Forecast</div>
+    <div class="nav-tab" onclick="showPage('effort',this)">เรือประมง · Fishing effort</div>
     <div class="nav-tab" onclick="showPage('pipeline',this)">Real Data Pipeline</div>
     <div class="nav-tab" onclick="showPage('profile',this)">ข้อมูลรายจังหวัด</div>
     <div class="nav-tab" onclick="showPage('alert',this)">จัดอันดับความเสี่ยง</div>
@@ -949,12 +970,14 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
           <option value="truth">ค่าจริงในตัวจำลอง</option>
           <option value="sd">ความไม่แน่นอน (เดือนล่วงหน้า)</option>
         </select>
+        <label class="fc-risk-toggle"><input type="checkbox" id="fcRiskToggle" onchange="renderForecastRisk()"> แสดงจุดเสี่ยงทำประมงเกิน</label>
       </div>
       <div id="forecastMap"></div>
       <div class="fc-legend">
         <div class="fc-legend-bar" id="fcLegendBar"></div>
         <div class="fc-legend-labels"><span id="fcLegendMin">—</span><span id="fcLegendMax">—</span></div>
         <div class="fc-legend-note" id="fcLegendNote">—</div>
+        <div class="fc-legend-note" id="fcRiskNote"></div>
       </div>
     </div>
 
@@ -975,6 +998,57 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
         </div>
         <div class="fc-chart-wrap"><canvas id="fcCurveChart"></canvas></div>
         <div class="grid-note">แกนตั้ง = โอกาสจับได้เพิ่มขึ้นกี่เท่า (odds) เมื่อค่านี้เปลี่ยน โดยตัวแปรอื่นคงที่ · เส้นประ = ไม่มีผล</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="page-effort" class="page">
+  <div class="section-title">ความหนาแน่นเรือประมงและแรงประมง · Fishing effort &amp; overfishing risk</div>
+  <div class="section-sub">
+    จำนวนเรือและวันทำประมงของแต่ละจังหวัดจากกรมประมง กระจายลงกริด 0.05° เดียวกับแผนที่พยากรณ์ปลา
+    แล้วเทียบกับปลาที่พยากรณ์ได้ในเดือนเดียวกัน ช่องที่เรือหนาแน่นแต่ปลาน้อยจะแจ้งเตือน <b>"เสี่ยงทำประมงเกินขนาด"</b>
+  </div>
+  <div class="notice" id="efNotice">
+    <b>ข้อมูลจริง (กรมประมง, catalog.fisheries.go.th):</b> จำนวนเรือประมงพาณิชย์ที่มีใบอนุญาตในอ่าวไทยรายจังหวัดรายปี,
+    วันทำประมงรายเดือนของทั้งอ่าวไทย และปริมาณสัตว์น้ำขึ้นท่ารายจังหวัด (พ.ศ. 2565–2567) ·
+    <b>ยังเป็นค่าประมาณ/จำลอง:</b> ตำแหน่งที่เรือไปทำประมงในแต่ละช่อง (ยังไม่มีข้อมูล AIS/VMS สาธารณะ
+    จึงกระจายตามระยะจากท่า ความลึก ปลาเดือนก่อน ลม และเขตปิดอ่าว) และปลาที่พยากรณ์ (โมเดลฝึกจาก logbook จำลอง)
+  </div>
+  <div class="fc-error" id="efError"></div>
+
+  <div class="fc-layout">
+    <div class="card">
+      <div class="card-title">แผนที่แรงประมง · Fishing effort grid map</div>
+      <div class="controls">
+        <label for="efMonthSelect">เดือน:</label>
+        <select id="efMonthSelect" onchange="renderEffort()"></select>
+        <label for="efViewSelect">แสดง:</label>
+        <select id="efViewSelect" onchange="renderEffort()">
+          <option value="risk">ความเสี่ยงทำประมงเกินขนาด</option>
+          <option value="density">ความหนาแน่นเรือ (ลำ/100 กม²)</option>
+          <option value="effort">แรงประมง (วันทำประมง/เดือน)</option>
+          <option value="fish">ปลาที่พยากรณ์ (ตัน/การล้อมอวน 1 ครั้ง)</option>
+          <option value="cpue">CPUE ที่คาด (ตัน/วันทำประมง)</option>
+        </select>
+      </div>
+      <div id="effortMap"></div>
+      <div class="fc-legend">
+        <div class="fc-legend-bar" id="efLegendBar"></div>
+        <div class="fc-legend-labels"><span id="efLegendMin">—</span><span id="efLegendMax">—</span></div>
+        <div class="fc-legend-note" id="efLegendNote">—</div>
+      </div>
+    </div>
+
+    <div class="fc-side">
+      <div class="card">
+        <div class="card-title">แจ้งเตือน · Overfishing alerts</div>
+        <div id="efAlerts"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">รายพื้นที่ · By area</div>
+        <table class="table ef-area" id="efAreaTable"></table>
+        <div class="grid-note" id="efAreaNote"></div>
       </div>
     </div>
   </div>
@@ -1361,6 +1435,10 @@ window.showPage = function(id, tab){
 
   if(id === "forecast"){
     setTimeout(ensureForecast, 80);
+  }
+
+  if(id === "effort"){
+    setTimeout(ensureEffort, 80);
   }
 
   if(id === "profile"){
@@ -2360,6 +2438,7 @@ window.renderForecast = function(){
 
   renderForecastSkill(sp);
   renderForecastCurveOptions(sp);
+  renderForecastRisk();
 };
 
 function renderForecastSkill(sp){
@@ -2432,6 +2511,251 @@ function fcCellPopup(e){
     `<div class="fc-popup"><b>${e.latlng.lat.toFixed(2)}°N, ${e.latlng.lng.toFixed(2)}°E</b> · ${fcMonthLabel(month)}<br>
      % ของปลาทั้งหมดในพื้นที่ศึกษาที่เป็นชนิดนี้ (ช่อง 0.05°)<table style="margin-top:.4rem">${lines}</table></div>`).openOn(fcMap);
 }
+
+/* ---------- Fishing effort page ---------- */
+/* Data: effort_data.js, generated by export_effort_web.py: DOF fleet and effort, modelled spread over
+   the forecast grid, forecast fish, CPUE and the risk-of-overfishing alert. */
+let efMap = null, efOverlay = null, ef = null, efLoading = false, fcRiskOverlay = null;
+const efWaiting = [];
+const EF_ALERT_RGB = {2:[215,48,31], 1:[245,166,35]};
+const EF_VIEWS = {
+  density: {cmap:"risk", unit:"ลำ/100 กม²", d:1,
+    note:"เรือที่ทำประมงอยู่ในช่องนี้ในวันปกติของเดือน ต่อพื้นที่ 100 กม²"},
+  effort: {cmap:"risk", unit:"วัน", d:0,
+    note:"วันทำประมงรวมของทุกลำในช่องนี้ทั้งเดือน (fishing effort)"},
+  fish: {cmap:"sequential", unit:"ตัน/ครั้ง", d:2, scale:1/1000,
+    note:"ปลาเป้าหมายที่คาดว่าจะได้ต่อการล้อมอวน 1 ครั้ง = Σ โอกาสจับได้ (พยากรณ์) × น้ำหนักเฉลี่ยเมื่อจับได้"},
+  cpue: {cmap:"sequential", unit:"ตัน/วัน", d:2,
+    note:"CPUE ที่คาด = ปลาที่พยากรณ์ × ค่าปรับเทียบกับปริมาณขึ้นท่าจริงของกรมประมง (ปลาเป้าหมาย ทุกเครื่องมือ)"}
+};
+const EF_LEVEL = [["low", "ปกติ"], ["mid", "เฝ้าระวัง"], ["high", "เสี่ยงสูง"]];
+
+function loadEffort(cb){
+  if(window.EFFORT_DATA){ cb(window.EFFORT_DATA); return; }
+  efWaiting.push(cb);
+  if(efLoading) return;
+  efLoading = true;
+  const s = document.createElement("script");
+  s.src = "effort_data.js?v=75ab922a83";
+  s.onload = () => {
+    efLoading = false;
+    const waiting = efWaiting.splice(0);
+    if(window.EFFORT_DATA) waiting.forEach(f => f(window.EFFORT_DATA));
+  };
+  s.onerror = () => {
+    efLoading = false;
+    efWaiting.length = 0;
+    const box = document.getElementById("efError");
+    box.style.display = "block";
+    box.innerHTML = "โหลด <code>effort_data.js</code> ไม่สำเร็จ ให้สร้างใหม่ด้วย <code>python export_effort_web.py</code>";
+  };
+  document.body.appendChild(s);
+}
+
+function efPrep(data){
+  if(ef) return ef;
+  const cells = new Uint16Array(fcB64(data.cells).buffer);
+  const lookup = new Int32Array(data.grid.nlat * data.grid.nlon).fill(-1);
+  cells.forEach((flat, k) => { lookup[flat] = k; });
+  const g = data.grid, half = g.res / 2;
+  ef = {data, grid:g, cells, lookup, cache:{},
+    bounds:[[g.lat0 - half, g.lon0 - half], [g.lat0 + (g.nlat - 1) * g.res + half, g.lon0 + (g.nlon - 1) * g.res + half]]};
+  return ef;
+}
+
+function efLayer(name, month){
+  const key = name + "|" + month;
+  if(!ef.cache[key]){
+    const L = ef.data.layers[name];
+    ef.cache[key] = Float32Array.from(fcB64(L.months[month]), v => v === 255 ? NaN : (v / 254) * L.vmax);
+  }
+  return ef.cache[key];
+}
+
+function efAlert(month){
+  const key = "alert|" + month;
+  if(!ef.cache[key]) ef.cache[key] = fcB64(ef.data.alert[month]);
+  return ef.cache[key];
+}
+
+// Paint one colour per sea cell; with `outline`, draw each cell as a square frame so the layer below shows.
+function efPaint(colorOf, outline){
+  const g = ef.grid, s = outline ? 8 : 1;
+  const canvas = document.createElement("canvas");
+  canvas.width = g.nlon * s;
+  canvas.height = g.nlat * s;
+  const ctx = canvas.getContext("2d");
+  for(let k = 0; k < ef.cells.length; k++){
+    const c = colorOf(k);
+    if(!c) continue;
+    const flat = ef.cells[k];
+    const x = (flat % g.nlon) * s, y = (g.nlat - 1 - Math.floor(flat / g.nlon)) * s;
+    ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${(c[3] ?? 235) / 255})`;
+    if(outline){
+      ctx.fillRect(x, y, s, 2); ctx.fillRect(x, y + s - 2, s, 2);
+      ctx.fillRect(x, y, 2, s); ctx.fillRect(x + s - 2, y, 2, s);
+    } else ctx.fillRect(x, y, 1, 1);
+  }
+  return canvas.toDataURL();
+}
+
+function efFmt(v, d){
+  return v === null || v === undefined || Number.isNaN(v) ? "—" : Number(v).toLocaleString("en-US", {minimumFractionDigits:d, maximumFractionDigits:d});
+}
+
+window.ensureEffort = function(){
+  if(efMap){
+    efMap.invalidateSize();
+    renderEffort();
+    return;
+  }
+  loadEffort(data => { if(!efMap) initEffort(data); });
+};
+
+function initEffort(data){
+  efPrep(data);
+  const up = data.meta.upcoming_month;
+  const monthSel = document.getElementById("efMonthSelect");
+  data.months.forEach(m => {
+    const o = document.createElement("option");
+    o.value = m;
+    o.textContent = fcMonthLabel(m) + (m === up ? " · คาดการณ์ล่วงหน้า" : "");
+    if(m === up) o.selected = true;
+    monthSel.appendChild(o);
+  });
+
+  efMap = L.map("effortMap", { zoomControl:true }).setView([8.9, 100.6], 7);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:12,
+    attribution:"&copy; OpenStreetMap contributors"
+  }).addTo(efMap);
+  efMap.fitBounds(ef.bounds, {padding:[10,10]});
+  addStudyAreaOutline(efMap);
+  data.meta.ports.forEach(pt => {
+    L.circleMarker([pt.lat, pt.lon], {radius:5, color:"#0D1E2A", weight:2, fillColor:"#fff", fillOpacity:1})
+      .bindTooltip(`ท่าเรือ${pt.name_th} (${pt.name})`).addTo(efMap);
+  });
+  efMap.on("click", efCellPopup);
+  renderEffort();
+}
+
+window.renderEffort = function(){
+  if(!efMap) return;
+  const month = document.getElementById("efMonthSelect").value;
+  const view = document.getElementById("efViewSelect").value;
+  const info = ef.data.month_info[month];
+  let url;
+  if(view === "risk"){
+    const al = efAlert(month), e = efLayer("effort", month), emax = ef.data.layers.effort.vmax;
+    url = efPaint(k => al[k] ? [...EF_ALERT_RGB[al[k]], 240] : [90, 110, 125, Math.round(40 + 120 * Math.min(e[k] / emax, 1))]);
+    document.getElementById("efLegendBar").style.background =
+      "linear-gradient(to right, rgb(150,165,175) 0 34%, rgb(245,166,35) 34% 67%, rgb(215,48,31) 67%)";
+    document.getElementById("efLegendMin").textContent = "ปกติ (เทาเข้ม = เรือมาก)";
+    document.getElementById("efLegendMax").textContent = "เฝ้าระวัง · เสี่ยงสูง";
+    const t = ef.data.thresholds, f = t.fish[month];
+    document.getElementById("efLegendNote").textContent =
+      `เสี่ยงสูง = แรงประมง ≥ ${efFmt(t.high_effort, 0)} วัน/เดือน (สูงสุด 25% ของทุกเดือน) และปลาที่พยากรณ์ ≤ ${efFmt(f[0] / 1000, 2)} ตัน/ครั้ง (ต่ำสุด 25% ของเดือนนี้) · ` +
+      `เฝ้าระวัง = แรงประมง ≥ ${efFmt(t.watch_effort, 0)} วัน และปลา ≤ ${efFmt(f[1] / 1000, 2)} ตัน/ครั้ง · ${fcMonthLabel(month)}`;
+  } else {
+    const V = EF_VIEWS[view], vals = efLayer(view, month), vmax = ef.data.layers[view].vmax, sc = V.scale || 1;
+    url = efPaint(k => Number.isNaN(vals[k]) ? null : fcColor(V.cmap, Math.min(vals[k] / vmax, 1)));
+    document.getElementById("efLegendBar").style.background = `linear-gradient(to right, ${FC_CMAPS[V.cmap].join(",")})`;
+    document.getElementById("efLegendMin").textContent = "0";
+    document.getElementById("efLegendMax").textContent = `${efFmt(vmax * sc, V.d)}+ ${V.unit}`;
+    document.getElementById("efLegendNote").textContent = `${V.note} · ${fcMonthLabel(month)} · ช่อง 0.05°`;
+  }
+  if(efOverlay) efOverlay.setUrl(url);
+  else efOverlay = L.imageOverlay(url, ef.bounds, {opacity:0.85, className:"fc-pixelated"}).addTo(efMap);
+  const src = info.days_source === "dof"
+    ? `วันทำประมงเฉลี่ย ${efFmt(info.days_per_vessel, 1)} วัน/ลำ (กรมประมง)`
+    : `คาดการณ์: ใช้วันทำประมง/ลำของเดือนเดียวกันปีก่อน (${efFmt(info.days_per_vessel, 1)} วัน/ลำ)`;
+  document.getElementById("efLegendNote").textContent += ` · ${src} · รวม ${efFmt(info.fleet_days, 0)} วันทำประมง`;
+  renderEffortAreas(month);
+};
+
+function renderEffortAreas(month){
+  const areas = ef.data.areas, names = ef.data.area_names;
+  const rows = Object.keys(areas).map(key => ({key, name:names[key], ...areas[key][month]}));
+  document.getElementById("efAreaTable").innerHTML =
+    `<tr><th>พื้นที่</th><th>เรือ/วัน</th><th>CPUE คาด</th><th>CPUE จริง</th><th>เตือน</th></tr>` +
+    rows.map(r => `<tr><td>${r.name}</td><td>${efFmt(r.boats_per_day, 0)}</td><td>${efFmt(r.cpue_t_day, 2)}</td>
+      <td>${efFmt(r.real_cpue_t_day, 2)}</td><td><span class="risk-badge ${EF_LEVEL[r.level][0]}">${EF_LEVEL[r.level][1]}</span></td></tr>`).join("");
+  document.getElementById("efAreaNote").innerHTML =
+    "เรือ/วัน = จำนวนเรือที่ทำประมงในพื้นที่ในวันปกติ · CPUE = ตันปลาเป้าหมาย (ปลาทู ปลาลัง ปลาหลังเขียว ปลาทูแขก ปลาโอดำ ปลาโอลาย) ต่อวันทำประมง · " +
+    "CPUE จริง = ปริมาณขึ้นท่าของจังหวัด ÷ วันทำประมงของเรือจังหวัดนั้น (กรมประมง มีถึง ธ.ค. 2567) · ปัตตานีรวมนราธิวาส";
+
+  const flagged = rows.filter(r => r.level > 0).sort((a, b) => b.level - a.level || b.high - a.high);
+  document.getElementById("efAlerts").innerHTML = flagged.length ? flagged.map(r => {
+    const yoy = r.real_landings_yoy === null || r.real_landings_yoy === undefined ? ""
+      : ` · ปลาขึ้นท่าจริง ${r.real_landings_yoy > 0 ? "+" : ""}${(r.real_landings_yoy * 100).toFixed(0)}% เทียบปีก่อน`;
+    const hot = r.hotspot ? ` · <span class="ef-link" onclick="efFocus(${r.hotspot[0]},${r.hotspot[1]})">จุดเรือหนาแน่นสุด ${r.hotspot[0].toFixed(2)}°N ${r.hotspot[1].toFixed(2)}°E</span>` : "";
+    const action = r.level === 2
+      ? "แนะนำ: พิจารณาจำกัดวันทำประมง/ปิดพื้นที่ชั่วคราว · กระจายเรือไปพื้นที่ที่ปลาหนาแน่นกว่า · ตรวจ CPUE จริงที่ท่าขึ้นปลา"
+      : "แนะนำ: ติดตาม CPUE รายสัปดาห์ · แจ้งกลุ่มเรือในพื้นที่";
+    return `<div class="alert ${r.level === 2 ? "h" : "m"} ef-side-alert">
+      <h4>⚠ เสี่ยงทำประมงเกินขนาด · Risk of overfishing</h4>
+      <p><b>${r.name}</b> · <span class="risk-badge ${EF_LEVEL[r.level][0]}">${EF_LEVEL[r.level][1]}</span><br>
+        เรือหนาแน่นแต่ปลาน้อย ${r.high} ช่องเสี่ยงสูง + ${r.watch} ช่องเฝ้าระวัง จาก ${r.cells} ช่อง ·
+        เรือ ${efFmt(r.boats_per_day, 0)} ลำ/วัน · ปลาที่พยากรณ์ ${efFmt(r.fish_kg_set / 1000, 2)} ตัน/ครั้ง${yoy}${hot}</p>
+      <span class="action">${action}</span>
+    </div>`;
+  }).join("") : `<div class="alert l ef-side-alert"><h4>ไม่มีพื้นที่เสี่ยงทำประมงเกินขนาด</h4>
+      <p>${fcMonthLabel(month)}: ไม่มีพื้นที่ใดที่ช่องเรือหนาแน่น-ปลาน้อยเกิน 10% ของพื้นที่</p></div>`;
+}
+
+window.efFocus = function(lat, lon){
+  efMap.setView([lat, lon], 10);
+  efCellPopup({latlng:L.latLng(lat, lon)});
+};
+
+function efCellPopup(e){
+  const g = ef.grid;
+  const row = Math.round((e.latlng.lat - g.lat0) / g.res);
+  const col = Math.round((e.latlng.lng - g.lon0) / g.res);
+  const k = row >= 0 && row < g.nlat && col >= 0 && col < g.nlon ? ef.lookup[row * g.nlon + col] : -1;
+  if(k < 0){
+    L.popup().setLatLng(e.latlng).setContent(
+      "<b>นอกพื้นที่ศึกษา</b><br>แผ่นดิน เกาะ หรือห่างฝั่ง &gt; 50 กม.").openOn(efMap);
+    return;
+  }
+  const month = document.getElementById("efMonthSelect").value;
+  const lv = efAlert(month)[k];
+  const v = n => efLayer(n, month)[k];
+  L.popup().setLatLng(e.latlng).setContent(
+    `<div class="fc-popup"><b>${e.latlng.lat.toFixed(2)}°N, ${e.latlng.lng.toFixed(2)}°E</b> · ${fcMonthLabel(month)}
+     <table style="margin-top:.4rem">
+       <tr><td>ความหนาแน่นเรือ</td><td>${efFmt(v("density"), 1)} ลำ/100 กม²</td></tr>
+       <tr><td>แรงประมง</td><td>${efFmt(v("effort"), 0)} วัน/เดือน</td></tr>
+       <tr><td>ปลาที่พยากรณ์</td><td>${efFmt(v("fish") / 1000, 2)} ตัน/ครั้ง</td></tr>
+       <tr><td>CPUE ที่คาด</td><td>${efFmt(v("cpue"), 2)} ตัน/วัน</td></tr>
+       <tr><td>สถานะ</td><td><span class="risk-badge ${EF_LEVEL[lv][0]}">${EF_LEVEL[lv][1]}</span></td></tr>
+     </table></div>`).openOn(efMap);
+}
+
+// Forecast tab: frame the risk-of-overfishing cells of the selected month over the fish map.
+window.renderForecastRisk = function(){
+  const box = document.getElementById("fcRiskToggle");
+  const note = document.getElementById("fcRiskNote");
+  if(!box || !box.checked || !fcMap){
+    if(fcRiskOverlay){ fcMap.removeLayer(fcRiskOverlay); fcRiskOverlay = null; }
+    if(note) note.textContent = "";
+    return;
+  }
+  loadEffort(data => {
+    efPrep(data);
+    if(!box.checked) return;
+    const month = document.getElementById("fcMonthSelect").value;
+    if(!data.alert[month]){ note.textContent = "ไม่มีข้อมูลแรงประมงของเดือนนี้"; return; }
+    const al = efAlert(month);
+    const url = efPaint(k => al[k] ? [...EF_ALERT_RGB[al[k]], 255] : null, true);
+    if(fcRiskOverlay) fcRiskOverlay.setUrl(url);
+    else fcRiskOverlay = L.imageOverlay(url, ef.bounds, {opacity:1, className:"fc-pixelated"}).addTo(fcMap);
+    let high = 0, watch = 0;
+    al.forEach(v => { if(v === 2) high++; else if(v === 1) watch++; });
+    note.innerHTML = `กรอบแดง = เสี่ยงทำประมงเกินขนาด (${high} ช่อง) · กรอบส้ม = เฝ้าระวัง (${watch} ช่อง): เรือหนาแน่นแต่ปลาที่พยากรณ์น้อย · ` +
+      `<span class="ef-link" onclick="showPage('effort', document.querySelectorAll('.nav-tab')[3])">ดูแผนที่เรือประมง</span>`;
+  });
+};
 
 /* ---------- Start ---------- */
 document.addEventListener("DOMContentLoaded", () => {

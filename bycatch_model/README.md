@@ -89,6 +89,10 @@ fish anywhere and every set is used for training, but prediction maps, skill sco
 forecast cover only the study area. `python export_study_area_web.py` writes its outline and the
 10-70 m isobaths to `study_area_data.js` for the website maps.
 
+Each `export_*_web.py` script also stamps `index.html` with `?v=<hash>` of the file it wrote, so
+browsers and the GitHub Pages CDN cannot pair new page code with a cached old data file. Commit
+`index.html` together with the data file (`python web_stamp.py` re-stamps without regenerating).
+
 With a single year of data, `train` holds out the last 3 months instead of a year and still maps
 every month.
 

@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="study_area_data.js"></script>
+<script src="study_area_data.js?v=0b8d7d3340"></script>
 
 <style>
 :root{
@@ -2337,7 +2337,7 @@ window.ensureEcocast = function(){
   if(ecoLoading) return;
   ecoLoading = true;
   const s = document.createElement("script");
-  s.src = "ecocast_data.js";
+  s.src = "ecocast_data.js?v=39e889d289";
   s.onload = () => {
     ecoLoading = false;
     if(window.ECOCAST_DATA) initEcocast(window.ECOCAST_DATA);
@@ -2631,7 +2631,7 @@ window.ensureForecast = function(){
   if(fcLoading) return;
   fcLoading = true;
   const s = document.createElement("script");
-  s.src = "forecast_data.js";
+  s.src = "forecast_data.js?v=65cfb7058a";
   s.onload = () => {
     fcLoading = false;
     if(window.FORECAST_DATA) initForecast(window.FORECAST_DATA);

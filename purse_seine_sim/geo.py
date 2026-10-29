@@ -1,8 +1,11 @@
-"""Approximate geography of the southern Gulf of Thailand.
+"""Geography of the southern Gulf of Thailand.
 
-The coastline is a hand-digitised polyline (~5-10 km accuracy) so the simulator
-runs without GIS dependencies. Good enough for a synthetic test bed, NOT for real
-analysis: use GEBCO bathymetry and a proper coastline for the real model.
+With `region.bathy_npz` (ETOPO 2022 / GEBCO, from fetch_env_data.py --bathy) the land
+mask, coastline, distance to coast and depth all come from real bathymetry. Without
+it the coastline is a hand-digitised polyline (~5-10 km accuracy) and the depth is
+analytic: good enough for a synthetic test bed, NOT for real analysis.
+
+`study_area` is the coastal buffer: ocean within `region.coastal_buffer_km` of the coast.
 """
 from __future__ import annotations
 
@@ -102,12 +105,57 @@ def is_land_analytic(lat, lon):
     return land
 
 
+def _coast_cells(land, LAT, LON):
+    """Centres of land cells that touch the sea (4-neighbour)."""
+    padded = np.pad(land, 1, constant_values=True)
+    ocean_neighbour = (~padded[:-2, 1:-1]) | (~padded[2:, 1:-1]) | (~padded[1:-1, :-2]) | (~padded[1:-1, 2:])
+    coast = land & ocean_neighbour
+    return LAT[coast], LON[coast]
+
+
+def _flood(mask, seed):
+    """Cells of `mask` 4-connected to the `seed` cells."""
+    out = seed & mask
+    while True:
+        grown = out.copy()
+        grown[1:] |= out[:-1]
+        grown[:-1] |= out[1:]
+        grown[:, 1:] |= out[:, :-1]
+        grown[:, :-1] |= out[:, 1:]
+        grown &= mask
+        if (grown == out).all():
+            return out
+        out = grown
+
+
+def _gulf(wet):
+    """Wet cells connected to the region's east edge, where the Gulf of Thailand opens.
+
+    Drops the Andaman Sea in the south-west corner and inland water below sea level.
+    """
+    seed = np.zeros_like(wet)
+    seed[:, -1] = True
+    return _flood(wet, seed)
+
+
+def _largest_component(mask):
+    best, left = np.zeros_like(mask), mask.copy()
+    while left.any():
+        seed = np.zeros_like(mask)
+        seed.flat[np.flatnonzero(left)[0]] = True
+        part = _flood(left, seed)
+        if part.sum() > best.sum():
+            best = part
+        left &= ~part
+    return best
+
+
 # =========================
 # GRIDDED STATIC FIELDS
 # =========================
 
 class Geography:
-    """Land mask, distance to coast, depth and habitat index on a regular grid."""
+    """Land mask, distance to coast, depth, coastal-buffer study area and habitat index on a regular grid."""
 
     def __init__(self, region, rng):
         self.region = region
@@ -115,17 +163,34 @@ class Geography:
         self.lats = np.arange(region.lat_min + res / 2, region.lat_max, res)
         self.lons = np.arange(region.lon_min + res / 2, region.lon_max, res)
         self.LAT, self.LON = np.meshgrid(self.lats, self.lons, indexing="ij")
-        self.land = is_land_analytic(self.LAT, self.LON)
-        self.dist_coast_km = self._distance_to_coast()
-        self.depth_m = self._depth(rng)
+        if region.bathy_npz:
+            self._from_bathymetry(region.bathy_npz)
+        else:
+            self.land = is_land_analytic(self.LAT, self.LON)
+            self.dist_coast_km = self._distance_to_coast(*_coast_cells(self.land, self.LAT, self.LON))
+            self.depth_m = self._depth(rng)
+        # One connected band along our coast: no stray pieces near coasts just outside the region.
+        self.study_area = _largest_component(~self.land & (self.dist_coast_km <= region.coastal_buffer_km))
         self.seagrass_idx = self._habitat()
 
-    def _distance_to_coast(self):
+    def _from_bathymetry(self, path):
+        b = np.load(path)
+        blat, blon, elev = b["lat"], b["lon"], np.nan_to_num(b["elevation"].astype(float), nan=1.0)
+        i = np.clip(np.searchsorted(blat, self.lats), 1, blat.size - 1)
+        i -= (self.lats - blat[i - 1]) < (blat[i] - self.lats)        # nearest neighbour
+        j = np.clip(np.searchsorted(blon, self.lons), 1, blon.size - 1)
+        j -= (self.lons - blon[j - 1]) < (blon[j] - self.lons)
+        e = elev[np.ix_(i, j)]
+        self.land = ~_gulf(e < 0)
+        # Coast cells from the full (padded) bathymetry, so coast just outside the region counts too.
+        BLAT, BLON = np.meshgrid(blat, blon, indexing="ij")
+        self.dist_coast_km = self._distance_to_coast(*_coast_cells(elev >= 0, BLAT, BLON))
+        depth = np.clip(-e, 1.5, None)
+        depth[self.land] = np.nan
+        self.depth_m = depth
+
+    def _distance_to_coast(self, clat, clon):
         land = self.land
-        padded = np.pad(land, 1, constant_values=True)
-        ocean_neighbour = (~padded[:-2, 1:-1]) | (~padded[2:, 1:-1]) | (~padded[1:-1, :-2]) | (~padded[1:-1, 2:])
-        coast = land & ocean_neighbour
-        clat, clon = self.LAT[coast], self.LON[coast]
         olat, olon = self.LAT[~land], self.LON[~land]
         out = np.empty(olat.size)
         chunk = 2000
@@ -138,6 +203,7 @@ class Geography:
         return dist
 
     def _depth(self, rng):
+        """Analytic depth (no bathymetry file): a shelf deepening away from the coast."""
         x, y = project_km(self.LAT, self.LON)
         bumps = RandomField(rng, n_modes=20, length_km=60.0, sd=2.5)(x, y)
         dist = self.dist_coast_km

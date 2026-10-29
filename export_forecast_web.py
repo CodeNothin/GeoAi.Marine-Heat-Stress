@@ -3,8 +3,8 @@
     python -m bycatch_model forecast --data sim_output --out forecast_output
     python export_forecast_web.py
 
-The 0.05 deg forecast maps are averaged onto a coarse 0.25 deg grid (the resolution of
-OISST and ERA5) and drawn smoothed, as a "cloud map": the data cannot support sharper detail.
+Like the EcoCast export, only the legal fishing cells of the 0.05 deg grid are written (land,
+islands, the 3 nm zone and water shallower than 15 m are left out), quantised to 0-254 and base64-encoded.
 """
 from pathlib import Path
 import argparse
@@ -19,8 +19,6 @@ from purse_seine_sim.species import checklist
 
 FORECAST_DIR = Path("forecast_output")
 OUT_FILE = Path("forecast_data.js")
-COARSEN = 5                 # 5 x 0.05 deg = 0.25 deg cells
-MIN_CELLS = 3               # a coarse cell needs this many legal fine cells to be shown
 
 
 def read_csv(path):
@@ -34,18 +32,6 @@ def num(v):
         return x if np.isfinite(x) else None
     except (TypeError, ValueError):
         return None
-
-
-def coarsen(values, mask, k=COARSEN):
-    """Block-average a fine 2-D grid over its legal cells; NaN where a block has too few."""
-    nlat, nlon = values.shape
-    pad = ((0, (-nlat) % k), (0, (-nlon) % k))
-    v = np.pad(np.where(mask, values, np.nan), pad, constant_values=np.nan)
-    blocks = v.reshape(v.shape[0] // k, k, v.shape[1] // k, k)
-    n = np.isfinite(blocks).sum(axis=(1, 3))
-    with np.errstate(all="ignore"):
-        mean = np.nansum(blocks, axis=(1, 3)) / n
-    return np.where(n >= MIN_CELLS, mean, np.nan)
 
 
 def encode_u8(values, vmax):
@@ -68,9 +54,11 @@ def main():
     maps = {m: np.load(fdir / "maps" / f"forecast_{m}.npz") for m in months}
     first = maps[months[0]]
     lat, lon, mask = first["lat"], first["lon"], first["mask"]
-    res = float(lat[1] - lat[0]) * COARSEN
-    lat0 = float(lat[0] + (COARSEN - 1) * res / COARSEN / 2)
-    lon0 = float(lon[0] + (COARSEN - 1) * res / COARSEN / 2)
+    res = float(lat[1] - lat[0])
+    cells = np.flatnonzero(np.asarray(mask, bool).ravel())   # row-major index into (nlat, nlon)
+
+    def legal(mp, key):
+        return np.asarray(mp[key], float).ravel()[cells]
 
     names = {r["code"]: r for r in checklist()}
     codes = sorted({k[2:] for mp in maps.values() for k in mp.files if k.startswith("p_")})
@@ -80,9 +68,9 @@ def main():
     species = []
     for code in codes:
         info = names.get(code, {"name_en": code, "name_th": code, "group": ""})
-        fc = {m: coarsen(np.asarray(mp[f"p_{code}"], float), mask) for m, mp in maps.items() if f"p_{code}" in mp.files}
-        tr = {m: coarsen(np.asarray(mp[f"lambda_{code}"], float), mask) for m, mp in maps.items() if f"lambda_{code}" in mp.files}
-        sd = {m: coarsen(np.asarray(mp[f"sd_{code}"], float), mask) for m, mp in maps.items() if f"sd_{code}" in mp.files}
+        fc = {m: legal(mp, f"p_{code}") for m, mp in maps.items() if f"p_{code}" in mp.files}
+        tr = {m: legal(mp, f"lambda_{code}") for m, mp in maps.items() if f"lambda_{code}" in mp.files}
+        sd = {m: legal(mp, f"sd_{code}") for m, mp in maps.items() if f"sd_{code}" in mp.files}
         vmax = float(np.nanpercentile(np.concatenate([v[np.isfinite(v)] for v in fc.values()]), 99))
         tmax = float(np.nanpercentile(np.concatenate([v[np.isfinite(v)] for v in tr.values()]), 99)) if tr else 1.0
         smax = float(np.nanpercentile(np.concatenate([v[np.isfinite(v)] for v in sd.values()]), 99)) if sd else 1.0
@@ -103,16 +91,19 @@ def main():
             "curves": curves.get(code, {}),
         })
 
-    env_cfg = {}
+    sim_cfg = {}
     if a.data and (Path(a.data) / "config_used.json").exists():
-        env_cfg = json.loads((Path(a.data) / "config_used.json").read_text(encoding="utf-8")).get("env", {})
-    ny, nx = coarsen(np.zeros(mask.shape), mask).shape
+        sim_cfg = json.loads((Path(a.data) / "config_used.json").read_text(encoding="utf-8"))
+    env_cfg, region_cfg = sim_cfg.get("env", {}), sim_cfg.get("region", {})
     payload = {
         "meta": {"generated": date.today().isoformat(), "simulated": meta.get("simulated", True), "real_sst": bool(env_cfg.get("sst_override_npz")),
                  "real_chl": bool(env_cfg.get("chl_override_npz")), "real_wind": bool(env_cfg.get("wind_override_npz")),
+                 "real_bathy": bool(region_cfg.get("bathy_npz")),
                  "train_sets": meta["train_sets"], "kernel_km": meta["kernel_km"], "n_boot": meta["n_boot"],
                  "upcoming_month": meta.get("upcoming_month")},
-        "grid": {"lat0": lat0, "lon0": lon0, "res": res, "nlat": int(ny), "nlon": int(nx)},
+        "grid": {"lat0": float(lat[0]), "lon0": float(lon[0]), "res": res,
+                 "nlat": int(lat.size), "nlon": int(lon.size)},
+        "cells": base64.b64encode(cells.astype(np.uint16).tobytes()).decode("ascii"),
         "months": months,
         "species": species,
     }
@@ -120,7 +111,7 @@ def main():
           "window.FORECAST_DATA = " + json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + ";\n")
     out_file.write_text(js, encoding="utf-8")
     print(f"Created: {out_file.resolve()} ({out_file.stat().st_size / 1024:.0f} KB)")
-    print(f"Months: {months[0]} .. {months[-1]} | grid {ny} x {nx} at {res:.2f} deg | species: {len(species)}")
+    print(f"Months: {months[0]} .. {months[-1]} | grid {lat.size} x {lon.size} at {res:.2f} deg, {cells.size} legal cells | species: {len(species)}")
 
 
 if __name__ == "__main__":

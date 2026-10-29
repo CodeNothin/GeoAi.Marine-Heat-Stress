@@ -65,18 +65,29 @@ when there is less than a year of training data, because it cannot be learned fr
 - **Response curves:** `response_curves.json` and `plots/response_curves.png` show how the odds of a
   catch change with each heat/climate input.
 
-The web export averages the 0.05 deg maps onto 0.25 deg cells (the OISST/ERA5 resolution) and the
-**Forecast** tab draws them smoothed, as a cloud map.
+The web export keeps the 0.05 deg legal-fishing cells (no land, islands or 3 nm zone) and the
+**Forecast** tab draws them as a grid, like the EcoCast map. The SST and wind inputs are ~0.25 deg, so
+cell-level detail is not more precise than that.
 
 ## Real ocean data
 
 `fetch_env_data.py` (repo root) cuts the area of interest out of real data:
 NOAA OISST v2.1 daily SST (ERDDAP download, or already-downloaded PSL `sst.day.mean.YYYY.nc` files via
-`--oisst-nc`), monthly satellite CHL-a (ERDDAP), and ERA5 monthly 10 m wind (`--era5`, needs a CDS key).
-The simulator then runs on those fields (`--sst-npz`, `--chl-npz`, `--wind-npz`), so the training data,
-the maps and the forecast all see the real ocean. Fish behaviour and the logbooks stay simulated.
+`--oisst-nc`), monthly satellite CHL-a (ERDDAP), ERA5 monthly 10 m wind (`--era5`, needs a CDS key)
+and ETOPO 2022 bathymetry (`--bathy`, or a GEBCO file via `--bathy-nc`).
+The simulator then runs on those fields (`--sst-npz`, `--chl-npz`, `--wind-npz`, `--bathy-npz`), so the
+training data, the maps and the forecast all see the real ocean. Fish behaviour and the logbooks stay simulated.
 `real_env/sst_daily.npz` holds the 2024 OISST cut-out. Without the PSL long-term-mean file
 (`--oisst-ltm`) the SST anomaly is measured against the simulator's assumed climatology.
+
+### Study area
+
+With `--bathy-npz` the land mask, coastline, depth and distance to coast come from the bathymetry
+(only the Gulf of Thailand side: the Andaman Sea in the south-west corner is masked out). The study
+area is the band of sea within 50 km of the coast (`RegionConfig.coastal_buffer_km`). Vessels still
+fish anywhere and every set is used for training, but prediction maps, skill scores, EcoCast and the
+forecast cover only the study area. `python export_study_area_web.py` writes its outline and the
+10-70 m isobaths to `study_area_data.js` for the website maps.
 
 With a single year of data, `train` holds out the last 3 months instead of a year and still maps
 every month.

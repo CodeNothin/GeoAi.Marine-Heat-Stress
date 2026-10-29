@@ -20,7 +20,7 @@ def _plt():
 
 def _panel(ax, g, values, title, cmap="viridis", vmin=None, vmax=None, fp=None):
     LON, LAT = np.meshgrid(g.lon, g.lat)
-    land = np.where(is_land_analytic(LAT, LON), 1.0, np.nan)
+    land = np.where(g.land if g.land is not None else is_land_analytic(LAT, LON), 1.0, np.nan)
     ax.pcolormesh(g.lon, g.lat, land, cmap="Greys", vmin=0, vmax=2.5, shading="auto")
     values = np.asarray(values, float)
     if fp is not None:

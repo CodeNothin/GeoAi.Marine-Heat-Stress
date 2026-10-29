@@ -5,6 +5,8 @@
     python fetch_env_data.py --start 2023-01 --end 2025-12 --out real_env --psl --era5   # SST from NOAA PSL files
     python fetch_env_data.py --oisst-nc sst.day.mean.2024.nc --oisst-ltm sst.day.mean.ltm.1991-2020.nc \
         --no-chl --out real_env                     # already-downloaded NOAA PSL OISST files (needs netCDF4)
+    python fetch_env_data.py --bathy --out real_env                     # bathymetry only (ETOPO 2022)
+    python fetch_env_data.py --bathy-nc gebco_2024_subset.nc --out real_env   # or a GEBCO download
 
 Sources:
   - SST and SST anomaly: NOAA OISST v2.1 daily, 0.25 deg, via NOAA CoastWatch ERDDAP (no account;
@@ -16,11 +18,16 @@ Sources:
     its analytic CHL-a.
   - Wind (optional, --era5): ERA5 monthly mean 10 m wind speed from the Copernicus Climate Data
     Store. Needs a free CDS account, the key in ~/.cdsapirc, and `pip install cdsapi xarray netcdf4`.
+  - Bathymetry (--bathy): NCEI ETOPO 2022, 60 arc-second (about 1.8 km), via the NOAA PIFSC
+    OceanWatch ERDDAP (no account). It also gives the coastline (elevation >= 0 is land) that sets
+    the 0-50 km coastal buffer study area. --bathy-nc reads a GEBCO 2024 subset downloaded from
+    https://download.gebco.net instead (netCDF, variable `elevation`).
 
 Output (all npz with time in unix days, lat/lon ascending, values[time, lat, lon]):
   real_env/sst_daily.npz     sst, sst_anom (deg C)
   real_env/chl_monthly.npz   chl (mg/m3)
   real_env/wind_monthly.npz  wind (m/s)
+  real_env/bathy.npz         elevation (m, positive up; no time axis)
 
 Then run the simulator on them, e.g.
   python -m purse_seine_sim --vessels 10 --start 2023-01-01 --end 2025-12-31 --no-track --out sim_real \\
@@ -53,6 +60,9 @@ CHL_DATASETS = [
     ("nesdisVHNSQchlaMonthly", "chlor_a", True),     # VIIRS SNPP, 4 km, monthly
 ]
 PAD_DEG = 0.25      # fetch a little beyond the region so interpolation works at the edges
+BATHY_SERVERS = ["https://oceanwatch.pifsc.noaa.gov/erddap/griddap"]
+BATHY_DATASET = "ETOPO_2022_v1_60s"
+BATHY_PAD_DEG = 0.5     # wider, so coast just outside the region still counts for distance to coast
 
 
 # =========================
@@ -242,6 +252,51 @@ def fetch_chl(region, months, res=0.05, verbose=True):
     return None
 
 
+def fetch_bathy(region, verbose=True):
+    """ETOPO 2022 elevation (m, positive up) around the region."""
+    lat0, lat1 = region.lat_min - BATHY_PAD_DEG, region.lat_max + BATHY_PAD_DEG
+    lon0, lon1 = region.lon_min - BATHY_PAD_DEG, region.lon_max + BATHY_PAD_DEG
+    query = f"{BATHY_DATASET}.csv?z[({lat0}):1:({lat1})][({lon0}):1:({lon1})]"
+    err = None
+    for server in BATHY_SERVERS:
+        try:
+            text = fetch(f"{server}/{query}", retries=2, timeout=180)
+            break
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            print(f"  {server.split('/')[2]} did not answer ({e})")
+            err = e
+    else:
+        raise ConnectionError("no bathymetry server answered. Download a GEBCO subset from "
+                              "https://download.gebco.net and pass it with --bathy-nc") from err
+    rows = list(csv.reader(io.StringIO(text)))[2:]
+    la = np.array([float(r[0]) for r in rows])
+    lo = np.array([float(r[1]) for r in rows])
+    z = np.array([float(r[2]) if r[2] not in ("", "NaN") else np.nan for r in rows])
+    lats, lons = np.unique(la), np.unique(lo)
+    elev = np.full((lats.size, lons.size), np.nan)
+    elev[np.searchsorted(lats, la), np.searchsorted(lons, lo)] = z
+    if verbose:
+        print(f"  Bathymetry from {BATHY_DATASET}: {lats.size} x {lons.size} cells")
+    return {"lat": lats, "lon": lons, "elevation": elev.astype(np.float32), "source": np.array(BATHY_DATASET)}
+
+
+def read_bathy_nc(path, region, verbose=True):
+    """Cut the region out of a GEBCO (or any lat/lon `elevation`) netCDF file."""
+    import netCDF4
+
+    with netCDF4.Dataset(path) as ds:
+        lat, lon = ds["lat"][:].astype(float), ds["lon"][:].astype(float)
+        i = np.flatnonzero((lat >= region.lat_min - BATHY_PAD_DEG) & (lat <= region.lat_max + BATHY_PAD_DEG))
+        j = np.flatnonzero((lon >= region.lon_min - BATHY_PAD_DEG) & (lon <= region.lon_max + BATHY_PAD_DEG))
+        elev = np.ma.filled(ds["elevation"][i[0]:i[-1] + 1, j[0]:j[-1] + 1].astype(float), np.nan)
+    lat, lon = lat[i], lon[j]
+    if lat[0] > lat[-1]:
+        lat, elev = lat[::-1], elev[::-1]
+    if verbose:
+        print(f"  Bathymetry from {Path(path).name}: {lat.size} x {lon.size} cells")
+    return {"lat": lat, "lon": lon, "elevation": elev.astype(np.float32), "source": np.array(Path(path).name)}
+
+
 def fetch_era5_wind(region, months, out_dir, verbose=True):
     """ERA5 monthly mean 10 m wind speed (needs cdsapi + a CDS key, and xarray + netcdf4 to read it)."""
     import cdsapi
@@ -286,15 +341,24 @@ def main(argv=None):
     p.add_argument("--oisst-ltm", help="PSL daily long-term mean file, for the SST anomaly")
     p.add_argument("--psl", action="store_true",
                    help="download the yearly NOAA PSL OISST files (+ 1991-2020 mean) instead of using ERDDAP")
+    p.add_argument("--bathy", action="store_true", help="also fetch ETOPO 2022 bathymetry")
+    p.add_argument("--bathy-nc", help="read bathymetry from this GEBCO netCDF file instead of downloading it")
     a = p.parse_args(argv)
-    if not a.oisst_nc and not (a.start and a.end):
-        p.error("--start and --end are required unless --oisst-nc is given")
+    bathy_only = (a.bathy or a.bathy_nc) and not (a.oisst_nc or a.start or a.end)
+    if not bathy_only and not a.oisst_nc and not (a.start and a.end):
+        p.error("--start and --end are required unless --oisst-nc or only --bathy is given")
     if a.psl and not (a.start and a.end):
         p.error("--psl needs --start and --end")
 
     region = RegionConfig()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
+    if a.bathy or a.bathy_nc:
+        bathy = read_bathy_nc(a.bathy_nc, region) if a.bathy_nc else fetch_bathy(region)
+        np.savez_compressed(out / "bathy.npz", **bathy)
+        if bathy_only:
+            print(f"Saved to {out.resolve()}")
+            return
     if a.psl:
         first = np.datetime64(a.start, "M") - np.timedelta64(1, "M")
         years = range(int(str(first)[:4]), int(a.end[:4]) + 1)

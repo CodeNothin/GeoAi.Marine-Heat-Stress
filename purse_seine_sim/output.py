@@ -149,6 +149,7 @@ def write_truth_maps(out_dir, cfg, geo, env, models):
     lons = np.arange(r.lon_min + res / 2, r.lon_max, res)
     LAT, LON = np.meshgrid(lats, lons, indexing="ij")
     ocean = geo.is_ocean(LAT, LON)
+    study_area = ocean & geo.lookup("study_area", LAT, LON)
     folder = Path(out_dir) / "truth" / "maps"
     folder.mkdir(parents=True, exist_ok=True)
     mean_lam = {m.sp.code: np.zeros(LAT.shape) for m in models}
@@ -166,7 +167,8 @@ def write_truth_maps(out_dir, cfg, geo, env, models):
             g[ocean] = m.density(s)
             fields[f"lambda_{m.sp.code}"] = g
             mean_lam[m.sp.code] += np.nan_to_num(g) / len(months)
-        np.savez_compressed(folder / f"truth_{month}.npz", lat=lats, lon=lons, ocean=ocean, **fields)
+        np.savez_compressed(folder / f"truth_{month}.npz", lat=lats, lon=lons, ocean=ocean,
+                            study_area=study_area, **fields)
     for k in mean_lam:
         mean_lam[k][~ocean] = np.nan
     return lats, lons, mean_lam

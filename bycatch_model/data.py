@@ -143,9 +143,10 @@ class Grid:
     month: str
     lat: np.ndarray
     lon: np.ndarray
-    mask: np.ndarray            # 2-D: legal fishing cells
+    mask: np.ndarray            # 2-D: legal fishing cells inside the study area
     features: dict              # 1-D over mask cells
     truth_lambda: dict          # code -> 1-D (simulations only)
+    land: np.ndarray | None = None   # 2-D land mask for plots
 
     @property
     def cell_latlon(self):
@@ -164,10 +165,12 @@ def load_grid(npz_path, set_type="free_school") -> Grid:
     month = re.search(r"(\d{4}-\d{2})", npz_path.name).group(1)
     d = np.load(npz_path)
     mask = d["ocean"] & (np.nan_to_num(d["depth"]) >= MIN_DEPTH_M) & (np.nan_to_num(d["dist_coast"]) >= MIN_DIST_COAST_KM)
+    if "study_area" in d.files:                      # coastal buffer (grids from older runs have none)
+        mask &= d["study_area"]
     t = to_unix_days(f"{month}-15T05:00")
     base = {k: np.asarray(d[k], float)[mask] for k in SMOOTH_TERMS}
     n = int(mask.sum())
     base["moon"] = np.full(n, float(moon_illumination(t)))
     features = add_derived(base, np.full(n, t), np.full(n, set_type))
     truth = {k[len("lambda_"):]: np.asarray(d[k], float)[mask] for k in d.files if k.startswith("lambda_")}
-    return Grid(month, d["lat"], d["lon"], mask, features, truth)
+    return Grid(month, d["lat"], d["lon"], mask, features, truth, land=~d["ocean"])

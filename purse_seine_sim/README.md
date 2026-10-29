@@ -53,7 +53,7 @@ Training rows = `logbook/sets.csv` + `logbook/catch.csv` (pivoted per species) +
 
 | Part | How |
 |---|---|
-| Geography | Hand-digitised coastline, islands, river mouths and seagrass areas. Depth and distance to coast are on a 0.02 deg grid |
+| Geography | Coastline, islands and depth from real ETOPO 2022 bathymetry with `--bathy-npz` (otherwise a hand-digitised coastline and analytic depth). River mouths and seagrass areas are approximate. Depth, distance to coast and the 0-50 km coastal-buffer study area are on a 0.02 deg grid |
 | Environment | Daily SST = monthly climatology + interannual AR(1) + the 2024 marine heatwave (assumed) + moving eddies. CHL-a falls offshore, rises at river plumes in the NE monsoon, and drops during heatwaves. Wind follows the monsoon, plus storms. Also SST fronts and moon phase |
 | Species | 6 targets (Indo-Pacific mackerel, Indian mackerel, sardinella, scad, longtail tuna, kawakawa), trash fish, and 5 ETP groups (whale shark, mobulids, requiem sharks, green turtle, Irrawaddy dolphin). Each has habitat responses, seasonality, heat-stress avoidance and random patchiness |
 | Vessels | Trips of 5–12 days from 5 ports. Free-school, own-FAD and light-luring sets (light luring only on dark-moon nights). Skippers pick spots by noisy knowledge of fish value minus steaming distance. Rules: no sets within 3 nm of the coast, Feb–May closure box (approximate), weather limits |

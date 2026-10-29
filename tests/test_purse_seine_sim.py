@@ -149,5 +149,35 @@ class EnvironmentTest(unittest.TestCase):
             SimConfig.from_dict({"fleet": {"n_vesels": 3}})
 
 
+
+class GeographyTest(unittest.TestCase):
+    def test_analytic_study_area(self):
+        geo = Geography(SimConfig().region, np.random.default_rng(0))
+        self.assertTrue(np.all(geo.dist_coast_km[geo.study_area] <= 50.0))
+        self.assertFalse(geo.study_area[geo.land].any())
+        self.assertTrue(geo.study_area.any() and not geo.study_area[~geo.land].all())
+
+    def test_bathymetry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            # Land west of 99.8 E, a shelf deepening eastward, an island and an inland pit below sea level.
+            lat, lon = np.arange(5.8, 12.01, 1 / 60), np.arange(98.5, 102.71, 1 / 60)
+            LAT, LON = np.meshgrid(lat, lon, indexing="ij")
+            elev = np.where(LON < 99.8, 50.0, -30.0 * (LON - 99.8))
+            elev[(LAT - 9.0) ** 2 + (LON - 101.0) ** 2 < 0.1 ** 2] = 20.0
+            elev[(LAT - 9.0) ** 2 + (LON - 99.3) ** 2 < 0.1 ** 2] = -5.0
+            path = Path(tmp) / "bathy.npz"
+            np.savez(path, lat=lat, lon=lon, elevation=elev)
+            cfg = SimConfig.from_dict({"region": {"bathy_npz": str(path), "coastal_buffer_km": 40.0}})
+            geo = Geography(cfg.region, np.random.default_rng(0))
+            self.assertTrue(geo.lookup("land", 9.0, 99.3))          # pit is not sea
+            self.assertTrue(geo.lookup("land", 9.0, 101.0))         # island
+            self.assertAlmostEqual(geo.lookup("depth_m", 8.0, 101.81), 60.0, delta=1.0)
+            self.assertTrue(np.all(geo.depth_m[~geo.land] > 0))
+            self.assertTrue(geo.lookup("study_area", 8.0, 100.0))   # ~20 km off the coast
+            self.assertFalse(geo.lookup("study_area", 8.0, 100.5))  # ~75 km off
+            self.assertFalse(geo.lookup("study_area", 9.0, 101.2))  # offshore island ring: not our coastal band
+            self.assertTrue(np.all(geo.dist_coast_km[geo.study_area] <= 40.0))
+
+
 if __name__ == "__main__":
     unittest.main()

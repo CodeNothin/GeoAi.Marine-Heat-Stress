@@ -77,7 +77,9 @@ class ForecastTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             data, out = Path(tmp) / "data", Path(tmp) / "fc"
             cfg = SimConfig.from_dict({"start": "2024-01-01", "end": "2025-03-31", "seed": 5, "write_track": False,
-                                       "fleet": {"n_vessels": 4}})
+                                       "fleet": {"n_vessels": 4},
+                                       # map skill is scored over the whole domain, not the 50 km study area
+                                       "region": {"coastal_buffer_km": 1000.0}})
             run_simulation(cfg, data, write_maps=True, verbose=False)
             archive = EnvArchive(data)
             self.assertFalse(archive.has_lags("2024-03"))
@@ -98,7 +100,9 @@ class EndToEndTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             data, out = Path(tmp) / "data", Path(tmp) / "model"
             cfg = SimConfig.from_dict({"start": "2024-01-01", "end": "2025-03-31", "seed": 3, "write_track": False,
-                                       "fleet": {"n_vessels": 3}})
+                                       "fleet": {"n_vessels": 3},
+                                       # map skill is scored over the whole domain, not the 50 km study area
+                                       "region": {"coastal_buffer_km": 1000.0}})
             run_simulation(cfg, data, write_maps=True, verbose=False)
             ds = load_dataset(data)
             self.assertEqual(len(ds), len(ds.presence["RAST_BRA"]))

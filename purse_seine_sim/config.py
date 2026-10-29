@@ -33,6 +33,8 @@ class RegionConfig:
     lon_max: float = 102.2
     grid_res_deg: float = 0.02      # static fields (land mask, depth, distance to coast)
     map_res_deg: float = 0.05       # exported truth maps / prediction grid
+    bathy_npz: str | None = None    # real bathymetry (fetch_env_data.py --bathy); None = analytic coast + depth
+    coastal_buffer_km: float = 50.0  # study area: ocean within this distance of the coast
 
 
 # =========================

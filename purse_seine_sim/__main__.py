@@ -27,6 +27,7 @@ def main(argv=None):
     p.add_argument("--sst-npz", help="real daily SST cube (from fetch_env_data.py) instead of the analytic SST")
     p.add_argument("--chl-npz", help="real CHL-a cube instead of the analytic CHL-a")
     p.add_argument("--wind-npz", help="real monthly wind cube (ERA5) instead of the analytic wind level")
+    p.add_argument("--bathy-npz", help="real bathymetry (fetch_env_data.py --bathy) instead of the analytic coast and depth")
     p.add_argument("--bycatch-avoidance", type=float, help="skipper avoids ETP hotspots (0 = status quo)")
     p.add_argument("--write-spec", metavar="PATH", help="write the data specification markdown and exit")
     p.add_argument("--validate", metavar="DIR", help="validate a folder of real or simulated data and exit")
@@ -60,6 +61,8 @@ def main(argv=None):
         cfg.env.sst_override_npz = a.sst_npz
     if a.chl_npz:
         cfg.env.chl_override_npz = a.chl_npz
+    if a.bathy_npz:
+        cfg.region.bathy_npz = a.bathy_npz
     if a.wind_npz:
         cfg.env.wind_override_npz = a.wind_npz
     if a.bycatch_avoidance is not None:

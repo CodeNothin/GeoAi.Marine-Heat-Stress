@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="study_area_data.js"></script>
 
 <style>
 :root{
@@ -756,7 +757,6 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   overflow:hidden;
   background:#d8ecf7;
 }
-.fc-cloud{filter:blur(5px)}
 .fc-skill td:not(:first-child),.fc-skill th:not(:first-child){text-align:right;font-family:var(--font-num)}
 .fc-best{font-weight:900;color:var(--teal)}
 .fc-chart-wrap{position:relative;height:230px}
@@ -851,7 +851,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   <div class="card">
     <div class="card-title">GeoAI Workflow</div>
     <div class="flow">
-      <div><b>Step 1</b><h4>Study Area</h4><p>กำหนด 5 จังหวัด + วิเคราะห์รายเดือน</p></div>
+      <div><b>Step 1</b><h4>Study Area</h4><p>5 จังหวัด · coastal buffer 0–50 km จากแนวชายฝั่งจริง + วิเคราะห์รายเดือน</p></div>
       <div><b>Step 2</b><h4>Data Ingestion</h4><p>SST, CHL-a, ERA5, ประมง, OSM, boundary</p></div>
       <div><b>Step 3</b><h4>Index</h4><p>Heat Stress, Productivity, Climate Exposure</p></div>
       <div><b>Step 4</b><h4>AI/ML</h4><p>Anomaly detection, clustering, sensitivity analysis</p></div>
@@ -873,7 +873,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     <div class="card-title">GeoAI Method Depth · Raster-to-Policy Pipeline</div>
     <div class="method-depth">
       <div class="method-step"><b>01</b><h4>Raster</h4><p>นำเข้าข้อมูลดาวเทียมรายวัน/รายเดือนในรูป raster หรือ tiles</p></div>
-      <div class="method-step"><b>02</b><h4>Coastal Buffer</h4><p>ตัดพื้นที่วิเคราะห์เฉพาะเขตประมงชายฝั่ง</p></div>
+      <div class="method-step"><b>02</b><h4>Coastal Buffer</h4><p>ตัดพื้นที่วิเคราะห์เฉพาะเขตประมงชายฝั่ง 0–50 km (แนวชายฝั่งและความลึกจาก ETOPO 2022)</p></div>
       <div class="method-step"><b>03</b><h4>Zonal Stats</h4><p>คำนวณค่ารายจังหวัด/เดือน</p></div>
       <div class="method-step"><b>04</b><h4>Baseline</h4><p>เทียบค่ากับ baseline เดือนเดียวกัน</p></div>
       <div class="method-step"><b>05</b><h4>Risk Index</h4><p>รวม Heat Stress, Productivity, Climate และ Dependency</p></div>
@@ -923,6 +923,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
       <label class="layer-check"><input type="checkbox" id="showCHLA" checked onchange="toggleOverlays()"> CHL-a anomaly</label>
       <label class="layer-check"><input type="checkbox" id="showPorts" checked onchange="toggleOverlays()"> ท่าเรือ/จุดขึ้นปลา</label>
       <label class="layer-check"><input type="checkbox" id="showBuffer" checked onchange="toggleOverlays()"> Coastal buffer</label>
+      <label class="layer-check"><input type="checkbox" id="showBathy" checked onchange="toggleOverlays()"> ความลึก (isobath)</label>
     </div>
 
     <div id="riskMap"></div>
@@ -934,6 +935,8 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
       <span><span class="dot" style="background:rgba(255,80,40,.45)"></span>SST anomaly</span>
       <span><span class="dot" style="background:rgba(40,90,220,.45)"></span>CHL-a anomaly</span>
       <span><span class="dot" style="background:#1A3A2A"></span>ท่าเรือ/จุดขึ้นปลา</span>
+      <span><span class="dot" style="background:rgba(46,125,110,.25);border:1.5px dashed #2E7D6E"></span>Study area 0–50 km</span>
+      <span><span class="dot" style="background:#4A80B0"></span>เส้นความลึก 10–70 m</span>
     </div>
   </div>
 
@@ -1015,7 +1018,8 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   <div class="section-title">พยากรณ์การกระจายตัวของปลาเดือนถัดไป · One-month-ahead Forecast</div>
   <div class="section-sub">
     ใช้สภาพทะเลของเดือนที่ผ่านมา (SST, ค่าผิดปกติของ SST, ความร้อนสะสม 3 เดือน, CHL-a, ลม) ทำนายโอกาสจับได้ของแต่ละชนิดในเดือนถัดไป
-    แสดงเป็นแผนที่หยาบ 0.25° แบบ "เมฆ" ตามความละเอียดของข้อมูลดาวเทียม ไม่ใช่ค่ารายช่องที่แม่นยำ
+    แสดงเป็นกริด 0.05° เฉพาะพื้นที่ทำประมงอวนล้อมที่ถูกกฎหมาย (≥3 ไมล์ทะเล, ลึก ≥15 ม.) เหมือนแผนที่ EcoCast
+    ข้อมูลดาวเทียมมีความละเอียด ~0.25° จึงไม่ควรอ่านค่ารายช่องว่าแม่นยำ
   </div>
   <div class="notice" id="fcNotice">
     <b>ข้อมูลจำลอง (simulated):</b> logbook และการตอบสนองของสัตว์น้ำต่อสภาพแวดล้อมยังเป็นค่าสมมติจากตัวจำลอง
@@ -1025,7 +1029,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 
   <div class="ecocast-layout">
     <div class="card">
-      <div class="card-title">แผนที่พยากรณ์ · Forecast cloud map</div>
+      <div class="card-title">แผนที่พยากรณ์ · Forecast grid map</div>
       <div class="controls">
         <label for="fcMonthSelect">เดือน:</label>
         <select id="fcMonthSelect" onchange="renderForecast()"></select>
@@ -1078,7 +1082,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 
   <div class="grid-4" style="margin-bottom:1rem">
     <div class="stat-box"><div class="stat-label">Boundary</div><div class="stat-val">ADM1</div><div class="stat-sub">ขอบเขตจังหวัดนำร่องฝังในเว็บ</div></div>
-    <div class="stat-box"><div class="stat-label">Coastal Buffer</div><div class="stat-val">50 km</div><div class="stat-sub">พื้นที่วิเคราะห์ชายฝั่ง</div></div>
+    <div class="stat-box"><div class="stat-label">Coastal Buffer</div><div class="stat-val">50 km</div><div class="stat-sub" id="bufferStatSub">พื้นที่วิเคราะห์ชายฝั่ง</div></div>
     <div class="stat-box red"><div class="stat-label">Real SST</div><div class="stat-val">CSV</div><div class="stat-sub">ข้อมูลจาก notebook/script</div></div>
     <div class="stat-box amber"><div class="stat-label">Output Unit</div><div class="stat-val">P × M</div><div class="stat-sub">province × month table</div></div>
   </div>
@@ -1265,6 +1269,7 @@ Final FRS = 0.4 × MHSI + 0.3 × LPS + 0.2 × CEI + 0.1 × FDI</code>
   <div class="ref-item"><span class="ref-id">CHL-a</span><h4>GISTDA Open Data — CHL-a เฉลี่ยรายวัน / NASA OceanColor</h4><p>ใช้เป็น proxy ของความอุดมสมบูรณ์ทางทะเลและสร้าง Low Productivity Signal</p><div class="ref-url">https://opendata.gistda.or.th · https://oceancolor.gsfc.nasa.gov</div></div>
   <div class="ref-item"><span class="ref-id">ERA5</span><h4>Copernicus Climate Data Store — ERA5</h4><p>ใช้ตัวแปรลม ฝน อุณหภูมิ และ climate anomaly เพื่อสร้าง Climate Exposure Index</p><div class="ref-url">https://cds.climate.copernicus.eu</div></div>
   <div class="ref-item"><span class="ref-id">DOF</span><h4>กรมประมง / Government Data Catalog</h4><p>ใช้ปริมาณและมูลค่าการจับสัตว์น้ำรายจังหวัดเพื่อสร้าง Fishery Dependency Index และ validation</p><div class="ref-url">https://catalog.fisheries.go.th · https://gdcatalog.go.th</div></div>
+  <div class="ref-item"><span class="ref-id">BATHYMETRY</span><h4>NOAA NCEI ETOPO 2022 (60 arc-second) / GEBCO 2024</h4><p>ใช้แนวชายฝั่ง ความลึกน้ำ และระยะห่างจากฝั่งเพื่อกำหนด study area (coastal buffer 0–50 km) และเป็นตัวแปรในโมเดล bycatch</p><div class="ref-url">https://www.ncei.noaa.gov/products/etopo-global-relief-model · https://www.gebco.net</div></div>
   <div class="ref-item"><span class="ref-id">OSM</span><h4>OpenStreetMap Thailand Extract / Geofabrik</h4><p>ใช้ตำแหน่งถนน ท่าเรือ จุดขึ้นปลา ชุมชน และโครงสร้างพื้นฐานชายฝั่ง</p><div class="ref-url">https://download.geofabrik.de/asia/thailand.html</div></div>
   <div class="ref-item"><span class="ref-id">BOUNDARY</span><h4>Thailand Subnational Administrative Boundaries</h4><p>ใช้ GeoJSON/Shapefile ขอบเขตจังหวัดและอำเภอสำหรับ choropleth map และ aggregate raster</p><div class="ref-url">https://www.geoboundaries.org · https://data.humdata.org/dataset/cod-ab-tha</div></div>
 </section>
@@ -1350,7 +1355,44 @@ const coastalBufferPoly = [
   [7.45,100.35],[8.25,100.02],[9.15,99.72],[10.05,99.40],[10.70,99.12],[11.10,98.92]
 ];
 
-let map, provinceLayer, sstLayer, chlaLayer, portLayer, bufferLayer;
+/* Study area: 0–50 km coastal buffer and isobaths from study_area_data.js (export_study_area_web.py).
+   Falls back to the approximate polygon above if the file is missing. */
+const studyArea = window.STUDY_AREA || null;
+const isobathColors = {10:"#8FB8D8", 20:"#6A9CC6", 30:"#4A80B0", 50:"#2F6494", 70:"#1D4A75"};
+
+function studyAreaPopup(){
+  if(!studyArea) return "<b>Coastal analysis buffer</b><br>พื้นที่จำลอง 0–50 km จากชายฝั่ง (โดยประมาณ)";
+  const m = studyArea.meta;
+  return `<b>Study area · Coastal buffer 0–${m.buffer_km} km</b><br>` +
+    `พื้นที่ ${m.area_km2.toLocaleString()} km² · ความลึกเฉลี่ย ${m.mean_depth_m} m (สูงสุด ${m.max_depth_m} m)<br>` +
+    `<span style="color:var(--muted)">แนวชายฝั่งและความลึกจาก ${m.source}</span>`;
+}
+
+function studyAreaLayer(style){
+  return L.polygon(studyArea ? studyArea.buffer : coastalBufferPoly, style).bindPopup(studyAreaPopup());
+}
+
+function isobathLayer(){
+  const group = L.layerGroup();
+  if(!studyArea) return group;
+  studyArea.isobaths.forEach(iso => {
+    L.polyline(iso.lines, {color:isobathColors[iso.depth_m] || "#4A80B0", weight:iso.depth_m >= 50 ? 1.3 : 0.9, opacity:0.8})
+      .bindTooltip(`ความลึก ${iso.depth_m} m`, {sticky:true})
+      .addTo(group);
+  });
+  return group;
+}
+
+function addStudyAreaOutline(m){
+  // Outline above the data overlay; clicks pass through to the map's cell popup.
+  if(!studyArea) return;
+  const pane = m.createPane("studyArea");
+  pane.style.zIndex = 450;
+  pane.style.pointerEvents = "none";
+  L.polygon(studyArea.buffer, {pane:"studyArea", interactive:false, color:"#1A3A2A", weight:1.2, dashArray:"5,5", fill:false}).addTo(m);
+}
+
+let map, provinceLayer, sstLayer, chlaLayer, portLayer, bufferLayer, bathyLayer;
 let pipelineMap, pipelineMapLayer, pipelineBufferLayer;
 let trendChart, provinceChart, driverChart;
 let activePage = "home";
@@ -1472,13 +1514,17 @@ function initMap(){
     attribution:"&copy; OpenStreetMap contributors"
   }).addTo(map);
 
-  bufferLayer = L.polygon(coastalBufferPoly, {
+  bathyLayer = isobathLayer().addTo(map);
+  bufferLayer = studyAreaLayer({
     color:"#2E7D6E",
     weight:1.8,
     dashArray:"6,6",
     fillColor:"#2E7D6E",
     fillOpacity:0.08
-  }).bindPopup("<b>Coastal analysis buffer</b><br>พื้นที่จำลอง 0–50 km จากชายฝั่ง").addTo(map);
+  }).addTo(map);
+  if(studyArea){
+    document.getElementById("bufferStatSub").textContent = `พื้นที่วิเคราะห์ชายฝั่ง · ${studyArea.meta.area_km2.toLocaleString()} km²`;
+  }
 
   provinceLayer = L.layerGroup().addTo(map);
   sstLayer = L.layerGroup().addTo(map);
@@ -1576,6 +1622,7 @@ function toggleOverlays(){
   const showCHLA = document.getElementById("showCHLA").checked;
   const showPorts = document.getElementById("showPorts").checked;
   const showBuffer = document.getElementById("showBuffer").checked;
+  const showBathy = document.getElementById("showBathy").checked;
 
   if(showSST && !map.hasLayer(sstLayer)) sstLayer.addTo(map);
   if(!showSST && map.hasLayer(sstLayer)) map.removeLayer(sstLayer);
@@ -1588,6 +1635,9 @@ function toggleOverlays(){
 
   if(showBuffer && !map.hasLayer(bufferLayer)) bufferLayer.addTo(map);
   if(!showBuffer && map.hasLayer(bufferLayer)) map.removeLayer(bufferLayer);
+
+  if(showBathy && !map.hasLayer(bathyLayer)) bathyLayer.addTo(map);
+  if(!showBathy && map.hasLayer(bathyLayer)) map.removeLayer(bathyLayer);
 }
 
 function updateStatCards(ranked,m){
@@ -2136,14 +2186,13 @@ function ensurePipelineMap(){
       attribution:"&copy; OpenStreetMap contributors"
     }).addTo(pipelineMap);
 
-    pipelineBufferLayer = L.polygon(coastalBufferPoly, {
+    pipelineBufferLayer = studyAreaLayer({
       color:"#2E7D6E",
       weight:1.6,
       dashArray:"6,6",
       fillColor:"#2E7D6E",
       fillOpacity:0.06
     })
-    .bindPopup("<b>Coastal analysis buffer</b><br>พื้นที่วิเคราะห์ชายฝั่ง 0–50 km")
     .addTo(pipelineMap);
 
     pipelineMapLayer = L.layerGroup().addTo(pipelineMap);
@@ -2270,6 +2319,7 @@ function ecoRealDataNote(m){
   (m.real_sst ? real : sim).push(m.real_sst ? "SST และค่าผิดปกติ (NOAA OISST v2.1)" : "SST");
   (m.real_wind ? real : sim).push(m.real_wind ? "ลม (ERA5)" : "ลม");
   (m.real_chl ? real : sim).push(m.real_chl ? "CHL-a (ดาวเทียม NOAA)" : "CHL-a");
+  (m.real_bathy ? real : sim).push(m.real_bathy ? "ความลึกและแนวชายฝั่ง (ETOPO 2022)" : "ความลึก");
   if(!real.length) return "";
   return `<br><b>ข้อมูลจริง:</b> ${real.join(", ")} · <b>ยังเป็นค่าจำลอง:</b> ${sim.concat(["logbook และการตอบสนองของสัตว์น้ำ"]).join(", ")}`;
 }
@@ -2368,6 +2418,7 @@ function initEcocast(data){
   const half = g.res / 2;
   eco.bounds = [[g.lat0 - half, g.lon0 - half], [g.lat0 + (g.nlat - 1) * g.res + half, g.lon0 + (g.nlon - 1) * g.res + half]];
   ecoMap.fitBounds(eco.bounds, {padding:[10,10]});
+  addStudyAreaOutline(ecoMap);
   ecoMap.on("click", ecoCellPopup);
 
   renderEcoModelTable();
@@ -2595,7 +2646,10 @@ window.ensureForecast = function(){
 };
 
 function initForecast(data){
-  fc = {data, grid:data.grid, species:Object.fromEntries(data.species.map(s => [s.code, s]))};
+  const cells = new Uint16Array(ecoB64(data.cells).buffer);
+  const lookup = new Int32Array(data.grid.nlat * data.grid.nlon).fill(-1);
+  cells.forEach((flat, k) => { lookup[flat] = k; });
+  fc = {data, grid:data.grid, cells, lookup, species:Object.fromEntries(data.species.map(s => [s.code, s]))};
   const up = data.meta.upcoming_month;
   const monthSel = document.getElementById("fcMonthSelect");
   data.months.forEach(m => {
@@ -2622,6 +2676,7 @@ function initForecast(data){
   const g = data.grid, half = g.res / 2;
   fc.bounds = [[g.lat0 - half, g.lon0 - half], [g.lat0 + (g.nlat - 1) * g.res + half, g.lon0 + (g.nlon - 1) * g.res + half]];
   fcMap.fitBounds(fc.bounds, {padding:[10,10]});
+  addStudyAreaOutline(fcMap);
   fcMap.on("click", fcCellPopup);
   renderForecast();
 }
@@ -2650,21 +2705,19 @@ window.renderForecast = function(){
   const ctx = canvas.getContext("2d");
   const img = ctx.createImageData(g.nlon, g.nlat);
   if(vals){
-    for(let row = 0; row < g.nlat; row++){
-      for(let col = 0; col < g.nlon; col++){
-        const v = vals[row * g.nlon + col];
-        if(Number.isNaN(v)) continue;
-        const t = Math.min(v / vmax, 1);
-        const c = ecoColor(cmap, t);
-        // Low values fade out so the high-probability areas read as clouds.
-        img.data.set([c[0], c[1], c[2], Math.round(40 + 200 * Math.sqrt(t))], ((g.nlat - 1 - row) * g.nlon + col) * 4);
-      }
+    for(let k = 0; k < fc.cells.length; k++){
+      const v = vals[k];
+      if(Number.isNaN(v)) continue;
+      const flat = fc.cells[k];
+      const row = Math.floor(flat / g.nlon), col = flat % g.nlon;
+      const c = ecoColor(cmap, Math.min(v / vmax, 1));
+      img.data.set([c[0], c[1], c[2], 235], ((g.nlat - 1 - row) * g.nlon + col) * 4);
     }
   }
   ctx.putImageData(img, 0, 0);
   const url = canvas.toDataURL();
   if(fcOverlay) fcOverlay.setUrl(url);
-  else fcOverlay = L.imageOverlay(url, fc.bounds, {opacity:0.85, className:"fc-cloud"}).addTo(fcMap);
+  else fcOverlay = L.imageOverlay(url, fc.bounds, {opacity:0.85, className:"eco-pixelated"}).addTo(fcMap);
 
   const fmt = v => view === "truth" ? (v / sp.tmax).toFixed(2) : (v * 100).toFixed(0) + "%";
   document.getElementById("fcLegendBar").style.background = `linear-gradient(to right, ${ECO_CMAPS[cmap].join(",")})`;
@@ -2676,7 +2729,7 @@ window.renderForecast = function(){
     sd: `ความไม่แน่นอน = ส่วนเบี่ยงเบนของค่าพยากรณ์จากการฝึกซ้ำ ${fc.data.meta.n_boot} รอบ (สุ่มเที่ยวเรือ)`
   }[view];
   document.getElementById("fcLegendNote").textContent = vals
-    ? `${viewNote} · ${ecoMonthLabel(month)} · ช่อง 0.25°`
+    ? `${viewNote} · ${ecoMonthLabel(month)} · ช่อง 0.05°`
     : (view === "sd" ? "ความไม่แน่นอนมีเฉพาะเดือนพยากรณ์ล่วงหน้า" : "เดือนพยากรณ์ล่วงหน้ายังไม่มีค่าจริงให้เทียบ");
 
   renderForecastSkill(sp);
@@ -2737,16 +2790,21 @@ function fcCellPopup(e){
   const g = fc.grid;
   const row = Math.round((e.latlng.lat - g.lat0) / g.res);
   const col = Math.round((e.latlng.lng - g.lon0) / g.res);
-  if(row < 0 || row >= g.nlat || col < 0 || col >= g.nlon) return;
+  const k = row >= 0 && row < g.nlat && col >= 0 && col < g.nlon ? fc.lookup[row * g.nlon + col] : -1;
+  if(k < 0){
+    L.popup().setLatLng(e.latlng).setContent(
+      "<b>ไม่ใช่พื้นที่ทำประมงอวนล้อมที่ถูกกฎหมาย</b><br>บนบก, ห่างฝั่ง &lt; 3 ไมล์ทะเล หรือน้ำลึก &lt; 15 ม.").openOn(fcMap);
+    return;
+  }
   const month = document.getElementById("fcMonthSelect").value;
   const lines = fc.data.species.map(sp => {
     const v = fcValues(sp, "forecast", month);
-    const x = v ? v[row * g.nlon + col] : NaN;
+    const x = v ? v[k] : NaN;
     return `<tr><td>${sp.name_th}</td><td>${Number.isNaN(x) ? "—" : (x * 100).toFixed(0) + "%"}</td></tr>`;
   }).join("");
   L.popup().setLatLng(e.latlng).setContent(
     `<div class="eco-popup"><b>${e.latlng.lat.toFixed(2)}°N, ${e.latlng.lng.toFixed(2)}°E</b> · ${ecoMonthLabel(month)}<br>
-     โอกาสจับได้ต่อการล้อมอวน 1 ครั้ง (ช่อง 0.25°)<table style="margin-top:.4rem">${lines}</table></div>`).openOn(fcMap);
+     โอกาสจับได้ต่อการล้อมอวน 1 ครั้ง (ช่อง 0.05°)<table style="margin-top:.4rem">${lines}</table></div>`).openOn(fcMap);
 }
 
 /* ---------- Start ---------- */

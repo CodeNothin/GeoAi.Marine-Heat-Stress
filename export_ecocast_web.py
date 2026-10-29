@@ -1,6 +1,7 @@
 """Export trained bycatch-model maps to ecocast_data.js for the EcoCast page in index.html.
 
-    python -m purse_seine_sim --vessels 10 --start 2023-01-01 --end 2025-12-31 --no-track --out sim_output
+    python -m purse_seine_sim --vessels 10 --start 2023-01-01 --end 2025-12-31 --no-track --out sim_output \
+        --sst-npz real_env/sst_daily.npz --wind-npz real_env/wind_monthly.npz --bathy-npz real_env/bathy.npz
     python -m bycatch_model train --data sim_output --out model_output
     python export_ecocast_web.py
 
@@ -159,7 +160,8 @@ def main():
     summary_path = data_dir / "summary.json"
     sim_summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}
     cfg_path = data_dir / "config_used.json"
-    env_cfg = json.loads(cfg_path.read_text(encoding="utf-8")).get("env", {}) if cfg_path.exists() else {}
+    sim_cfg = json.loads(cfg_path.read_text(encoding="utf-8")) if cfg_path.exists() else {}
+    env_cfg, region_cfg = sim_cfg.get("env", {}), sim_cfg.get("region", {})
     holdout_path = model_dir / "holdout.json"
     holdout = json.loads(holdout_path.read_text(encoding="utf-8")) if holdout_path.exists() else {}
     train_sets = num(next(iter(metrics.values())).get("train_sets"))
@@ -176,6 +178,7 @@ def main():
             "real_sst": bool(env_cfg.get("sst_override_npz")),
             "real_chl": bool(env_cfg.get("chl_override_npz")),
             "real_wind": bool(env_cfg.get("wind_override_npz")),
+            "real_bathy": bool(region_cfg.get("bathy_npz")),
             "ecocast_skill": float(np.mean(skill)) if skill else None,
             "footprint_km": 40,
             "weights": {"revenue": 0.40, "RHIN_TYP": 0.15, "MOBU_SPP": 0.10, "CARC_SPP": 0.15,

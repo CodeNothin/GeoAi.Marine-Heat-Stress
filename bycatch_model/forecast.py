@@ -80,10 +80,12 @@ class EnvArchive:
             self.truth[month] = {k[len("lambda_"):]: np.asarray(d[k], float) for k in d.files if k.startswith("lambda_")}
             if not hasattr(self, "lat"):
                 self.lat, self.lon, self.ocean = np.asarray(d["lat"], float), np.asarray(d["lon"], float), d["ocean"]
+                self.study_area = d["study_area"] if "study_area" in d.files else self.ocean
         self.months = sorted(self.grids)
         self.res = float(self.lat[1] - self.lat[0])
         g = self.grids[self.months[0]]
-        self.mask = self.ocean & (np.nan_to_num(g["depth"]) >= MIN_DEPTH_M) & (np.nan_to_num(g["dist_coast"]) >= MIN_DIST_COAST_KM)
+        self.mask = (self.ocean & self.study_area
+                     & (np.nan_to_num(g["depth"]) >= MIN_DEPTH_M) & (np.nan_to_num(g["dist_coast"]) >= MIN_DIST_COAST_KM))
         LAT, LON = np.meshgrid(self.lat, self.lon, indexing="ij")
         self.cell_lat, self.cell_lon = LAT[self.mask], LON[self.mask]
 

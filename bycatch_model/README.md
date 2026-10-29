@@ -65,8 +65,10 @@ when there is less than a year of training data, because it cannot be learned fr
 - **Response curves:** `response_curves.json` and `plots/response_curves.png` show how the odds of a
   catch change with each heat/climate input.
 
-The web export keeps the 0.05 deg legal-fishing cells (no land, islands or 3 nm zone) and the
-**Forecast** tab draws them as a grid, like the EcoCast map. The SST and wind inputs are ~0.25 deg, so
+Forecast maps cover every sea cell of the study area, including inshore water outside the legal
+fishing zone (those cells reuse the habitat of the shallowest legal cells). Cells that are at least a
+third land in the bathymetry are dropped, so islands such as Ko Samui stay dry. The **Forecast** tab
+draws the 0.05 deg cells as a grid, like the EcoCast map. The SST and wind inputs are ~0.25 deg, so
 cell-level detail is not more precise than that.
 
 ## Real ocean data

@@ -21,6 +21,9 @@ at least 0.5% compared with the same model without them.
 
 Monthly environment grids are read from <data>/env/maps/env_YYYY-MM.npz (real satellite
 or ERA5 data, same keys as below) or, for simulations, <data>/truth/maps/truth_YYYY-MM.npz.
+
+Maps cover every sea cell of the study area, not only the legal fishing cells the sets come
+from: inshore cells use the depth / distance to coast of the shallowest legal cells.
 """
 from __future__ import annotations
 
@@ -32,7 +35,7 @@ from pathlib import Path
 import numpy as np
 
 from purse_seine_sim.environment import to_unix_days
-from purse_seine_sim.geo import distance_km
+from purse_seine_sim.geo import distance_km, land_fraction
 
 from .data import MIN_DEPTH_M, MIN_DIST_COAST_KM, add_derived, load_dataset
 from .ecocast import FOOTPRINT_KM, MIN_POSITIVES_SCORE, auc, footprint, spearman
@@ -48,6 +51,7 @@ KERNEL_KM = 30.0            # bandwidth of the persistence / climatology baselin
 KERNEL_PRIOR = 2.0          # pseudo-sets pulling sparse areas towards the overall rate
 MIN_TEST_SETS = 30          # a month with fewer sets is too thin to score a forecast on
 MIN_HEAT_GAIN = 0.005       # heat terms are kept only if they cut the Brier score by at least 0.5%
+MAX_LAND_FRACTION = 1 / 3   # a map cell this much land in the bathymetry is drawn as land (islands)
 
 
 def month_str(m) -> str:
@@ -84,8 +88,14 @@ class EnvArchive:
         self.months = sorted(self.grids)
         self.res = float(self.lat[1] - self.lat[0])
         g = self.grids[self.months[0]]
-        self.mask = (self.ocean & self.study_area
-                     & (np.nan_to_num(g["depth"]) >= MIN_DEPTH_M) & (np.nan_to_num(g["dist_coast"]) >= MIN_DIST_COAST_KM))
+        legal = (self.ocean & self.study_area
+                 & (np.nan_to_num(g["depth"]) >= MIN_DEPTH_M) & (np.nan_to_num(g["dist_coast"]) >= MIN_DIST_COAST_KM))
+        # Habitat range the sets were fished in; inshore map cells are clamped to it.
+        self.habitat_range = {k: (np.nanmin(g[k][legal]), np.nanmax(g[k][legal])) for k in ("depth", "dist_coast")}
+        self.mask = self.ocean & self.study_area & np.all([np.isfinite(g[k]) for k in GRID_KEYS], axis=0)
+        bathy = _bathy_path(data_dir)
+        if bathy:
+            self.mask &= ~(land_fraction(bathy, self.lat, self.lon, self.res) >= MAX_LAND_FRACTION)
         LAT, LON = np.meshgrid(self.lat, self.lon, indexing="ij")
         self.cell_lat, self.cell_lon = LAT[self.mask], LON[self.mask]
 
@@ -110,9 +120,11 @@ class EnvArchive:
         }
 
     def grid_features(self, month) -> dict:
-        """Forecast inputs for every legal cell of `month` (free-school set, no light)."""
+        """Forecast inputs for every map cell of `month` (free-school set, no light)."""
         i, j = np.nonzero(self.mask)
         F = self.lag_features(month, i, j)
+        for k, (lo, hi) in self.habitat_range.items():
+            F[k] = np.clip(F[k], lo, hi)
         n = i.size
         F["moon"] = np.zeros(n)
         return add_derived(F, np.full(n, to_unix_days(f"{month}-15T05:00")), np.full(n, "free_school"))
@@ -121,6 +133,15 @@ class EnvArchive:
         out = np.full(self.mask.shape, np.nan)
         out[self.mask] = values
         return out
+
+
+def _bathy_path(data_dir):
+    """The bathymetry file the simulator used, if any (paths in config_used.json are relative to the repo)."""
+    cfg = Path(data_dir) / "config_used.json"
+    if not cfg.exists():
+        return None
+    path = json.loads(cfg.read_text(encoding="utf-8")).get("region", {}).get("bathy_npz")
+    return path if path and Path(path).exists() else None
 
 
 def set_features(ds, archive):

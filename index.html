@@ -1018,7 +1018,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   <div class="section-title">พยากรณ์การกระจายตัวของปลาเดือนถัดไป · One-month-ahead Forecast</div>
   <div class="section-sub">
     ใช้สภาพทะเลของเดือนที่ผ่านมา (SST, ค่าผิดปกติของ SST, ความร้อนสะสม 3 เดือน, CHL-a, ลม) ทำนายโอกาสจับได้ของแต่ละชนิดในเดือนถัดไป
-    แสดงเป็นกริด 0.05° เฉพาะพื้นที่ทำประมงอวนล้อมที่ถูกกฎหมาย (≥3 ไมล์ทะเล, ลึก ≥15 ม.) เหมือนแผนที่ EcoCast
+    แสดงเป็นกริด 0.05° ครอบคลุมทะเลทั้งหมดในพื้นที่ศึกษา (ไม่รวมแผ่นดินและเกาะ เช่น เกาะสมุย เกาะพะงัน)
     ข้อมูลดาวเทียมมีความละเอียด ~0.25° จึงไม่ควรอ่านค่ารายช่องว่าแม่นยำ
   </div>
   <div class="notice" id="fcNotice">
@@ -2793,7 +2793,7 @@ function fcCellPopup(e){
   const k = row >= 0 && row < g.nlat && col >= 0 && col < g.nlon ? fc.lookup[row * g.nlon + col] : -1;
   if(k < 0){
     L.popup().setLatLng(e.latlng).setContent(
-      "<b>ไม่ใช่พื้นที่ทำประมงอวนล้อมที่ถูกกฎหมาย</b><br>บนบก, ห่างฝั่ง &lt; 3 ไมล์ทะเล หรือน้ำลึก &lt; 15 ม.").openOn(fcMap);
+      "<b>นอกพื้นที่พยากรณ์</b><br>แผ่นดิน เกาะ หรืออยู่นอกพื้นที่ศึกษา (ห่างฝั่ง &gt; 50 กม.)").openOn(fcMap);
     return;
   }
   const month = document.getElementById("fcMonthSelect").value;

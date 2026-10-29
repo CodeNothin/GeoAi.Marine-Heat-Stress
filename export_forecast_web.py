@@ -3,8 +3,8 @@
     python -m bycatch_model forecast --data sim_output --out forecast_output
     python export_forecast_web.py
 
-Like the EcoCast export, only the legal fishing cells of the 0.05 deg grid are written (land,
-islands, the 3 nm zone and water shallower than 15 m are left out), quantised to 0-254 and base64-encoded.
+Like the EcoCast export, only the map's sea cells of the 0.05 deg grid are written (land and
+islands are left out), quantised to 0-254 and base64-encoded.
 """
 from pathlib import Path
 import argparse
@@ -55,7 +55,7 @@ def main():
     first = maps[months[0]]
     lat, lon, mask = first["lat"], first["lon"], first["mask"]
     res = float(lat[1] - lat[0])
-    cells = np.flatnonzero(np.asarray(mask, bool).ravel())   # row-major index into (nlat, nlon)
+    cells = np.flatnonzero(np.asarray(mask, bool).ravel())   # sea cells, row-major index into (nlat, nlon)
 
     def legal(mp, key):
         return np.asarray(mp[key], float).ravel()[cells]
@@ -111,7 +111,7 @@ def main():
           "window.FORECAST_DATA = " + json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + ";\n")
     out_file.write_text(js, encoding="utf-8")
     print(f"Created: {out_file.resolve()} ({out_file.stat().st_size / 1024:.0f} KB)")
-    print(f"Months: {months[0]} .. {months[-1]} | grid {lat.size} x {lon.size} at {res:.2f} deg, {cells.size} legal cells | species: {len(species)}")
+    print(f"Months: {months[0]} .. {months[-1]} | grid {lat.size} x {lon.size} at {res:.2f} deg, {cells.size} sea cells | species: {len(species)}")
 
 
 if __name__ == "__main__":

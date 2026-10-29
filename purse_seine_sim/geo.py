@@ -150,6 +150,26 @@ def _largest_component(mask):
     return best
 
 
+def land_fraction(path, lats, lons, res):
+    """Share of bathymetry points with elevation >= 0 inside each res x res cell centred on (lats, lons).
+
+    The grid's land mask samples only the cell centre, so small islands (Ko Samui, Ko Pha Ngan)
+    come out partly wet; this counts every bathymetry point in the cell instead.
+    """
+    b = np.load(path)
+    blat, blon = b["lat"], b["lon"]
+    land = np.nan_to_num(b["elevation"].astype(float), nan=1.0) >= 0
+    bi = np.floor((blat - (lats[0] - res / 2)) / res).astype(int)
+    bj = np.floor((blon - (lons[0] - res / 2)) / res).astype(int)
+    ok_i, ok_j = (bi >= 0) & (bi < lats.size), (bj >= 0) & (bj < lons.size)
+    I, J = np.meshgrid(bi[ok_i], bj[ok_j], indexing="ij")
+    flat = (I * lons.size + J).ravel()
+    n = np.bincount(flat, minlength=lats.size * lons.size)
+    hit = np.bincount(flat, weights=land[np.ix_(ok_i, ok_j)].ravel(), minlength=lats.size * lons.size)
+    with np.errstate(invalid="ignore"):
+        return (hit / n).reshape(lats.size, lons.size)
+
+
 # =========================
 # GRIDDED STATIC FIELDS
 # =========================

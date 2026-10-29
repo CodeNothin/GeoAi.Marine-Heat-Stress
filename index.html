@@ -682,6 +682,221 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   border-radius:999px;
 }
 
+/* ---------- Home page: carousel, stats, news ---------- */
+.hm-carousel{
+  position:relative;
+  margin:-2rem -2rem 0;
+  background:var(--green-hd);
+  overflow:hidden;
+  color:white;
+}
+.hm-track{display:flex;transition:transform .6s ease}
+.hm-slide{
+  flex:0 0 100%;
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:2rem;
+  align-items:center;
+  padding:2.6rem 4.2rem 4.4rem;
+  min-height:390px;
+  background:radial-gradient(circle at 85% 20%, rgba(93,201,138,.16), transparent 55%), var(--green-hd);
+}
+.hm-slide:nth-child(3){background:radial-gradient(circle at 85% 20%, rgba(214,120,90,.22), transparent 55%), #2a2622}
+.hm-slide:nth-child(4){background:radial-gradient(circle at 85% 30%, rgba(214,178,90,.20), transparent 55%), var(--navy)}
+.hm-kicker{
+  display:inline-block;
+  border:1px solid rgba(168,216,188,.5);
+  color:#A8D8BC;
+  padding:3px 11px;
+  border-radius:4px;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  margin-bottom:.9rem;
+}
+.hm-kicker.new{background:#5DC98A;border-color:#5DC98A;color:#0D1E2A}
+.hm-kicker.coral{border-color:rgba(240,170,150,.6);color:#F0B6A4}
+.hm-kicker.amber{border-color:rgba(230,200,140,.6);color:#E9CF94}
+.hm-slide h2{font-family:var(--font-head);font-size:30px;line-height:1.35;letter-spacing:-.015em;margin-bottom:.8rem}
+.hm-slide h2 span{color:#7DC9A0}
+.hm-slide:nth-child(3) h2 span{color:#F0B6A4}
+.hm-slide:nth-child(4) h2 span{color:#E9CF94}
+.hm-slide p{color:rgba(255,255,255,.74);max-width:560px;margin-bottom:1.3rem;font-size:15px}
+.hm-btn{
+  display:inline-block;
+  background:white;
+  color:var(--green-hd);
+  border:0;
+  border-radius:6px;
+  padding:.65rem 1.15rem;
+  font:inherit;
+  font-weight:800;
+  font-size:14px;
+  cursor:pointer;
+  text-decoration:none;
+}
+.hm-btn:hover{background:#E4F4EA}
+.hm-slide-img{
+  height:310px;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  border:1px solid rgba(255,255,255,.12);
+  background:#d8ecf7;
+}
+.hm-slide-img img{width:100%;height:100%;object-fit:cover;display:block}
+.hm-slide-img.tall img{object-position:center 35%}
+.hm-date-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:1.2rem;
+  background:linear-gradient(135deg,#1c3446,#0D1E2A);
+  color:white;
+  text-align:center;
+}
+.hm-date-art b{display:block;font-family:var(--font-head);font-size:34px;color:#E9CF94}
+.hm-date-art small{color:rgba(255,255,255,.65);font-size:13px}
+.hm-date-line{width:70px;height:3px;background:linear-gradient(90deg,#E9CF94,#7DC9A0);border-radius:2px}
+.hm-arrow{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:40px;height:40px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.3);
+  background:rgba(0,0,0,.25);
+  color:white;
+  font-size:26px;
+  line-height:1;
+  cursor:pointer;
+}
+.hm-arrow:hover{background:rgba(0,0,0,.45)}
+.hm-arrow.prev{left:14px}
+.hm-arrow.next{right:14px}
+.hm-dots{position:absolute;left:0;right:0;bottom:2.3rem;display:flex;justify-content:center;gap:8px}
+.hm-dots button{
+  width:10px;height:10px;
+  border-radius:5px;
+  border:0;
+  background:rgba(255,255,255,.4);
+  cursor:pointer;
+  padding:0;
+  transition:width .3s;
+}
+.hm-dots button.active{width:28px;background:#5DC98A}
+
+.hm-stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1rem;
+  margin:-1.4rem 1.2rem 1.6rem;
+  position:relative;
+  z-index:2;
+}
+.hm-stat{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:.9rem 1.1rem;
+  box-shadow:0 6px 18px rgba(13,30,42,.08);
+}
+.hm-stat small{display:block;color:var(--muted);font-size:12px;font-weight:700}
+.hm-stat b{display:block;font-family:var(--font-head);font-size:27px;color:var(--teal);margin:.15rem 0}
+.hm-stat span{font-size:12px;color:var(--muted)}
+.hm-stat.warn b{color:var(--coral)}
+
+.hm-main{display:grid;grid-template-columns:1fr 340px;gap:1.2rem;align-items:start}
+.hm-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-bottom:.8rem;flex-wrap:wrap}
+.hm-head h3{font-family:var(--font-head);font-size:20px}
+.hm-head span{font-size:12px;color:var(--muted)}
+.hm-news{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+.hm-news-card{
+  display:flex;
+  flex-direction:column;
+  background:white;
+  border:1px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
+  color:inherit;
+  text-decoration:none;
+  transition:transform .15s, box-shadow .15s;
+}
+.hm-news-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(13,30,42,.10)}
+.hm-news-card.featured{grid-column:1 / -1;flex-direction:row}
+.hm-news-band{height:8px;flex:0 0 auto}
+.hm-news-band span{display:none}
+.hm-news-band.policy{background:var(--teal)}
+.hm-news-band.heat{background:var(--coral)}
+.hm-news-card.featured .hm-news-band{
+  height:auto;
+  flex:0 0 190px;
+  display:flex;
+  align-items:flex-end;
+  padding:1rem;
+  background:linear-gradient(160deg,var(--green-acc),var(--green-hd));
+}
+.hm-news-card.featured .hm-news-band span{display:block;color:white;font-weight:800;font-size:13px}
+.hm-news-body{padding:1rem 1.1rem 1.1rem;display:flex;flex-direction:column;flex:1}
+.hm-news-meta{font-size:12px;color:var(--muted);font-family:var(--font-num);margin-bottom:.35rem}
+.hm-news-body h4{font-size:15.5px;line-height:1.45;margin-bottom:.45rem}
+.hm-news-card.featured h4{font-size:19px}
+.hm-news-body p{font-size:13.5px;color:var(--muted);flex:1}
+.hm-read{margin-top:.7rem;font-size:13px;font-weight:800;color:var(--teal)}
+
+.hm-side .card{margin-bottom:1rem}
+.hm-alerts .hm-alert-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:.6rem;
+  padding:.55rem 0;
+  border-bottom:1px solid var(--border);
+  font-size:13.5px;
+}
+.hm-alerts .hm-alert-row small{display:block;color:var(--muted);font-size:12px}
+.hm-muted{font-size:13px;color:var(--muted)}
+.hm-link-btn{margin-top:.7rem;background:none;border:0;color:var(--teal);font:inherit;font-weight:800;font-size:13px;cursor:pointer;padding:0}
+.hm-timeline{list-style:none;padding:0;margin:0}
+.hm-timeline li{position:relative;padding:0 0 .8rem 1.1rem;font-size:13px;color:var(--text);border-left:2px solid var(--teal-pale)}
+.hm-timeline li::before{content:"";position:absolute;left:-6px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--teal)}
+.hm-timeline li b{display:block;font-size:12px;color:var(--teal);font-family:var(--font-num)}
+.hm-quick{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.hm-quick button{
+  text-align:left;
+  background:var(--sand-pale);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:.55rem .65rem;
+  font:inherit;
+  cursor:pointer;
+}
+.hm-quick button:hover{border-color:var(--teal);background:var(--teal-pale)}
+.hm-quick b{display:block;font-size:13px}
+.hm-quick small{font-size:11.5px;color:var(--muted)}
+.hm-about{margin-top:2rem}
+.hm-about-lead{color:var(--muted);max-width:900px;margin-bottom:1rem}
+
+@media(max-width:1100px){
+  .hm-main{grid-template-columns:1fr}
+  .hm-stats{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:760px){
+  .hm-carousel{margin:-2rem -1rem 0}
+  .hm-slide{grid-template-columns:1fr;padding:1.8rem 1.4rem 3rem;min-height:0}
+  .hm-slide-img{height:200px}
+  .hm-slide h2{font-size:23px}
+  .hm-arrow{display:none}
+  .hm-stats{margin:1rem 0 1.4rem}
+  .hm-news{grid-template-columns:1fr}
+  .hm-news-card.featured{flex-direction:column}
+  .hm-news-card.featured .hm-news-band{flex:0 0 auto;min-height:60px}
+}
+@media(prefers-reduced-motion:reduce){
+  .hm-track{transition:none}
+}
+
 /* ---------- Grid map layout (forecast page) ---------- */
 .fc-layout{
   display:grid;
@@ -805,11 +1020,145 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 </nav>
 
 <section id="page-home" class="page active">
-  <div class="hero">
-    <div class="tag">GeoAI · Earth Observation · Climate · Fishery</div>
-    <h1>ระบบประเมินความเสี่ยงประมงชายฝั่ง<br><span>จากสภาวะทะเลร้อนและข้อมูลดาวเทียม</span></h1>
-    <p>ต้นแบบนี้วิเคราะห์พื้นที่และช่วงเวลาที่ประมงชายฝั่งเสี่ยงในภาคใต้ฝั่งอ่าวไทย โดยผสานข้อมูล SST, CHL-a, ERA5, สถิติประมง, ขอบเขตจังหวัด และ OpenStreetMap เพื่อสร้างแผนที่ความเสี่ยงและข้อเสนอเชิงนโยบายที่นำไปใช้ประกอบการตัดสินใจได้</p>
+  <div class="hm-carousel" id="hmCarousel" aria-roledescription="carousel" aria-label="ไฮไลต์">
+    <div class="hm-track" id="hmTrack">
+      <div class="hm-slide" role="group" aria-roledescription="slide" aria-label="1 จาก 4">
+        <div class="hm-slide-text">
+          <span class="hm-kicker new">ใหม่ · New</span>
+          <h2>แผนที่เรือประมงและการเตือน<br><span>"เสี่ยงทำประมงเกินขนาด"</span></h2>
+          <p>จำนวนเรือและวันทำประมงจริงรายจังหวัดจากกรมประมง วางบนกริดเดียวกับแผนที่พยากรณ์ปลา ช่องที่เรือหนาแน่นแต่ปลาน้อยจะขึ้นเตือนทันที พร้อม CPUE รายพื้นที่</p>
+          <button class="hm-btn" onclick="hmGo('effort')">เปิดแผนที่เรือประมง →</button>
+        </div>
+        <div class="hm-slide-img"><img src="home_img/slide_effort.jpg" alt="แผนที่ความเสี่ยงทำประมงเกินขนาด ช่องสีแดงและส้มตามแนวชายฝั่ง" loading="eager"></div>
+      </div>
+      <div class="hm-slide" role="group" aria-roledescription="slide" aria-label="2 จาก 4">
+        <div class="hm-slide-text">
+          <span class="hm-kicker">พยากรณ์ · Forecast</span>
+          <h2>ปลาจะอยู่ตรงไหนเดือนหน้า?<br><span>พยากรณ์ล่วงหน้า 1 เดือน</span></h2>
+          <p>โมเดลใช้อุณหภูมิผิวน้ำ ค่าผิดปกติ ความร้อนสะสม และลม ทำนายการกระจายของปลาทู ปลาลัง ปลาหลังเขียว ปลาโอ และสัตว์น้ำหายาก ทุกช่อง 0.05° ในพื้นที่ศึกษา</p>
+          <button class="hm-btn" onclick="hmGo('forecast')">ดูแผนที่พยากรณ์ →</button>
+        </div>
+        <div class="hm-slide-img"><img src="home_img/slide_forecast.jpg" alt="แผนที่พยากรณ์ปลาบนกริดชายฝั่งอ่าวไทย" loading="eager"></div>
+      </div>
+      <div class="hm-slide" role="group" aria-roledescription="slide" aria-label="3 จาก 4">
+        <div class="hm-slide-text">
+          <span class="hm-kicker coral">ทะเลร้อน · Heat stress</span>
+          <h2>ติดตามคลื่นความร้อนในทะเล<br><span>ด้วยข้อมูลดาวเทียม NOAA OISST</span></h2>
+          <p>ค่าผิดปกติของอุณหภูมิผิวน้ำรายเดือน 2565–2568 ใช้คำนวณดัชนีความร้อนสะสมและคะแนนความเสี่ยงประมงรายจังหวัด ภาพนี้คือเดือนพฤษภาคม 2567 ช่วงทะเลไทยร้อนทำสถิติ</p>
+          <button class="hm-btn" onclick="hmGo('map')">เปิดแผนที่ GeoAI →</button>
+        </div>
+        <div class="hm-slide-img tall"><img src="home_img/slide_sst.jpg" alt="แผนที่ค่าผิดปกติอุณหภูมิผิวน้ำ พฤษภาคม 2567" loading="eager"></div>
+      </div>
+      <div class="hm-slide" role="group" aria-roledescription="slide" aria-label="4 จาก 4">
+        <div class="hm-slide-text">
+          <span class="hm-kicker amber">ข่าวเด่น · Top story</span>
+          <h2>ปิดอ่าวไทยตอนกลาง ปี 2569<br><span>ประจวบฯ · ชุมพร · สุราษฎร์ธานี</span></h2>
+          <p>กรมประมงประกาศมาตรการคุ้มครองสัตว์น้ำช่วงวางไข่ 2 ระยะ ตั้งแต่ 15 ก.พ. ถึง 14 มิ.ย. 2569 พร้อมกองเรือตรวจการณ์ เขตนี้คือกรอบปิดอ่าวที่ใช้ในแผนที่แรงประมงของเรา</p>
+          <a class="hm-btn" href="https://en.thairath.co.th/agriculture/agricultural-policy/2914081" target="_blank" rel="noopener">อ่านข่าว (Thairath) ↗</a>
+        </div>
+        <div class="hm-slide-img hm-date-art" aria-hidden="true">
+          <div><b>15 ก.พ.</b><small>เริ่มปิดอ่าว</small></div>
+          <div class="hm-date-line"></div>
+          <div><b>14 มิ.ย.</b><small>สิ้นสุด</small></div>
+        </div>
+      </div>
+    </div>
+    <button class="hm-arrow prev" onclick="hmShow(hmIndex - 1, true)" aria-label="สไลด์ก่อนหน้า">‹</button>
+    <button class="hm-arrow next" onclick="hmShow(hmIndex + 1, true)" aria-label="สไลด์ถัดไป">›</button>
+    <div class="hm-dots" id="hmDots" role="tablist"></div>
   </div>
+
+  <div class="hm-stats">
+    <div class="hm-stat"><small>เรือประมงพาณิชย์ในพื้นที่</small><b id="hmVessels">—</b><span>ลำ ที่มีใบอนุญาต (กรมประมง)</span></div>
+    <div class="hm-stat"><small>พื้นที่ศึกษา</small><b id="hmArea">—</b><span>ตร.กม. · ชายฝั่ง 0–50 กม.</span></div>
+    <div class="hm-stat"><small>ชนิดสัตว์น้ำที่พยากรณ์</small><b>8</b><span>ปลาเศรษฐกิจ 6 · สัตว์หายาก 2</span></div>
+    <div class="hm-stat warn"><small>พื้นที่เสี่ยงทำประมงเกิน</small><b id="hmAlertCount">—</b><span id="hmAlertMonth">เดือนล่าสุด</span></div>
+  </div>
+
+  <div class="hm-main">
+    <div>
+      <div class="hm-head"><h3>ข่าวประมงและทะเลไทย</h3><span>สรุปโดยทีมงาน · คลิกเพื่ออ่านจากแหล่งข่าวต้นฉบับ</span></div>
+      <div class="hm-news">
+        <a class="hm-news-card featured" href="https://en.thairath.co.th/agriculture/agricultural-policy/2914081" target="_blank" rel="noopener">
+          <div class="hm-news-band policy"><span>นโยบาย · Policy</span></div>
+          <div class="hm-news-body">
+            <div class="hm-news-meta">13 ก.พ. 2569 · Thairath Online</div>
+            <h4>เปิดมาตรการปิดอ่าวไทยตอนกลาง 2569 ที่ท่าเทียบเรือชุมพร</h4>
+            <p>รองนายกรัฐมนตรีและรัฐมนตรีว่าการกระทรวงเกษตรฯ เปิดมาตรการคุ้มครองสัตว์น้ำช่วงวางไข่ในประจวบคีรีขันธ์ ชุมพร และสุราษฎร์ธานี พร้อมปล่อยกองเรือตรวจการณ์
+              ภาครัฐระบุว่าปริมาณจับเฉลี่ยต่อวันเพิ่มจาก 198 กก. (2567) เป็น 276 กก. (2568) เป็นสัญญาณการฟื้นตัวของทรัพยากร</p>
+            <span class="hm-read">อ่านต่อ ↗</span>
+          </div>
+        </a>
+        <a class="hm-news-card" href="https://en.thairath.co.th/news/society/2943609" target="_blank" rel="noopener">
+          <div class="hm-news-band heat"><span>ทะเลร้อน · Heat</span></div>
+          <div class="hm-news-body">
+            <div class="hm-news-meta">2 ก.ค. 2569 · Thairath Online</div>
+            <h4>ดร.ธรณ์ เตือนเตรียมรับปะการังฟอกขาวรุนแรง ก.พ.–มิ.ย. ปีหน้า</h4>
+            <p>แผนที่เตือนภัยของ NOAA ชี้คลื่นความร้อนกำลังเคลื่อนเข้าเอเชียตะวันออกเฉียงใต้ อาจกระทบหญ้าทะเล สัตว์น้ำชายฝั่ง และการเพาะเลี้ยง บางแนวปะการังอาจต้องปิดฟื้นฟู</p>
+            <span class="hm-read">อ่านต่อ ↗</span>
+          </div>
+        </a>
+        <a class="hm-news-card" href="https://www.thaipbs.or.th/news/content/507047" target="_blank" rel="noopener">
+          <div class="hm-news-band policy"><span>นโยบาย · Policy</span></div>
+          <div class="hm-news-body">
+            <div class="hm-news-meta">14 มิ.ย. 2569 · Thai PBS</div>
+            <h4>ปิดอ่าวไทยรูปตัว ก 15 มิ.ย.–30 ก.ย. ใน 8 จังหวัด</h4>
+            <p>แบ่ง 2 ระยะ ฝั่งตะวันตกหัวหิน–สมุทรสาคร ราว 2,350 ตร.กม. และฝั่งเหนือสมุทรสาคร–ศรีราชา ราว 1,650 ตร.กม. เพื่อให้สัตว์น้ำวางไข่และเลี้ยงตัวอ่อน</p>
+            <span class="hm-read">อ่านต่อ ↗</span>
+          </div>
+        </a>
+        <a class="hm-news-card" href="https://www.pattayamail.com/thailandnews/thailand-to-enforce-seasonal-fishing-closure-in-central-gulf-to-protect-marine-stocks-534833" target="_blank" rel="noopener">
+          <div class="hm-news-band policy"><span>นโยบาย · Policy</span></div>
+          <div class="hm-news-body">
+            <div class="hm-news-meta">6 ก.พ. 2569 · Pattaya Mail</div>
+            <h4>ประกาศช่วงเวลาปิดอ่าวไทยตอนกลาง 2 ช่วง</h4>
+            <p>15 ก.พ.–15 พ.ค. และ 16 พ.ค.–14 มิ.ย. 2569 ครอบคลุมพื้นที่ตั้งแต่แหลมเขาม่องไล่ถึงอำเภอดอนสัก เพื่อคุ้มครองพ่อแม่พันธุ์ ไข่ และลูกปลา</p>
+            <span class="hm-read">อ่านต่อ ↗</span>
+          </div>
+        </a>
+        <a class="hm-news-card" href="https://www.gmanetwork.com/news/topstories/world/907816/boiling-not-warming-marine-life-suffers-as-thai-sea-temperatures-hit-record/story/" target="_blank" rel="noopener">
+          <div class="hm-news-band heat"><span>ทะเลร้อน · ย้อนหลัง</span></div>
+          <div class="hm-news-body">
+            <div class="hm-news-meta">24 พ.ค. 2567 · Reuters ผ่าน GMA News</div>
+            <h4>"ทะเลเดือด" อ่าวไทยฝั่งตะวันออกร้อนทำสถิติ 32.73°C</h4>
+            <p>ปะการังในหมู่เกาะตราดฟอกขาวถึง 30% และตายแล้ว 5% ชาวประมงพื้นบ้านจับปลาได้น้อยลงมาก บางวันกลับเข้าฝั่งมือเปล่า เหตุการณ์นี้อยู่ในข้อมูล SST ที่ระบบใช้ฝึกโมเดล</p>
+            <span class="hm-read">อ่านต่อ ↗</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <aside class="hm-side">
+      <div class="card">
+        <div class="card-title">⚠ แจ้งเตือนล่าสุด · Alerts</div>
+        <div id="hmAlerts" class="hm-alerts"><p class="hm-muted">กำลังโหลดข้อมูลแรงประมง…</p></div>
+        <button class="hm-link-btn" onclick="hmGo('effort')">ดูแผนที่เรือประมงทั้งหมด →</button>
+      </div>
+      <div class="card">
+        <div class="card-title">อัปเดตระบบ · Updates</div>
+        <ul class="hm-timeline">
+          <li><b>30 ต.ค. 2569</b>เพิ่มแผนที่เรือประมง CPUE และเตือนเสี่ยงทำประมงเกินขนาด ใช้ข้อมูลจริงจากกรมประมง</li>
+          <li><b>30 ต.ค. 2569</b>แผนที่พยากรณ์แสดง % ของปลาทั้งหมดในพื้นที่ บนสเกลเดียวกันทุกชนิด</li>
+          <li><b>30 ต.ค. 2569</b>เปลี่ยนแผนที่พยากรณ์เป็นกริด 0.05° ครอบคลุมทะเลทั้งพื้นที่ศึกษา</li>
+          <li><b>27 ต.ค. 2569</b>ฝึกโมเดลใหม่ด้วยอุณหภูมิผิวน้ำจริง NOAA OISST และลม ERA5 ปี 2565–2568</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">เมนูลัด · Quick links</div>
+        <div class="hm-quick">
+          <button onclick="hmGo('map')"><b>แผนที่ GeoAI</b><small>ความเสี่ยงรายจังหวัด</small></button>
+          <button onclick="hmGo('forecast')"><b>พยากรณ์ปลา</b><small>ล่วงหน้า 1 เดือน</small></button>
+          <button onclick="hmGo('effort')"><b>เรือประมง</b><small>แรงประมง · CPUE</small></button>
+          <button onclick="hmGo('alert')"><b>จัดอันดับ</b><small>พื้นที่ควรเฝ้าระวัง</small></button>
+          <button onclick="hmGo('pipeline')"><b>Data Pipeline</b><small>อัปโหลด CSV</small></button>
+          <button onclick="hmGo('policy')"><b>ข้อเสนอนโยบาย</b><small>สำหรับหน่วยงาน</small></button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="hm-head hm-about"><h3>เกี่ยวกับระบบ · About</h3><span>GeoAI · Earth Observation · Climate · Fishery</span></div>
+  <p class="hm-about-lead">ต้นแบบนี้วิเคราะห์พื้นที่และช่วงเวลาที่ประมงชายฝั่งเสี่ยงในภาคใต้ฝั่งอ่าวไทย โดยผสานข้อมูล SST, CHL-a, ERA5, สถิติประมง, ขอบเขตจังหวัด และ OpenStreetMap เพื่อสร้างแผนที่ความเสี่ยงและข้อเสนอเชิงนโยบายที่นำไปใช้ประกอบการตัดสินใจได้</p>
 
   <div class="notice">
     หมายเหตุ: หน้าแผนที่หลักใช้ mock data เพื่อสาธิตหน้าตาระบบ ส่วนหน้า Real Data Pipeline รองรับการอัปโหลด CSV จริงจาก notebook/script
@@ -2757,9 +3106,87 @@ window.renderForecastRisk = function(){
   });
 };
 
+/* ---------- Home page ---------- */
+let hmIndex = 0, hmTimer = null, hmPaused = false;
+const HM_DELAY = 6500;
+
+window.hmGo = function(id){
+  const tab = [...document.querySelectorAll(".nav-tab")].find(t => (t.getAttribute("onclick") || "").includes(`'${id}'`));
+  showPage(id, tab);
+  window.scrollTo(0, 0);
+};
+
+window.hmShow = function(i, byUser){
+  const slides = document.querySelectorAll("#hmTrack .hm-slide");
+  hmIndex = (i + slides.length) % slides.length;
+  document.getElementById("hmTrack").style.transform = `translateX(-${hmIndex * 100}%)`;
+  document.querySelectorAll("#hmDots button").forEach((b, k) => {
+    b.classList.toggle("active", k === hmIndex);
+    b.setAttribute("aria-selected", k === hmIndex);
+  });
+  slides.forEach((s, k) => s.setAttribute("aria-hidden", k !== hmIndex));
+  if(byUser) hmRestart();
+};
+
+function hmRestart(){
+  clearInterval(hmTimer);
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  hmTimer = setInterval(() => { if(!hmPaused && activePage === "home") hmShow(hmIndex + 1); }, HM_DELAY);
+}
+
+function initHome(){
+  const box = document.getElementById("hmCarousel");
+  const dots = document.getElementById("hmDots");
+  document.querySelectorAll("#hmTrack .hm-slide").forEach((s, k) => {
+    const b = document.createElement("button");
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-label", `สไลด์ ${k + 1}`);
+    b.onclick = () => hmShow(k, true);
+    dots.appendChild(b);
+  });
+  box.addEventListener("mouseenter", () => { hmPaused = true; });
+  box.addEventListener("mouseleave", () => { hmPaused = false; });
+  box.addEventListener("focusin", () => { hmPaused = true; });
+  box.addEventListener("focusout", () => { hmPaused = false; });
+  box.tabIndex = 0;
+  box.addEventListener("keydown", e => {
+    if(e.key === "ArrowLeft") hmShow(hmIndex - 1, true);
+    if(e.key === "ArrowRight") hmShow(hmIndex + 1, true);
+  });
+  let x0 = null;
+  box.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, {passive:true});
+  box.addEventListener("touchend", e => {
+    if(x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if(Math.abs(dx) > 40) hmShow(hmIndex + (dx < 0 ? 1 : -1), true);
+    x0 = null;
+  });
+  hmShow(0);
+  hmRestart();
+
+  if(studyArea) document.getElementById("hmArea").textContent = studyArea.meta.area_km2.toLocaleString("en-US");
+  // The latest month's fishing-effort alerts and fleet size, without waiting for the effort tab.
+  setTimeout(() => loadEffort(renderHomeAlerts), 400);
+}
+
+function renderHomeAlerts(data){
+  const month = data.meta.upcoming_month || data.months[data.months.length - 1];
+  const rows = Object.entries(data.areas).map(([key, a]) => ({key, name:data.area_names[key], ...a[month]}));
+  document.getElementById("hmVessels").textContent = rows.reduce((s, r) => s + r.licensed_vessels, 0).toLocaleString("en-US");
+  const flagged = rows.filter(r => r.level > 0).sort((a, b) => b.level - a.level || b.high - a.high);
+  document.getElementById("hmAlertCount").textContent = `${flagged.length} / ${rows.length}`;
+  document.getElementById("hmAlertMonth").textContent = `พื้นที่ · ${fcMonthLabel(month)}${month === data.meta.upcoming_month ? " (คาดการณ์)" : ""}`;
+  const levels = [["low", "ปกติ"], ["mid", "เฝ้าระวัง"], ["high", "เสี่ยงสูง"]];
+  document.getElementById("hmAlerts").innerHTML = rows.sort((a, b) => b.level - a.level || b.high - a.high).map(r =>
+    `<div class="hm-alert-row"><div><b>${r.name}</b><small>${r.high} ช่องเสี่ยงสูง · ${r.watch} เฝ้าระวัง · เรือ ${Math.round(r.boats_per_day)} ลำ/วัน</small></div>
+      <span class="risk-badge ${levels[r.level][0]}">${levels[r.level][1]}</span></div>`).join("") +
+    `<p class="hm-muted" style="margin-top:.5rem">${fcMonthLabel(month)} · เรือหนาแน่นแต่ปลาที่พยากรณ์น้อย = เสี่ยงทำประมงเกินขนาด</p>`;
+}
+
 /* ---------- Start ---------- */
 document.addEventListener("DOMContentLoaded", () => {
   initSelectors();
+  initHome();
   updateProfile();
   updateAlerts();
 });

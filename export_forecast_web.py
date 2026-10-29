@@ -19,7 +19,12 @@ from web_stamp import stamp_index
 from purse_seine_sim.species import checklist
 
 FORECAST_DIR = Path("forecast_output")
+DATA_DIR = Path("sim_output")
 OUT_FILE = Path("forecast_data.js")
+# The logbook counts sharks and rays instead of weighing them; ASSUMED mean weight per animal (kg) so they
+# can join the catch-weight total. Turtles and dolphins are not fish and are left out of "all the fish".
+KG_PER_ANIMAL = {"RHIN_TYP": 2000.0, "MOBU_SPP": 60.0, "CARC_SPP": 20.0}
+NOT_FISH = {"CHEL_MYD", "ORCA_BRE"}
 
 
 def read_csv(path):
@@ -35,6 +40,19 @@ def num(v):
         return None
 
 
+def catch_shares(data_dir):
+    """Each species' share of all fish caught in the study area (logbook catch weight)."""
+    kg = {}
+    for r in read_csv(Path(data_dir) / "logbook" / "catch.csv"):
+        code = r["species_code"]
+        if code in NOT_FISH:
+            continue
+        w = num(r["catch_kg"]) or (num(r["count"]) or 0.0) * KG_PER_ANIMAL.get(code, 0.0)
+        kg[code] = kg.get(code, 0.0) + (w or 0.0)
+    total = sum(kg.values())
+    return {code: w / total for code, w in kg.items()} if total > 0 else {}
+
+
 def encode_u8(values, vmax):
     q = np.full(values.shape, 255, dtype=np.uint8)
     ok = np.isfinite(values)
@@ -45,7 +63,7 @@ def encode_u8(values, vmax):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--forecast", default=str(FORECAST_DIR))
-    p.add_argument("--data", help="simulator/real data folder (to label real-SST runs)")
+    p.add_argument("--data", default=str(DATA_DIR), help="simulator/real data folder (catch shares, real-SST labels)")
     p.add_argument("--out", default=str(OUT_FILE))
     a = p.parse_args()
     fdir, out_file = Path(a.forecast), Path(a.out)
@@ -65,6 +83,7 @@ def main():
     codes = sorted({k[2:] for mp in maps.values() for k in mp.files if k.startswith("p_")})
     summary = read_csv(fdir / "forecast_summary.csv")
     curves = json.loads((fdir / "response_curves.json").read_text(encoding="utf-8"))["species"]
+    shares = catch_shares(a.data)
 
     species = []
     for code in codes:
@@ -85,6 +104,7 @@ def main():
             "code": code, "group": info["group"], "name_en": info["name_en"], "name_th": info["name_th"],
             "heat_terms_kept": bool(meta["heat_terms_kept"].get(code)),
             "vmax": vmax, "tmax": tmax, "smax": smax,
+            "share": shares.get(code),
             "forecast": {m: encode_u8(v, vmax) for m, v in fc.items()},
             "truth": {m: encode_u8(v, tmax) for m, v in tr.items()},
             "sd": {m: encode_u8(v, smax) for m, v in sd.items()},

@@ -2192,6 +2192,13 @@ function fcColor(cmap, t){
   return [0,1,2].map(k => Math.round(a[k] + f * (b[k] - a[k])));
 }
 
+function fcPct(x){
+  if(x === null || x === undefined || Number.isNaN(x)) return "—";
+  const p = x * 100;
+  if(p > 0 && p < 0.01) return "<0.01%";
+  return (p >= 10 ? p.toFixed(0) : p >= 1 ? p.toFixed(1) : p.toFixed(2)) + "%";
+}
+
 function fcNum(v, d){
   return v === null || v === undefined ? "—" : Number(v).toFixed(d);
 }
@@ -2233,7 +2240,7 @@ window.ensureForecast = function(){
   if(fcLoading) return;
   fcLoading = true;
   const s = document.createElement("script");
-  s.src = "forecast_data.js?v=65cfb7058a";
+  s.src = "forecast_data.js?v=d5300dfe45";
   s.onload = () => {
     fcLoading = false;
     if(window.FORECAST_DATA) initForecast(window.FORECAST_DATA);
@@ -2251,7 +2258,7 @@ function initForecast(data){
   const cells = new Uint16Array(fcB64(data.cells).buffer);
   const lookup = new Int32Array(data.grid.nlat * data.grid.nlon).fill(-1);
   cells.forEach((flat, k) => { lookup[flat] = k; });
-  fc = {data, grid:data.grid, cells, lookup, species:Object.fromEntries(data.species.map(s => [s.code, s]))};
+  fc = {data, grid:data.grid, cells, lookup, species:Object.fromEntries(data.species.map(s => [s.code, s])), means:{}};
   const up = data.meta.upcoming_month;
   const monthSel = document.getElementById("fcMonthSelect");
   data.months.forEach(m => {
@@ -2291,6 +2298,25 @@ function fcValues(sp, view, month){
   return Array.from(q, v => v === 255 ? NaN : (v / 254) * vmax);
 }
 
+// Study-area mean of a layer: P(A in study area). The sd layer is scaled by the forecast's mean.
+function fcMean(sp, view, month){
+  const key = sp.code + "|" + view + "|" + month;
+  if(!(key in fc.means)){
+    const vals = fcValues(sp, view === "sd" ? "forecast" : view, month);
+    let sum = 0, n = 0;
+    if(vals) for(const v of vals) if(!Number.isNaN(v)){ sum += v; n++; }
+    fc.means[key] = n ? sum / n : NaN;
+  }
+  return fc.means[key];
+}
+
+// % of all the fish in the study area that are this species, in this cell:
+// P(A in cell) * (#A in study area / #all fish in study area) / P(A in study area).
+// One fixed 0-100% scale, so a colour means the same % for every species.
+function fcShare(sp, view, month, v){
+  return v / fcMean(sp, view, month) * (sp.share ?? NaN);
+}
+
 window.renderForecast = function(){
   if(!fc) return;
   const month = document.getElementById("fcMonthSelect").value;
@@ -2298,7 +2324,6 @@ window.renderForecast = function(){
   const view = document.getElementById("fcViewSelect").value;
   const g = fc.grid;
   const vals = fcValues(sp, view, month);
-  const vmax = view === "forecast" ? sp.vmax : view === "truth" ? sp.tmax : sp.smax;
   const cmap = view === "sd" ? "risk" : "sequential";
 
   const canvas = document.createElement("canvas");
@@ -2312,7 +2337,7 @@ window.renderForecast = function(){
       if(Number.isNaN(v)) continue;
       const flat = fc.cells[k];
       const row = Math.floor(flat / g.nlon), col = flat % g.nlon;
-      const c = fcColor(cmap, Math.min(v / vmax, 1));
+      const c = fcColor(cmap, fcShare(sp, view, month, v) || 0);
       img.data.set([c[0], c[1], c[2], 235], ((g.nlat - 1 - row) * g.nlon + col) * 4);
     }
   }
@@ -2321,15 +2346,14 @@ window.renderForecast = function(){
   if(fcOverlay) fcOverlay.setUrl(url);
   else fcOverlay = L.imageOverlay(url, fc.bounds, {opacity:0.85, className:"fc-pixelated"}).addTo(fcMap);
 
-  const fmt = v => view === "truth" ? (v / sp.tmax).toFixed(2) : (v * 100).toFixed(0) + "%";
   document.getElementById("fcLegendBar").style.background = `linear-gradient(to right, ${FC_CMAPS[cmap].join(",")})`;
-  document.getElementById("fcLegendMin").textContent = view === "truth" ? "0" : "0%";
-  document.getElementById("fcLegendMax").textContent = view === "truth" ? "สูงสุด" : fmt(vmax) + "+";
+  document.getElementById("fcLegendMin").textContent = "0%";
+  document.getElementById("fcLegendMax").textContent = "100%";
   const viewNote = {
-    forecast: "โอกาสที่การล้อมอวนฝูงปลาอิสระ 1 ครั้งจะจับชนิดนี้ได้",
-    truth: "ความหนาแน่นจริงในตัวจำลอง (ใช้ตรวจความแม่นเท่านั้น ข้อมูลจริงจะไม่มีชั้นนี้)",
-    sd: `ความไม่แน่นอน = ส่วนเบี่ยงเบนของค่าพยากรณ์จากการฝึกซ้ำ ${fc.data.meta.n_boot} รอบ (สุ่มเที่ยวเรือ)`
-  }[view];
+    forecast: "% ของปลาทั้งหมดในพื้นที่ศึกษาที่เป็นชนิดนี้ ในช่องนี้ = (โอกาสจับได้ในช่อง ÷ โอกาสเฉลี่ยทั้งพื้นที่) × สัดส่วนชนิดนี้ในพื้นที่ศึกษา",
+    truth: "แบบเดียวกัน แต่ใช้ความหนาแน่นจริงในตัวจำลอง (ใช้ตรวจความแม่นเท่านั้น ข้อมูลจริงจะไม่มีชั้นนี้)",
+    sd: `ความไม่แน่นอนของ % นี้ = ส่วนเบี่ยงเบนของค่าพยากรณ์จากการฝึกซ้ำ ${fc.data.meta.n_boot} รอบ (สุ่มเที่ยวเรือ)`
+  }[view] + ` · ${sp.name_th} = ${fcPct(sp.share)} ของปลาทั้งหมดในพื้นที่ศึกษา (น้ำหนักที่จับได้ใน logbook)`;
   document.getElementById("fcLegendNote").textContent = vals
     ? `${viewNote} · ${fcMonthLabel(month)} · ช่อง 0.05°`
     : (view === "sd" ? "ความไม่แน่นอนมีเฉพาะเดือนพยากรณ์ล่วงหน้า" : "เดือนพยากรณ์ล่วงหน้ายังไม่มีค่าจริงให้เทียบ");
@@ -2402,11 +2426,11 @@ function fcCellPopup(e){
   const lines = fc.data.species.map(sp => {
     const v = fcValues(sp, "forecast", month);
     const x = v ? v[k] : NaN;
-    return `<tr><td>${sp.name_th}</td><td>${Number.isNaN(x) ? "—" : (x * 100).toFixed(0) + "%"}</td></tr>`;
+    return `<tr><td>${sp.name_th}</td><td>${Number.isNaN(x) ? "—" : fcPct(fcShare(sp, "forecast", month, x))}</td></tr>`;
   }).join("");
   L.popup().setLatLng(e.latlng).setContent(
     `<div class="fc-popup"><b>${e.latlng.lat.toFixed(2)}°N, ${e.latlng.lng.toFixed(2)}°E</b> · ${fcMonthLabel(month)}<br>
-     โอกาสจับได้ต่อการล้อมอวน 1 ครั้ง (ช่อง 0.05°)<table style="margin-top:.4rem">${lines}</table></div>`).openOn(fcMap);
+     % ของปลาทั้งหมดในพื้นที่ศึกษาที่เป็นชนิดนี้ (ช่อง 0.05°)<table style="margin-top:.4rem">${lines}</table></div>`).openOn(fcMap);
 }
 
 /* ---------- Start ---------- */

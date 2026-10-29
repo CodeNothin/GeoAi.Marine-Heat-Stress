@@ -91,20 +91,19 @@ fish anywhere and every set is used for training, but prediction maps, skill sco
 forecast cover only the study area. `python export_study_area_web.py` writes its outline and the
 10-70 m isobaths to `study_area_data.js` for the website maps.
 
+Each `export_*_web.py` script also stamps `index.html` with `?v=<hash>` of the file it wrote, so
+browsers and the GitHub Pages CDN cannot pair new page code with a cached old data file. Commit
+`index.html` together with the data file (`python web_stamp.py` re-stamps without regenerating).
+
 With a single year of data, `train` holds out the last 3 months instead of a year and still maps
 every month.
 
 ## Website
 
-`python export_ecocast_web.py` turns `model_output/maps/*.npz` into `ecocast_data.js`. The
-**EcoCast · Bycatch** tab in `index.html` loads that file when the tab is opened. The page has:
-
-- a monthly map of the EcoCast score, revenue, kg per set for each target species, and bycatch
-  probability for each protected species;
-- a click popup showing every species at a point;
-- per-province sea-zone averages and the model-reliability table.
-
-As in EcoCast, the score is rescaled to −1…+1 each month: it shows *relatively* good and bad areas.
+Only the **Forecast** tab of `index.html` comes from this package (`export_forecast_web.py`, above).
+The EcoCast score maps that `train` writes to `model_output/` (PNG and `maps/*.npz`) are not shown
+on the website. As in EcoCast, the score is rescaled to −1…+1 each month: it shows *relatively*
+good and bad areas.
 
 ## Validation
 

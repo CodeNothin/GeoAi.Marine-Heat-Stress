@@ -327,15 +327,6 @@ code{
   color:var(--text);
 }
 select,input[type=checkbox]{accent-color:var(--green-acc)}
-.layer-check{
-  display:flex;
-  align-items:center;
-  gap:.35rem;
-  font-size:13px;
-  color:var(--muted);
-}
-
-#riskMap,
 #pipelineDynamicMap{
   height:535px;
   width:100%;
@@ -1086,7 +1077,6 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   .two-col{grid-template-columns:1fr}
   .page{padding:1.2rem}
   .hero{margin:-1.2rem -1.2rem 1rem;padding:2.2rem 1.2rem}
-  #riskMap{height:430px}
 }
 @media(max-width:640px){
   .grid-3,.grid-4,.profile-grid,.flow,.pipeline-summary,.method-depth,.pipeline-steps,.status-grid{grid-template-columns:1fr}
@@ -1110,7 +1100,6 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 <nav class="nav">
   <div class="nav-inner">
     <div class="nav-tab active" onclick="showPage('home',this)">ภาพรวม</div>
-    <div class="nav-tab" onclick="showPage('map',this)">แผนที่ GeoAI</div>
     <div class="nav-tab" onclick="showPage('forecast',this)">พยากรณ์ปลา · Forecast</div>
     <div class="nav-tab" onclick="showPage('effort',this)">เรือประมง · Fishing effort</div>
     <div class="nav-tab" onclick="showPage('forum',this)">ชุมชน · Forum</div>
@@ -1148,7 +1137,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
           <span class="hm-kicker coral">ทะเลร้อน · Heat stress</span>
           <h2>ติดตามคลื่นความร้อนในทะเล<br><span>ด้วยข้อมูลดาวเทียม NOAA OISST</span></h2>
           <p>ค่าผิดปกติของอุณหภูมิผิวน้ำรายเดือน 2565–2568 ใช้คำนวณดัชนีความร้อนสะสมและคะแนนความเสี่ยงประมงรายจังหวัด ภาพนี้คือเดือนพฤษภาคม 2567 ช่วงทะเลไทยร้อนทำสถิติ</p>
-          <button class="hm-btn" onclick="hmGo('map')">เปิดแผนที่ GeoAI →</button>
+          <button class="hm-btn" onclick="hmGo('pipeline')">ดูข้อมูล SST จริง →</button>
         </div>
         <div class="hm-slide-img tall"><img src="home_img/slide_sst.jpg" alt="แผนที่ค่าผิดปกติอุณหภูมิผิวน้ำ พฤษภาคม 2567" loading="eager"></div>
       </div>
@@ -1250,7 +1239,6 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
       <div class="card">
         <div class="card-title">เมนูลัด · Quick links</div>
         <div class="hm-quick">
-          <button onclick="hmGo('map')"><b>แผนที่ GeoAI</b><small>ความเสี่ยงรายจังหวัด</small></button>
           <button onclick="hmGo('forecast')"><b>พยากรณ์ปลา</b><small>ล่วงหน้า 1 เดือน</small></button>
           <button onclick="hmGo('effort')"><b>เรือประมง</b><small>แรงประมง · CPUE</small></button>
           <button onclick="hmGo('alert')"><b>จัดอันดับ</b><small>พื้นที่ควรเฝ้าระวัง</small></button>
@@ -1334,65 +1322,6 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
       <div class="status-card"><span class="status-chip ready">Ready</span><h4>Real Data Pipeline</h4><p>รองรับ CSV จาก SST-only pipeline และวาดแผนที่อัตโนมัติ</p></div>
       <div class="status-card"><span class="status-chip planned">Next</span><h4>CHL-a / ERA5 / DOF</h4><p>ต่อยอดเป็น FRS เต็มระบบหลังรวมข้อมูลเพิ่มเติม</p></div>
       <div class="status-card"><span class="status-chip planned">Next</span><h4>Explainability</h4><p>เพิ่ม driver contribution / SHAP เมื่อมี target data เพียงพอ</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="page-map" class="page">
-  <div class="section-title">แผนที่ GeoAI ความเสี่ยงประมงชายฝั่ง</div>
-  <div class="section-sub">แผนที่ต้นแบบแสดงการผสานข้อมูลความเสี่ยงรายจังหวัดร่วมกับชั้นข้อมูลทะเล ภูมิอากาศ และโครงสร้างพื้นฐานชายฝั่ง</div>
-
-  <div class="notice">หน้านี้ใช้ mock data เพื่อสาธิต dashboard </div>
-
-  <div class="grid-4" style="margin-bottom:1rem">
-    <div class="stat-box red"><div class="stat-label">จังหวัดเสี่ยงสูงสุด</div><div class="stat-val" id="topProv">—</div><div class="stat-sub" id="topProvSub">เลือกเดือนเพื่อคำนวณ Risk Score</div></div>
-    <div class="stat-box amber"><div class="stat-label">SST Anomaly สูงสุด</div><div class="stat-val" id="maxSST">—</div><div class="stat-sub">เหนือค่าเฉลี่ยปกติ</div></div>
-    <div class="stat-box"><div class="stat-label">CHL-a ต่ำสุด</div><div class="stat-val" id="minCHLA">—</div><div class="stat-sub">สัญญาณ productivity ต่ำ</div></div>
-    <div class="stat-box"><div class="stat-label">ช่วงเฝ้าระวัง</div><div class="stat-val">มี.ค.–พ.ค.</div><div class="stat-sub">Peak marine heat stress / monitoring</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Interactive GeoAI Map</div>
-    <div class="controls">
-      <label>เดือน:</label>
-      <select id="monthSelect" onchange="updateAll()"></select>
-
-      <label>ชั้นสีหลัก:</label>
-      <select id="mainLayerSelect" onchange="updateAll()">
-        <option value="risk">Fishery Risk Score</option>
-        <option value="heat">Marine Heat Stress Index</option>
-        <option value="prod">Low Productivity Signal</option>
-      </select>
-
-      <label class="layer-check"><input type="checkbox" id="showSST" checked onchange="toggleOverlays()"> SST anomaly</label>
-      <label class="layer-check"><input type="checkbox" id="showCHLA" checked onchange="toggleOverlays()"> CHL-a anomaly</label>
-      <label class="layer-check"><input type="checkbox" id="showPorts" checked onchange="toggleOverlays()"> ท่าเรือ/จุดขึ้นปลา</label>
-      <label class="layer-check"><input type="checkbox" id="showBuffer" checked onchange="toggleOverlays()"> Coastal buffer</label>
-      <label class="layer-check"><input type="checkbox" id="showBathy" checked onchange="toggleOverlays()"> ความลึก (isobath)</label>
-    </div>
-
-    <div id="riskMap"></div>
-
-    <div class="legend">
-      <span><span class="dot" style="background:#B5614A"></span>สูง ≥70</span>
-      <span><span class="dot" style="background:#A07B3A"></span>กลาง 40–69</span>
-      <span><span class="dot" style="background:#2E7D6E"></span>ต่ำ &lt;40</span>
-      <span><span class="dot" style="background:rgba(255,80,40,.45)"></span>SST anomaly</span>
-      <span><span class="dot" style="background:rgba(40,90,220,.45)"></span>CHL-a anomaly</span>
-      <span><span class="dot" style="background:#1A3A2A"></span>ท่าเรือ/จุดขึ้นปลา</span>
-      <span><span class="dot" style="background:rgba(46,125,110,.25);border:1.5px dashed #2E7D6E"></span>Study area 0–50 km</span>
-      <span><span class="dot" style="background:#4A80B0"></span>เส้นความลึก 10–70 m</span>
-    </div>
-  </div>
-
-  <div class="two-col" style="margin-top:1rem">
-    <div class="card">
-      <div class="card-title">Risk Ranking รายจังหวัด</div>
-      <table class="table" id="rankingTable"></table>
-    </div>
-    <div class="card">
-      <div class="card-title">แนวโน้ม Risk Score เฉลี่ย</div>
-      <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
     </div>
   </div>
 </section>
@@ -1910,7 +1839,6 @@ const coastalBufferPoly = [
 /* Study area: 0–50 km coastal buffer and isobaths from study_area_data.js (export_study_area_web.py).
    Falls back to the approximate polygon above if the file is missing. */
 const studyArea = window.STUDY_AREA || null;
-const isobathColors = {10:"#8FB8D8", 20:"#6A9CC6", 30:"#4A80B0", 50:"#2F6494", 70:"#1D4A75"};
 
 function studyAreaPopup(){
   if(!studyArea) return "<b>Coastal analysis buffer</b><br>พื้นที่จำลอง 0–50 km จากชายฝั่ง (โดยประมาณ)";
@@ -1924,17 +1852,6 @@ function studyAreaLayer(style){
   return L.polygon(studyArea ? studyArea.buffer : coastalBufferPoly, style).bindPopup(studyAreaPopup());
 }
 
-function isobathLayer(){
-  const group = L.layerGroup();
-  if(!studyArea) return group;
-  studyArea.isobaths.forEach(iso => {
-    L.polyline(iso.lines, {color:isobathColors[iso.depth_m] || "#4A80B0", weight:iso.depth_m >= 50 ? 1.3 : 0.9, opacity:0.8})
-      .bindTooltip(`ความลึก ${iso.depth_m} m`, {sticky:true})
-      .addTo(group);
-  });
-  return group;
-}
-
 function addStudyAreaOutline(m){
   // Outline above the data overlay; clicks pass through to the map's cell popup.
   if(!studyArea) return;
@@ -1944,9 +1861,8 @@ function addStudyAreaOutline(m){
   L.polygon(studyArea.buffer, {pane:"studyArea", interactive:false, color:"#1A3A2A", weight:1.2, dashArray:"5,5", fill:false}).addTo(m);
 }
 
-let map, provinceLayer, sstLayer, chlaLayer, portLayer, bufferLayer, bathyLayer;
 let pipelineMap, pipelineMapLayer, pipelineBufferLayer;
-let trendChart, provinceChart, driverChart;
+let provinceChart, driverChart;
 let activePage = "home";
 
 /* ---------- Helpers ---------- */
@@ -1970,19 +1886,6 @@ function colorByScore(score){
   if(score >= 40) return "#A07B3A";
   return "#2E7D6E";
 }
-function colorByLayer(value, layer){
-  if(layer === "prod"){
-    if(value >= 70) return "#5B5DAE";
-    if(value >= 40) return "#4FA396";
-    return "#91C6B6";
-  }
-  return colorByScore(value);
-}
-function getMetric(prov, monthIdx, layer){
-  if(layer === "heat") return prov.heat[monthIdx];
-  if(layer === "prod") return prov.prod[monthIdx];
-  return prov.risk[monthIdx];
-}
 
 /* ---------- Navigation ---------- */
 window.showPage = function(id, tab){
@@ -1994,14 +1897,6 @@ window.showPage = function(id, tab){
   if(tab) tab.classList.add("active");
 
   activePage = id;
-
-  if(id === "map"){
-    setTimeout(() => {
-      if(!map) initMap();
-      else map.invalidateSize();
-      updateAll();
-    }, 80);
-  }
 
   if(id === "forecast"){
     setTimeout(ensureForecast, 80);
@@ -2038,17 +1933,6 @@ window.showPage = function(id, tab){
 
 /* ---------- Initial UI ---------- */
 function initSelectors(){
-  const monthSelect = document.getElementById("monthSelect");
-  if(monthSelect && monthSelect.children.length === 0){
-    months.forEach((m,i)=>{
-      const opt = document.createElement("option");
-      opt.value = i;
-      opt.textContent = m;
-      if(i === months.length - 1) opt.selected = true;
-      monthSelect.appendChild(opt);
-    });
-  }
-
   const provinceSelect = document.getElementById("provinceSelect");
   if(provinceSelect && provinceSelect.children.length === 0){
     Object.entries(provinces).forEach(([key,p])=>{
@@ -2059,199 +1943,6 @@ function initSelectors(){
       provinceSelect.appendChild(opt);
     });
   }
-}
-
-/* ---------- Main Map ---------- */
-function initMap(){
-  map = L.map("riskMap", { zoomControl:true, attributionControl:true }).setView([8.55,100.10], 7);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom:18,
-    attribution:"&copy; OpenStreetMap contributors"
-  }).addTo(map);
-
-  bathyLayer = isobathLayer().addTo(map);
-  bufferLayer = studyAreaLayer({
-    color:"#2E7D6E",
-    weight:1.8,
-    dashArray:"6,6",
-    fillColor:"#2E7D6E",
-    fillOpacity:0.08
-  }).addTo(map);
-  if(studyArea){
-    document.getElementById("bufferStatSub").textContent = `พื้นที่วิเคราะห์ชายฝั่ง · ${studyArea.meta.area_km2.toLocaleString()} km²`;
-  }
-
-  provinceLayer = L.layerGroup().addTo(map);
-  sstLayer = L.layerGroup().addTo(map);
-  chlaLayer = L.layerGroup().addTo(map);
-  portLayer = L.layerGroup().addTo(map);
-
-  map.fitBounds([[6.15,98.65],[11.15,101.90]], {padding:[20,20]});
-}
-
-function updateAll(){
-  if(!map) return;
-
-  const m = Number(document.getElementById("monthSelect").value);
-  const layer = document.getElementById("mainLayerSelect").value;
-
-  provinceLayer.clearLayers();
-  sstLayer.clearLayers();
-  chlaLayer.clearLayers();
-  portLayer.clearLayers();
-
-  const ranked = Object.entries(provinces)
-    .map(([key,p]) => ({key, ...p, score:p.risk[m]}))
-    .sort((a,b) => b.score - a.score);
-
-  ranked.forEach(r => {
-    const metric = getMetric(r,m,layer);
-    const poly = L.polygon(provinceGeo[r.key], {
-      color:"#ffffff",
-      weight:1.4,
-      fillColor:colorByLayer(metric, layer),
-      fillOpacity:.78
-    });
-
-    poly.bindPopup(`
-      <b>${r.name}</b><br>
-      เดือน: ${months[m]}<br>
-      Risk Score: <b>${r.risk[m]}/100</b> (${levelTh(r.risk[m])})<br>
-      Heat Stress: ${r.heat[m]}/100<br>
-      Low Productivity: ${r.prod[m]}/100<br>
-      SST anomaly: ${r.sst[m] > 0 ? "+" : ""}${r.sst[m].toFixed(1)}°C<br>
-      CHL-a anomaly: ${r.chla[m] > 0 ? "+" : ""}${r.chla[m]}%
-    `);
-
-    poly.addTo(provinceLayer);
-
-    const gridOffsets = [[-0.18,0.32],[-0.18,0.56],[0.02,0.32],[0.02,0.56],[0.22,0.32],[0.22,0.56]];
-    gridOffsets.forEach((off,idx)=>{
-      const lat = r.center[0] + off[0];
-      const lon = r.center[1] + off[1];
-      const cell = [[lat-0.09,lon-0.11],[lat-0.09,lon+0.11],[lat+0.09,lon+0.11],[lat+0.09,lon-0.11]];
-      const heatAlpha = Math.min(0.50, 0.12 + r.heat[m]/220 + idx*0.01);
-
-      L.polygon(cell, {
-        color:"rgba(180,60,40,.55)",
-        weight:.7,
-        fillColor:"rgba(255,80,40,1)",
-        fillOpacity:heatAlpha
-      }).bindPopup(`<b>SST anomaly grid cell</b><br>${r.name}: ${r.sst[m] > 0 ? "+" : ""}${r.sst[m].toFixed(1)}°C`).addTo(sstLayer);
-
-      const cell2 = [[lat-0.09,lon+0.17],[lat-0.09,lon+0.39],[lat+0.09,lon+0.39],[lat+0.09,lon+0.17]];
-      const prodAlpha = Math.min(0.45, 0.10 + r.prod[m]/240 + idx*0.008);
-
-      L.polygon(cell2, {
-        color:"rgba(30,70,180,.55)",
-        weight:.7,
-        fillColor:"rgba(40,90,220,1)",
-        fillOpacity:prodAlpha
-      }).bindPopup(`<b>CHL-a anomaly grid cell</b><br>${r.name}: ${r.chla[m] > 0 ? "+" : ""}${r.chla[m]}%`).addTo(chlaLayer);
-    });
-  });
-
-  ports.forEach(pt=>{
-    L.circleMarker([pt.lat,pt.lon], {
-      radius:6,
-      fillColor:"#1A3A2A",
-      color:"#fff",
-      weight:1.4,
-      fillOpacity:1
-    }).bindPopup(`<b>${pt.name}</b><br>${pt.province}`).addTo(portLayer);
-  });
-
-  toggleOverlays();
-  updateStatCards(ranked,m);
-  updateRankingTable(ranked,m);
-  updateTrendChart();
-
-  if(activePage === "profile") updateProfile();
-  if(activePage === "alert") updateAlerts();
-}
-
-function toggleOverlays(){
-  if(!map) return;
-
-  const showSST = document.getElementById("showSST").checked;
-  const showCHLA = document.getElementById("showCHLA").checked;
-  const showPorts = document.getElementById("showPorts").checked;
-  const showBuffer = document.getElementById("showBuffer").checked;
-  const showBathy = document.getElementById("showBathy").checked;
-
-  if(showSST && !map.hasLayer(sstLayer)) sstLayer.addTo(map);
-  if(!showSST && map.hasLayer(sstLayer)) map.removeLayer(sstLayer);
-
-  if(showCHLA && !map.hasLayer(chlaLayer)) chlaLayer.addTo(map);
-  if(!showCHLA && map.hasLayer(chlaLayer)) map.removeLayer(chlaLayer);
-
-  if(showPorts && !map.hasLayer(portLayer)) portLayer.addTo(map);
-  if(!showPorts && map.hasLayer(portLayer)) map.removeLayer(portLayer);
-
-  if(showBuffer && !map.hasLayer(bufferLayer)) bufferLayer.addTo(map);
-  if(!showBuffer && map.hasLayer(bufferLayer)) map.removeLayer(bufferLayer);
-
-  if(showBathy && !map.hasLayer(bathyLayer)) bathyLayer.addTo(map);
-  if(!showBathy && map.hasLayer(bathyLayer)) map.removeLayer(bathyLayer);
-}
-
-function updateStatCards(ranked,m){
-  const top = ranked[0];
-  const maxSST = ranked.reduce((a,b)=> b.sst[m] > a.sst[m] ? b : a, ranked[0]);
-  const minCHLA = ranked.reduce((a,b)=> b.chla[m] < a.chla[m] ? b : a, ranked[0]);
-
-  document.getElementById("topProv").textContent = top.short;
-  document.getElementById("topProvSub").textContent = `Risk Score ${top.score} · ${months[m]}`;
-  document.getElementById("maxSST").textContent = `+${maxSST.sst[m].toFixed(1)}°C`;
-  document.getElementById("minCHLA").textContent = `${minCHLA.chla[m]}%`;
-}
-
-function updateRankingTable(ranked,m){
-  const rows = ranked.map((r,i)=>{
-    const lv = level(r.score);
-    const fill = colorByScore(r.score);
-    return `<tr>
-      <td><b>${i+1}</b></td>
-      <td><b>${r.name}</b></td>
-      <td style="color:var(--coral)">${r.sst[m] > 0 ? "+" : ""}${r.sst[m].toFixed(1)}°C</td>
-      <td style="color:${r.chla[m] < 0 ? "var(--teal)" : "var(--coral)"}">${r.chla[m] > 0 ? "+" : ""}${r.chla[m]}%</td>
-      <td><div style="display:flex;align-items:center;gap:8px"><div class="bar"><span style="width:${r.score}%;background:${fill}"></span></div><b>${r.score}</b></div></td>
-      <td><span class="risk-badge ${lv}">${levelTh(r.score)}</span></td>
-    </tr>`;
-  }).join("");
-
-  document.getElementById("rankingTable").innerHTML = `
-    <thead><tr><th>อันดับ</th><th>จังหวัด</th><th>SST</th><th>CHL-a</th><th>Risk Score</th><th>ระดับ</th></tr></thead>
-    <tbody>${rows}</tbody>
-  `;
-}
-
-/* ---------- Charts ---------- */
-function updateTrendChart(){
-  const ctx = document.getElementById("trendChart");
-  if(!ctx || typeof Chart === "undefined") return;
-
-  const avg = months.map((_,i)=>{
-    const vals = Object.values(provinces).map(p=>p.risk[i]);
-    return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
-  });
-
-  if(trendChart) trendChart.destroy();
-
-  trendChart = new Chart(ctx, {
-    type:"line",
-    data:{
-      labels:months,
-      datasets:[{label:"Average Risk Score",data:avg,tension:.35,borderWidth:2,pointRadius:3}]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{y:{min:0,max:100}}
-    }
-  });
 }
 
 /* ---------- Profile ---------- */

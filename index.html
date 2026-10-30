@@ -472,6 +472,16 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   font-size:13.2px;
   color:var(--muted);
 }
+.ref-group{
+  font-size:13px;
+  font-weight:900;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin:1.5rem 0 .6rem;
+}
+.ref-list{margin:.4rem 0 .3rem 1.2rem;font-size:13px;color:var(--muted)}
+.ref-list li{margin-bottom:.25rem;overflow-wrap:anywhere}
 .ref-id{
   display:inline-block;
   background:var(--teal-pale);
@@ -1238,7 +1248,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
         <div class="hm-slide-text">
           <span class="hm-kicker coral">ทะเลร้อน · Heat stress</span>
           <h2>ติดตามคลื่นความร้อนในทะเล<br><span>ด้วยข้อมูลดาวเทียม NOAA OISST</span></h2>
-          <p>ค่าผิดปกติของอุณหภูมิผิวน้ำรายเดือน 2565–2568 ใช้คำนวณดัชนีความร้อนสะสมและคะแนนความเสี่ยงประมงรายจังหวัด ภาพนี้คือเดือนพฤษภาคม 2567 ช่วงทะเลไทยร้อนทำสถิติ</p>
+          <p>ค่าผิดปกติของอุณหภูมิผิวน้ำรายเดือน 2565–2569 ใช้คำนวณดัชนีความร้อนสะสมและคะแนนความเสี่ยงประมงรายจังหวัด ภาพนี้คือเดือนพฤษภาคม 2567 ช่วงทะเลไทยร้อนทำสถิติ</p>
           <button class="hm-btn" onclick="hmGo('pipeline')">ดูข้อมูล SST จริง →</button>
         </div>
         <div class="hm-slide-img tall"><img src="home_img/slide_sst.jpg" alt="แผนที่ค่าผิดปกติอุณหภูมิผิวน้ำ พฤษภาคม 2567" loading="eager"></div>
@@ -1389,7 +1399,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
       <div><b>Step 1</b><h4>Study Area</h4><p>6 จังหวัด · coastal buffer 0–50 km จากแนวชายฝั่งจริง + วิเคราะห์รายเดือน</p></div>
       <div><b>Step 2</b><h4>Data Ingestion</h4><p>OISST, VIIRS CHL-a, ERA5 ลม, ETOPO ความลึก, สถิติกรมประมง</p></div>
       <div><b>Step 3</b><h4>Index</h4><p>ความร้อนสะสม 3 เดือน, CHL-a anomaly, ปลาขึ้นท่า, ความหนาแน่นเรือ</p></div>
-      <div><b>Step 4</b><h4>AI/ML</h4><p>โมเดลพยากรณ์ปลาเดือนถัดไป + ทดสอบย้อนหลังทีละเดือน</p></div>
+      <div><b>Step 4</b><h4>AI/ML</h4><p>แนวหน้าน้ำ SST/CHL-a + เทียบ 4 โมเดล (GLM, GAM, BRT, RF) + SHAP</p></div>
       <div><b>Step 5</b><h4>Action</h4><p>Map, ranking, alert, policy recommendation</p></div>
     </div>
 
@@ -1424,7 +1434,7 @@ percentile = สูงกว่ากี่ % ของทุกจังหว�
       <div class="status-card"><span class="status-chip ready">Ready</span><h4>คะแนนสัญญาณเตือน</h4><p>คำนวณรายจังหวัด/รายเดือนจากข้อมูลจริง 2565–2569</p></div>
       <div class="status-card"><span class="status-chip ready">Ready</span><h4>Real Data Pipeline</h4><p>รองรับ CSV จาก SST-only pipeline และวาดแผนที่อัตโนมัติ</p></div>
       <div class="status-card"><span class="status-chip ready">Ready</span><h4>CHL-a / ERA5 / DOF</h4><p>รวมเข้าโมเดลพยากรณ์และคะแนนรายจังหวัดแล้ว</p></div>
-      <div class="status-card"><span class="status-chip planned">Next</span><h4>Explainability</h4><p>เพิ่ม driver contribution / SHAP เมื่อมี target data เพียงพอ</p></div>
+      <div class="status-card"><span class="status-chip ready">Ready</span><h4>Explainability</h4><p>อธิบายโมเดลพยากรณ์ด้วย SHAP และอธิบายอันดับจังหวัดด้วยองค์ประกอบคะแนน</p></div>
     </div>
   </div>
 </section>
@@ -1889,15 +1899,53 @@ percentile = สูงกว่ากี่ % ของทุกจังหว�
 
 <section id="page-refs" class="page">
   <div class="section-title">แหล่งข้อมูลและการอ้างอิง</div>
-  <div class="section-sub">ชุดข้อมูลที่ระบบใช้จริง ระบุว่าใช้ในหน้าใด และรายการอ้างอิง</div>
+  <div class="section-sub">ชุดข้อมูลที่ระบบใช้จริง ระบุว่าใช้ในหน้าใด และรายการอ้างอิง · หน้าชุมชน (Forum) ไม่ใช้ข้อมูลภายนอก โพสต์ทั้งหมดเป็นตัวอย่างสาธิตที่เก็บในเบราว์เซอร์</div>
 
-  <div class="ref-item"><span class="ref-id">SST</span><h4>NOAA OISST v2.1 — อุณหภูมิผิวน้ำทะเลรายวัน 0.25°</h4><p>อุณหภูมิผิวน้ำและค่าผิดปกติ (anomaly เทียบค่าเฉลี่ย 1971–2000 ของ OISST) ใช้ในโมเดลพยากรณ์ปลา ความร้อนสะสม 3 เดือน และคะแนนสัญญาณเตือนรายจังหวัด · ดึงผ่าน NOAA CoastWatch ERDDAP</p><div class="ref-url">Huang, B., Liu, C., Banzon, V., et al. (2021). Improvements of the Daily Optimum Interpolation Sea Surface Temperature (DOISST) Version 2.1. Journal of Climate, 34(8), 2923–2939. https://doi.org/10.1175/JCLI-D-20-0166.1</div></div>
-  <div class="ref-item"><span class="ref-id">CHL-a</span><h4>NOAA CoastWatch — VIIRS chlorophyll-a รายเดือน 0.05°</h4><p>ความเข้มข้นคลอโรฟิลล์ (proxy ของแพลงก์ตอนพืช) ใช้ในโมเดลพยากรณ์ปลาและองค์ประกอบ “คลอโรฟิลล์ลดลง” ของคะแนนรายจังหวัด · ชุดข้อมูล noaacwNPPVIIRSSQchlaMonthly, noaacwNPPVIIRSchlaDaily, noaacwN20VIIRSchlaDaily</p><div class="ref-url">NOAA CoastWatch/OceanWatch. VIIRS (Suomi-NPP, NOAA-20) chlorophyll-a, Science Quality and Near Real-Time. https://coastwatch.noaa.gov/erddap</div></div>
-  <div class="ref-item"><span class="ref-id">ERA5</span><h4>Copernicus Climate Change Service — ERA5</h4><p>ความเร็วลมที่ 10 ม. รายเดือน (เดือนล่าสุดจาก ERA5T รายชั่วโมง) ใช้ในโมเดลพยากรณ์ปลา การกระจายแรงประมง และเป็นบริบทในหน้าข้อมูลรายจังหวัด</p><div class="ref-url">Hersbach, H., Bell, B., Berrisford, P., et al. (2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803 · ข้อมูลจาก https://cds.climate.copernicus.eu</div></div>
-  <div class="ref-item"><span class="ref-id">BATHYMETRY</span><h4>NOAA NCEI — ETOPO 2022 (60 arc-second)</h4><p>ความลึกน้ำและแนวชายฝั่ง ใช้กำหนดพื้นที่ศึกษา (ทะเล 0–50 กม. จากฝั่ง) น่านน้ำรายจังหวัด และเป็นตัวแปรในโมเดลพยากรณ์ · ใช้ GEBCO grid แทนได้เมื่อ ETOPO ไม่พร้อมใช้งาน</p><div class="ref-url">NOAA National Centers for Environmental Information (2022). ETOPO 2022 15 Arc-Second Global Relief Model. https://doi.org/10.25921/fd45-gt74</div></div>
-  <div class="ref-item"><span class="ref-id">DOF</span><h4>กรมประมง — ข้อมูลเปิด (สถิติประมง)</h4><p>จำนวนเรือประมงพาณิชย์ที่มีใบอนุญาตรายจังหวัดรายปี วันทำประมงรายเดือนของอ่าวไทย และปริมาณสัตว์น้ำขึ้นท่ารายจังหวัดรายเดือน ใช้ในหน้าเรือประมง (แรงประมง, CPUE) และองค์ประกอบ “ปลาขึ้นท่าลดลง” กับ “ความหนาแน่นเรือ” ของคะแนนรายจังหวัด</p><div class="ref-url">กรมประมง. แคตตาล็อกข้อมูลเปิด กลุ่มสถิติประมง. https://catalog.fisheries.go.th/group/strategy-stat</div></div>
+  <h3 class="ref-group">ข้อมูลสภาพแวดล้อม · Environment</h3>
+  <div class="ref-item"><span class="ref-id">SST</span><h4>NOAA OISST v2.1 — อุณหภูมิผิวน้ำทะเลรายวัน 0.25°</h4><p>อุณหภูมิผิวน้ำและค่าผิดปกติ (เทียบค่าเฉลี่ย 1971–2000 ของ OISST) · <b>พยากรณ์ปลา:</b> ค่าเฉลี่ย ความแปรปรวน ค่าผิดปกติ ความชัน และแนวหน้าน้ำอุณหภูมิรายโซน · <b>ข้อมูลรายจังหวัด:</b> ความร้อนสะสม 3 เดือนของคะแนนสัญญาณเตือน · ดึงผ่าน NOAA CoastWatch ERDDAP</p><div class="ref-url">Huang, B., Liu, C., Banzon, V., et al. (2021). Improvements of the Daily Optimum Interpolation Sea Surface Temperature (DOISST) Version 2.1. Journal of Climate, 34(8), 2923–2939. https://doi.org/10.1175/JCLI-D-20-0166.1</div></div>
+  <div class="ref-item"><span class="ref-id">CHL-a</span><h4>NOAA CoastWatch — VIIRS chlorophyll-a รายเดือน 0.05°</h4><p>ความเข้มข้นคลอโรฟิลล์ (proxy ของแพลงก์ตอนพืช) · <b>พยากรณ์ปลา:</b> ค่าเฉลี่ย ความชัน และแนวหน้าน้ำสีน้ำรายโซน · <b>ข้อมูลรายจังหวัด:</b> องค์ประกอบ “คลอโรฟิลล์ลดลง” · ชุดข้อมูล noaacwNPPVIIRSSQchlaMonthly, noaacwNPPVIIRSchlaDaily, noaacwN20VIIRSchlaDaily</p><div class="ref-url">NOAA CoastWatch/OceanWatch. VIIRS (Suomi-NPP, NOAA-20) chlorophyll-a, Science Quality and Near Real-Time. https://coastwatch.noaa.gov/erddap</div></div>
+  <div class="ref-item"><span class="ref-id">ERA5</span><h4>Copernicus Climate Change Service — ERA5</h4><p>ความเร็วลมที่ 10 ม. รายเดือน (เดือนล่าสุดจาก ERA5T รายชั่วโมง) · <b>พยากรณ์ปลา:</b> ลมเฉลี่ยและความชันของลมรายโซน · <b>เรือประมง:</b> ใช้กระจายแรงประมง · <b>ข้อมูลรายจังหวัด:</b> บริบท</p><div class="ref-url">Hersbach, H., Bell, B., Berrisford, P., et al. (2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803 · ข้อมูลจาก https://cds.climate.copernicus.eu</div></div>
+  <div class="ref-item"><span class="ref-id">BATHYMETRY</span><h4>NOAA NCEI — ETOPO 2022 (60 arc-second)</h4><p>ความลึกน้ำ ความชันพื้นทะเล และแนวชายฝั่ง (เส้นชั้นความสูง 0 ม. ของ ETOPO ไม่ได้ใช้ชุดข้อมูลแนวชายฝั่งแยก) · ใช้กำหนดพื้นที่ศึกษา (ทะเล 0–50 กม. จากฝั่ง) วงระยะจากฝั่งทุก 10 กม. ของโมเดลพยากรณ์ และน่านน้ำรายจังหวัด · ใช้ GEBCO grid แทนได้เมื่อ ETOPO ไม่พร้อมใช้งาน</p><div class="ref-url">NOAA National Centers for Environmental Information (2022). ETOPO 2022 15 Arc-Second Global Relief Model. https://doi.org/10.25921/fd45-gt74</div></div>
+
+  <h3 class="ref-group">ข้อมูลประมง · Fisheries</h3>
+  <div class="ref-item"><span class="ref-id">DOF</span><h4>กรมประมง — แคตตาล็อกข้อมูลเปิด กลุ่มสถิติประมง (strategy-stat)</h4><p>ดึงผ่าน CKAN API (ไม่ต้องมีบัญชี) ด้วย fetch_dof_stats.py สรุปไว้ใน real_env/dof_stats.json · ใช้ในหน้าเรือประมง (แรงประมง, CPUE, แจ้งเตือนทำประมงเกินขนาด) และองค์ประกอบ “ปลาขึ้นท่าลดลง” กับ “ความหนาแน่นเรือ” ในหน้าข้อมูลรายจังหวัด</p>
+    <ul class="ref-list">
+      <li><b>จำนวนเรือประมงไทย</b> (package <code>thaivessel</code>) — เรือประมงพาณิชย์ที่มีใบอนุญาตรายจังหวัดรายปี พ.ศ. 2559–2568</li>
+      <li><b>ปริมาณการลงแรงทำการประมง</b> (package <code>dofd07_05_0101_07</code>) — วันทำประมงรายเดือน อ่าวไทย พ.ศ. 2562–2568</li>
+      <li><b>ปริมาณและมูลค่าสัตว์น้ำเค็มขึ้นท่าเทียบเรือรายจังหวัด</b> (package <code>landing</code>) — ปริมาณขึ้นท่าของสัตว์น้ำเป้าหมาย 6 ชนิด พ.ศ. 2565–2567</li>
+    </ul>
+    <div class="ref-url">กรมประมง. แคตตาล็อกข้อมูลเปิด กลุ่มสถิติประมง. https://catalog.fisheries.go.th/group/strategy-stat</div></div>
+
+  <h3 class="ref-group">ข้อมูลจำลอง · Simulated</h3>
+  <div class="ref-item"><span class="ref-id">SIMULATED</span><h4>Logbook อวนล้อมจับจำลอง (purse_seine_sim)</h4><p>บันทึกการล้อมอวนจำลอง (ชีวมวลต่อครั้ง) ที่ใช้สภาพทะเลจริงข้างต้นเป็นอินพุต ใช้ฝึกและทดสอบโมเดลพยากรณ์ปลา เพราะยังไม่มี logbook หรือ VMS สาธารณะ · แผนที่แรงประมงยังใช้แผนที่ “ค่าจริง” ของตัวจำลอง (ลม และปลาเดือนก่อน) กระจายเรือลงกริด · ผลที่ได้จึงเป็นการทดสอบ pipeline ไม่ใช่ข้อค้นพบทางชีววิทยา</p><div class="ref-url">สร้างขึ้นในโครงการนี้ (purse_seine_sim/) · ไม่ใช่ข้อมูลจริง</div></div>
+
+  <h3 class="ref-group">ข่าวในหน้าแรก · News</h3>
+  <div class="ref-item"><span class="ref-id">NEWS</span><h4>บทความต้นฉบับของการ์ดข่าว</h4><p>สรุปเนื้อหาเขียนโดยทีมงาน แต่ละการ์ดลิงก์ไปยังบทความต้นฉบับ</p>
+    <ul class="ref-list">
+      <li>Thairath Online (13 ก.พ. 2569). มาตรการปิดอ่าวไทยตอนกลาง 2569. https://en.thairath.co.th/agriculture/agricultural-policy/2914081</li>
+      <li>Thairath Online (2 ก.ค. 2569). คำเตือนปะการังฟอกขาว ก.พ.–มิ.ย. ปีหน้า. https://en.thairath.co.th/news/society/2943609</li>
+      <li>Thai PBS (14 มิ.ย. 2569). ปิดอ่าวไทยรูปตัว ก 15 มิ.ย.–30 ก.ย. https://www.thaipbs.or.th/news/content/507047</li>
+      <li>Pattaya Mail (6 ก.พ. 2569). Thailand to enforce seasonal fishing closure in central Gulf to protect marine stocks. https://www.pattayamail.com/thailandnews/thailand-to-enforce-seasonal-fishing-closure-in-central-gulf-to-protect-marine-stocks-534833</li>
+      <li>Reuters ผ่าน GMA News (24 พ.ค. 2567). Boiling, not warming: marine life suffers as Thai sea temperatures hit record. https://www.gmanetwork.com/news/topstories/world/907816/boiling-not-warming-marine-life-suffers-as-thai-sea-temperatures-hit-record/story/</li>
+    </ul></div>
+
+  <h3 class="ref-group">แผนที่พื้นหลัง · Basemap</h3>
   <div class="ref-item"><span class="ref-id">BASEMAP</span><h4>OpenStreetMap — แผนที่พื้นหลัง</h4><p>ใช้เป็นภาพแผนที่พื้นหลังของแผนที่ทุกหน้าเท่านั้น ไม่ได้นำข้อมูลถนน ท่าเรือ หรือชุมชนมาคำนวณ</p><div class="ref-url">© OpenStreetMap contributors. https://www.openstreetmap.org/copyright</div></div>
-  <div class="ref-item"><span class="ref-id">SIMULATED</span><h4>Logbook อวนล้อมจับจำลอง (purse_seine_sim)</h4><p>บันทึกการล้อมอวนจำลองที่ใช้สภาพทะเลจริงข้างต้นเป็นอินพุต ใช้ฝึกและทดสอบโมเดลพยากรณ์ปลา เพราะยังไม่มี logbook หรือ VMS สาธารณะ · ผลที่ได้จึงเป็นการทดสอบ pipeline ไม่ใช่ข้อค้นพบทางชีววิทยา</p><div class="ref-url">สร้างขึ้นในโครงการนี้ (purse_seine_sim/) · ไม่ใช่ข้อมูลจริง</div></div>
+
+  <h3 class="ref-group">วิธีการและซอฟต์แวร์ · Methods &amp; software</h3>
+  <div class="ref-item"><span class="ref-id">METHODS</span><h4>วิธีการที่ใช้ในโมเดลพยากรณ์ปลา (MAP 1)</h4>
+    <ul class="ref-list">
+      <li>เกณฑ์แบ่งพิกเซลแนวหน้าน้ำแบบปรับตัว — Otsu, N. (1979). A threshold selection method from gray-level histograms. IEEE Transactions on Systems, Man, and Cybernetics, 9(1), 62–66. https://doi.org/10.1109/TSMC.1979.4310076</li>
+      <li>การหาแนวหน้าน้ำแบบหน้าต่าง — Cayula, J.-F., &amp; Cornillon, P. (1992). Edge detection algorithm for SST images. Journal of Atmospheric and Oceanic Technology, 9(1), 67–80.</li>
+      <li>Taylor diagram เปรียบเทียบโมเดล — Taylor, K. E. (2001). Summarizing multiple aspects of model performance in a single diagram. Journal of Geophysical Research: Atmospheres, 106(D7), 7183–7192. https://doi.org/10.1029/2000JD900719</li>
+      <li>การอธิบายผลด้วย SHAP — Lundberg, S. M., &amp; Lee, S.-I. (2017). A unified approach to interpreting model predictions. Advances in Neural Information Processing Systems 30, 4765–4774.</li>
+    </ul></div>
+  <div class="ref-item"><span class="ref-id">SOFTWARE</span><h4>ซอฟต์แวร์</h4>
+    <ul class="ref-list">
+      <li>scikit-learn — Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. Journal of Machine Learning Research, 12, 2825–2830.</li>
+      <li>SciPy — Virtanen, P., et al. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python. Nature Methods, 17, 261–272. https://doi.org/10.1038/s41592-019-0686-2</li>
+      <li>shap (https://github.com/shap/shap) · NumPy · GAM ที่ทีมเขียนเองด้วย NumPy · เว็บ: Leaflet และ Chart.js</li>
+    </ul></div>
 </section>
 
 <script>

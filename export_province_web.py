@@ -5,7 +5,7 @@
 Everything here is real data, averaged over each province's coastal waters:
   - SST anomaly (deg C): NOAA OISST v2.1 daily, OISST's own anomaly, averaged per month.
   - heat_3m (deg C x months): positive SST anomaly summed over this month and the two before,
-    the same heat term the forecast model uses (bycatch_model/forecast.py), here ending this month.
+    a monthly stand-in for degree heating weeks (the MAP 1 forecast no longer uses it).
   - CHL-a (mg m-3): NOAA VIIRS monthly; the anomaly is % vs that calendar month's mean over all
     years on file (2022 onward), because there is no longer satellite climatology in real_env.
   - Wind (m s-1): ERA5 monthly mean 10 m wind speed.

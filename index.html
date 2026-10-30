@@ -1072,6 +1072,104 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   .status-grid{grid-template-columns:repeat(2,1fr)}
   .output-grid,.driver-wrap{grid-template-columns:1fr}
 }
+/* Province insights folder: policy face, ranking, technical detail */
+.ins-tabs{
+  display:flex;
+  gap:.35rem;
+  box-shadow:inset 0 -2px 0 var(--border);
+  margin-bottom:1.2rem;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+.ins-tab{
+  font:inherit;
+  font-size:13.5px;
+  font-weight:800;
+  text-align:left;
+  padding:8px 16px;
+  border:1px solid var(--border);
+  border-bottom:2px solid var(--border);
+  border-radius:7px 7px 0 0;
+  background:var(--sand-pale);
+  color:var(--muted);
+  cursor:pointer;
+  white-space:nowrap;
+}
+.ins-tab small{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.04em;
+}
+.ins-tab:hover{color:var(--text)}
+.ins-tab.active{
+  background:var(--bg);
+  color:var(--text);
+  border-bottom-color:var(--bg);
+  border-top:3px solid var(--green-acc);
+}
+.ins-panel{display:none}
+.ins-panel.active{display:block}
+
+.ins-pick{display:flex;flex-direction:column}
+.ins-pick .stat-sub{flex:1}
+.ins-link{
+  font:inherit;
+  align-self:flex-start;
+  margin-top:.6rem;
+  background:none;
+  border:none;
+  padding:0;
+  color:var(--teal);
+  font-size:12.5px;
+  font-weight:800;
+  cursor:pointer;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+.ins-link:hover{color:var(--green-acc)}
+
+.ins-next{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-top:1.2rem;
+  padding:1rem 1.2rem;
+  border:1px dashed var(--teal);
+  border-radius:7px;
+  background:var(--teal-pale);
+}
+.ins-next b{display:block;font-size:14px}
+.ins-next span{font-size:13px;color:var(--muted)}
+.ins-next-btns{display:flex;gap:.5rem;flex-wrap:wrap}
+.ins-btn{
+  font:inherit;
+  font-size:13px;
+  font-weight:800;
+  padding:7px 14px;
+  border-radius:5px;
+  border:1px solid var(--green-acc);
+  background:var(--green-acc);
+  color:white;
+  cursor:pointer;
+}
+.ins-btn.ghost{background:white;color:var(--green-acc)}
+
+.ins-why{margin-bottom:1rem;border-left:4px solid var(--teal);scroll-margin-top:120px}
+.ins-why.h{border-left-color:var(--coral)}
+.ins-why.m{border-left-color:var(--amber)}
+.ins-why h3{font-size:17px;margin-bottom:.2rem}
+.ins-why-verdict{font-size:13.5px;color:var(--muted);margin-bottom:.9rem}
+.ins-why-reasons{margin:0 0 1rem 1.2rem;font-size:13.5px}
+.ins-why-reasons li{margin-bottom:.3rem}
+.ins-why-reasons li.hit::marker{color:var(--coral)}
+.ins-why .table-scroll{overflow-x:auto}
+.ins-why .table td.num{font-family:var(--font-num);white-space:nowrap}
+.ins-flag{font-size:11.5px;font-weight:900;color:var(--coral);white-space:nowrap}
+.ins-src{font-size:12px;color:var(--muted)}
+
 @media(max-width:960px){
   .grid-3,.grid-4,.profile-grid,.flow,.pipeline-summary{grid-template-columns:1fr 1fr}
   .two-col{grid-template-columns:1fr}
@@ -1104,9 +1202,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     <div class="nav-tab" onclick="showPage('effort',this)">เรือประมง · Fishing effort</div>
     <div class="nav-tab" onclick="showPage('forum',this)">ชุมชน · Forum</div>
     <div class="nav-tab" onclick="showPage('pipeline',this)">Real Data Pipeline</div>
-    <div class="nav-tab" onclick="showPage('profile',this)">ข้อมูลรายจังหวัด</div>
-    <div class="nav-tab" onclick="showPage('alert',this)">จัดอันดับความเสี่ยง</div>
-    <div class="nav-tab" onclick="showPage('policy',this)">ข้อเสนอเชิงนโยบาย</div>
+    <div class="nav-tab" onclick="showPage('insights',this)">ข้อมูลเชิงลึกรายจังหวัด</div>
     <div class="nav-tab" onclick="showPage('refs',this)">แหล่งข้อมูล</div>
   </div>
 </nav>
@@ -1683,63 +1779,89 @@ Final FRS = 0.4 × MHSI + 0.3 × LPS + 0.2 × CEI + 0.1 × FDI</code>
   </div>
 </section>
 
-<section id="page-profile" class="page">
-  <div class="section-title">ข้อมูลรายจังหวัด</div>
-  <div class="section-sub">ใช้สำหรับอธิบายว่า “จังหวัดนี้เสี่ยงเพราะอะไร” </div>
-  <div class="notice">ค่าที่แสดงเป็น mock data สำหรับ demo และจะเปลี่ยนตามเดือนที่เลือกในหน้าแผนที่</div>
+<section id="page-insights" class="page">
+  <div class="section-title">ข้อมูลเชิงลึกรายจังหวัด</div>
+  <div class="section-sub">เริ่มจากอันดับความเสี่ยง แล้วเปิดดูลึกลงไปได้ว่าแต่ละจังหวัดอยู่ในอันดับนั้นเพราะอะไร มีข้อมูลอะไรรองรับ และควรดำเนินการอย่างไร</div>
 
   <div class="controls">
-    <label>เลือกจังหวัด:</label>
-    <select id="provinceSelect" onchange="updateProfile()"></select>
+    <label for="monthSelect">เดือนที่วิเคราะห์:</label>
+    <select id="monthSelect" onchange="refreshInsights()"></select>
   </div>
 
-  <div class="profile-grid" id="profileCards"></div>
-
-  <div class="two-col">
-    <div class="card">
-      <div class="card-title">Risk Score รายเดือน</div>
-      <div class="chart-wrap"><canvas id="provinceChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">ปัจจัยที่ขับเคลื่อนความเสี่ยง</div>
-      <div id="factorText" style="font-size:13.5px;color:var(--muted)"></div>
-    </div>
+  <div class="ins-tabs" role="tablist">
+    <button class="ins-tab active" data-sub="alert" role="tab" onclick="showInsight('alert')"><small>ภาพรวม</small>จัดอันดับความเสี่ยง</button>
+    <button class="ins-tab" data-sub="profile" role="tab" onclick="showInsight('profile')"><small>ทำไม? · ข้อมูลเชิงเทคนิค</small>ข้อมูลรายจังหวัด</button>
+    <button class="ins-tab" data-sub="policy" role="tab" onclick="showInsight('policy')"><small>ควรทำอะไร?</small>ข้อเสนอนโยบาย</button>
   </div>
 
-  <div class="card" style="margin-top:1rem">
-    <div class="card-title">Risk Driver Contribution · เสี่ยงเพราะอะไร</div>
-    <div class="driver-wrap">
-      <div class="driver-list" id="driverBars"></div>
-      <div>
-        <div class="notice" style="margin-bottom:.8rem">
-          Driver contribution ใน prototype คำนวณจากสัดส่วนของ 4 องค์ประกอบหลักตามสูตร FRS เพื่อช่วยอธิบายคะแนน ไม่ใช่ causal attribution ขั้นสุดท้าย
-        </div>
-        <div class="chart-wrap" style="height:210px"><canvas id="driverChart"></canvas></div>
+  <div class="ins-panel active" id="ins-alert">
+    <div class="section-sub">จัดลำดับพื้นที่ที่ควรเฝ้าระวัง/สำรวจภาคสนาม/ประสานงานหน่วยงานก่อน · กด “ทำไม?” เพื่อดูข้อมูลที่อยู่เบื้องหลังแต่ละจังหวัด</div>
+
+    <div class="grid-3" style="margin-bottom:1rem" id="policyPicks"></div>
+
+    <div id="alertList"></div>
+
+    <div class="ins-next">
+      <div><b>อยากรู้ว่าอันดับนี้มาจากไหน และควรทำอะไรต่อ?</b><span>เปิดข้อมูลเชิงเทคนิครายจังหวัด หรือดูข้อเสนอนโยบาย</span></div>
+      <div class="ins-next-btns">
+        <button class="ins-btn" onclick="showInsight('profile')">ข้อมูลรายจังหวัด →</button>
+        <button class="ins-btn ghost" onclick="showInsight('policy')">ข้อเสนอนโยบาย →</button>
       </div>
     </div>
   </div>
-</section>
 
-<section id="page-alert" class="page">
-  <div class="section-title">การจัดอันดับความเสี่ยงและการเฝ้าระวัง</div>
-  <div class="section-sub">จัดลำดับพื้นที่ที่ควรเฝ้าระวัง/สำรวจภาคสนาม/ประสานงานหน่วยงานก่อน</div>
-  <div id="alertList"></div>
-</section>
+  <div class="ins-panel" id="ins-profile">
+    <div class="notice">ค่าที่แสดงเป็น mock data สำหรับ demo และจะเปลี่ยนตามเดือนที่เลือกด้านบน</div>
 
-<section id="page-policy" class="page">
-  <div class="section-title">ข้อเสนอเชิงนโยบาย</div>
-  <div class="section-sub">ใช้เป็นข้อมูลประกอบการตัดสินใจ ไม่ใช่ผลตัดสินเชิงนโยบายอัตโนมัติ</div>
+    <div class="controls">
+      <label for="provinceSelect">เลือกจังหวัด:</label>
+      <select id="provinceSelect" onchange="updateProfile()"></select>
+    </div>
 
-  <div class="grid-3" style="margin-bottom:1rem">
-    <div class="stat-box red"><div class="stat-label">เร่งเฝ้าระวัง</div><div class="stat-val">นครศรีฯ</div><div class="stat-sub">Risk สูงและมีหลายปัจจัยร่วม</div></div>
-    <div class="stat-box amber"><div class="stat-label">ติดตามต่อเนื่อง</div><div class="stat-val">สงขลา</div><div class="stat-sub">SST anomaly สูงช่วง มี.ค.–พ.ค.</div></div>
-    <div class="stat-box"><div class="stat-label">สำรวจเพิ่มเติม</div><div class="stat-val">ปัตตานี</div><div class="stat-sub">CHL-a anomaly ต่ำเด่น</div></div>
+    <div class="card ins-why" id="whyPanel"></div>
+
+    <div class="profile-grid" id="profileCards"></div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Risk Score รายเดือน</div>
+        <div class="chart-wrap"><canvas id="provinceChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">ปัจจัยที่ขับเคลื่อนความเสี่ยง</div>
+        <div id="factorText" style="font-size:13.5px;color:var(--muted)"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Risk Driver Contribution · เสี่ยงเพราะอะไร</div>
+      <div class="driver-wrap">
+        <div class="driver-list" id="driverBars"></div>
+        <div>
+          <div class="notice" style="margin-bottom:.8rem">
+            Driver contribution ใน prototype คำนวณจากสัดส่วนของ 4 องค์ประกอบหลักตามสูตร FRS เพื่อช่วยอธิบายคะแนน ไม่ใช่ causal attribution ขั้นสุดท้าย
+          </div>
+          <div class="chart-wrap" style="height:210px"><canvas id="driverChart"></canvas></div>
+        </div>
+      </div>
+    </div>
   </div>
+  <div class="ins-panel" id="ins-policy">
+    <div class="section-sub">ข้อเสนอที่ต่อยอดจากอันดับความเสี่ยง ใช้เป็นข้อมูลประกอบการตัดสินใจ ไม่ใช่ผลตัดสินเชิงนโยบายอัตโนมัติ</div>
 
-  <div class="policy"><h4>1. ใช้ Risk Map เป็นเครื่องมือจัดลำดับพื้นที่เฝ้าระวัง</h4><p>หน่วยงานประมงจังหวัดสามารถใช้แผนที่เพื่อดูว่าจังหวัดใดมี SST anomaly สูงร่วมกับ CHL-a anomaly ต่ำ และจัดลำดับพื้นที่สำหรับการติดตามภาคสนามก่อนตัดสินใจออกมาตรการ</p></div>
-  <div class="policy"><h4>2. เพิ่มการสื่อสารความเสี่ยงช่วงมีนาคม–พฤษภาคม</h4><p>ช่วงที่ระบบประเมินว่า marine heat stress สูง ควรเพิ่มการแจ้งเตือนเชิงข้อมูลแก่กลุ่มประมงชายฝั่ง เช่น รายงานรายสัปดาห์จาก SST/CHL-a และแนวโน้มสภาพอากาศทะเล</p></div>
-  <div class="policy"><h4>3. เชื่อมข้อมูลกับการวางแผนงบประมาณเชิงพื้นที่</h4><p>Risk Score และ Fishery Dependency Index สามารถใช้ประกอบการพิจารณาพื้นที่เป้าหมายสำหรับการสนับสนุนชุมชนประมง โดยไม่ใช้แทนการสำรวจภาคสนามหรือการตัดสินใจของผู้เชี่ยวชาญ</p></div>
-  <div class="policy"><h4>4. พัฒนาการเก็บข้อมูลประมงให้ละเอียดขึ้น</h4><p>เพื่อเพิ่มความแม่นยำในอนาคต ควรเก็บข้อมูลปริมาณ/มูลค่าการจับสัตว์น้ำในระดับอำเภอหรือรายเดือน เพื่อเชื่อมกับข้อมูลดาวเทียมและ climate anomaly ได้ตรงขึ้น</p></div>
+    <div class="policy"><h4>1. ใช้ Risk Map เป็นเครื่องมือจัดลำดับพื้นที่เฝ้าระวัง</h4><p>หน่วยงานประมงจังหวัดสามารถใช้แผนที่เพื่อดูว่าจังหวัดใดมี SST anomaly สูงร่วมกับ CHL-a anomaly ต่ำ และจัดลำดับพื้นที่สำหรับการติดตามภาคสนามก่อนตัดสินใจออกมาตรการ</p></div>
+    <div class="policy"><h4>2. เพิ่มการสื่อสารความเสี่ยงช่วงมีนาคม–พฤษภาคม</h4><p>ช่วงที่ระบบประเมินว่า marine heat stress สูง ควรเพิ่มการแจ้งเตือนเชิงข้อมูลแก่กลุ่มประมงชายฝั่ง เช่น รายงานรายสัปดาห์จาก SST/CHL-a และแนวโน้มสภาพอากาศทะเล</p></div>
+    <div class="policy"><h4>3. เชื่อมข้อมูลกับการวางแผนงบประมาณเชิงพื้นที่</h4><p>Risk Score และ Fishery Dependency Index สามารถใช้ประกอบการพิจารณาพื้นที่เป้าหมายสำหรับการสนับสนุนชุมชนประมง โดยไม่ใช้แทนการสำรวจภาคสนามหรือการตัดสินใจของผู้เชี่ยวชาญ</p></div>
+    <div class="policy"><h4>4. พัฒนาการเก็บข้อมูลประมงให้ละเอียดขึ้น</h4><p>เพื่อเพิ่มความแม่นยำในอนาคต ควรเก็บข้อมูลปริมาณ/มูลค่าการจับสัตว์น้ำในระดับอำเภอหรือรายเดือน เพื่อเชื่อมกับข้อมูลดาวเทียมและ climate anomaly ได้ตรงขึ้น</p></div>
+
+    <div class="ins-next">
+      <div><b>กลับไปดูหลักฐาน</b><span>อันดับความเสี่ยงล่าสุด และข้อมูลที่รองรับแต่ละจังหวัด</span></div>
+      <div class="ins-next-btns">
+        <button class="ins-btn" onclick="showInsight('alert')">← จัดอันดับความเสี่ยง</button>
+        <button class="ins-btn ghost" onclick="showInsight('profile')">ข้อมูลรายจังหวัด</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="page-refs" class="page">
@@ -1864,6 +1986,8 @@ function addStudyAreaOutline(m){
 let pipelineMap, pipelineMapLayer, pipelineBufferLayer;
 let provinceChart, driverChart;
 let activePage = "home";
+const INSIGHT_SUBS = ["alert","profile","policy"];
+let insightSub = "alert";
 
 /* ---------- Helpers ---------- */
 function currentMonthIndex(){
@@ -1889,6 +2013,15 @@ function colorByScore(score){
 
 /* ---------- Navigation ---------- */
 window.showPage = function(id, tab){
+  // The old profile / alert / policy pages now live as sub-panels of "insights".
+  const sub = INSIGHT_SUBS.includes(id) ? id : null;
+  if(sub || id === "insights"){
+    id = "insights";
+    if(!tab || !tab.classList.contains("nav-tab")){
+      tab = [...document.querySelectorAll(".nav-tab")].find(t => (t.getAttribute("onclick") || "").includes("'insights'"));
+    }
+  }
+
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const page = document.getElementById("page-" + id);
   if(page) page.classList.add("active");
@@ -1910,12 +2043,8 @@ window.showPage = function(id, tab){
     initForum();
   }
 
-  if(id === "profile"){
-    setTimeout(updateProfile, 80);
-  }
-
-  if(id === "alert"){
-    updateAlerts();
+  if(id === "insights"){
+    showInsight(sub || insightSub);
   }
 
   if(id === "pipeline"){
@@ -1933,6 +2062,17 @@ window.showPage = function(id, tab){
 
 /* ---------- Initial UI ---------- */
 function initSelectors(){
+  const monthSelect = document.getElementById("monthSelect");
+  if(monthSelect && monthSelect.children.length === 0){
+    months.forEach((label,i)=>{
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = label;
+      if(i === months.length - 1) opt.selected = true;
+      monthSelect.appendChild(opt);
+    });
+  }
+
   const provinceSelect = document.getElementById("provinceSelect");
   if(provinceSelect && provinceSelect.children.length === 0){
     Object.entries(provinces).forEach(([key,p])=>{
@@ -1946,6 +2086,13 @@ function initSelectors(){
 }
 
 /* ---------- Profile ---------- */
+function dependencyScore(p){
+  if(p.dep === "สูง") return 85;
+  if(p.dep.includes("ปานกลาง-สูง")) return 70;
+  if(p.dep.includes("ปานกลาง")) return 55;
+  return 35;
+}
+
 function getDriverContributions(p,m){
   const heatWeighted = 0.4 * p.heat[m];
   const prodWeighted = 0.3 * p.prod[m];
@@ -1955,10 +2102,7 @@ function getDriverContributions(p,m){
   const climate = Math.min(100, Math.round(0.55 * p.heat[m] + seasonalBoost));
   const climateWeighted = 0.2 * climate;
 
-  let depScore = 35;
-  if(p.dep.includes("สูง")) depScore = 85;
-  else if(p.dep.includes("ปานกลาง-สูง")) depScore = 70;
-  else if(p.dep.includes("ปานกลาง")) depScore = 55;
+  const depScore = dependencyScore(p);
 
   const depWeighted = 0.1 * depScore;
   const total = heatWeighted + prodWeighted + climateWeighted + depWeighted || 1;
@@ -2038,6 +2182,7 @@ function updateProfile(){
     <p><b>Actionable interpretation:</b> ใช้เพื่อจัดลำดับพื้นที่เฝ้าระวังและสำรวจภาคสนาม ไม่ใช่ทำนายตำแหน่งปลารายจุด</p>
   `;
 
+  renderWhy(key, m);
   updateDriverPanel(p,m);
 
   const ctx = document.getElementById("provinceChart");
@@ -2066,6 +2211,7 @@ function updateProfile(){
 /* ---------- Alerts ---------- */
 function updateAlerts(){
   const m = currentMonthIndex();
+  const groups = classifyProvinces(m);
   const ranked = Object.entries(provinces)
     .map(([key,p]) => ({key, ...p, score:p.risk[m]}))
     .sort((a,b) => b.score - a.score);
@@ -2084,9 +2230,10 @@ function updateAlerts(){
 
     return `<div class="alert ${cls}">
       <div>
-        <h4>${r.name}</h4>
+        <h4>${r.name} <span class="risk-badge ${groups[r.key].cls}">${groups[r.key].cat}</span></h4>
         <p>${months[m]} · SST anomaly ${r.sst[m] > 0 ? "+" : ""}${r.sst[m].toFixed(1)}°C · CHL-a anomaly ${r.chla[m] > 0 ? "+" : ""}${r.chla[m]}% · dependency ${r.dep}</p>
         <span class="action">${action}</span>
+        <div><button class="ins-link" onclick="openWhy('${r.key}')">ทำไม? ดูข้อมูลประกอบ →</button></div>
       </div>
       <div>
         <div class="score-big" style="color:${colorByScore(r.score)}">${r.score}</div>
@@ -2095,6 +2242,198 @@ function updateAlerts(){
     </div>`;
   }).join("");
 }
+
+/* ---------- Province insights folder ---------- */
+/* Ranking is the face; the profile explains why a province sits where it does,
+   the policy panel says what to do about it. */
+const WHY_THRESH = {risk:70, sst:1.0, chla:-20, dep:70};
+
+function classifyProvinces(m){
+  const rows = Object.entries(provinces).map(([key,p]) => ({key, p}));
+  const out = {};
+  const pick = (cmp) => rows.filter(r => !out[r.key]).sort(cmp)[0];
+
+  const urgent = pick((a,b) => b.p.risk[m] - a.p.risk[m]);
+  out[urgent.key] = {cat:"เร่งเฝ้าระวัง", cls:"high", box:"red",
+    rule:"มี Risk Score สูงสุดในเดือนนี้",
+    sub:`Risk ${urgent.p.risk[m]}/100 สูงสุดในกลุ่ม · ${whyHits(urgent.p,m)} จาก 4 ปัจจัยเกินเกณฑ์` +
+      (urgent.p.risk[m] < WHY_THRESH.risk ? " (ยังต่ำกว่าเกณฑ์สูง 70)" : "")};
+
+  const monitor = pick((a,b) => b.p.sst[m] - a.p.sst[m]);
+  out[monitor.key] = {cat:"ติดตามต่อเนื่อง", cls:"mid", box:"amber",
+    rule:"มี SST anomaly สูงสุดในจังหวัดที่เหลือ (น้ำทะเลอุ่นผิดปกติ)",
+    sub:`SST anomaly ${signed(monitor.p.sst[m],1)}°C สูงสุดในจังหวัดที่เหลือ` +
+      (monitor.p.sst[m] < WHY_THRESH.sst ? " (ยังต่ำกว่าเกณฑ์ +1.0°C)" : "")};
+
+  const survey = pick((a,b) => a.p.chla[m] - b.p.chla[m]);
+  out[survey.key] = {cat:"สำรวจเพิ่มเติม", cls:"low", box:"",
+    rule:"มี CHL-a anomaly ต่ำสุดในจังหวัดที่เหลือ (ผลผลิตขั้นต้นลดลง ควรยืนยันภาคสนาม)",
+    sub:`CHL-a anomaly ${signed(survey.p.chla[m])}% ` +
+      (survey.p.chla[m] <= WHY_THRESH.chla ? "ต่ำเด่น" : "ต่ำสุดในจังหวัดที่เหลือ (ยังไม่ถึงเกณฑ์ −20%)")};
+
+  rows.filter(r => !out[r.key]).forEach(r => {
+    out[r.key] = {cat:"ติดตามตามปกติ", cls:"low", box:"",
+      rule:"ไม่เข้าเกณฑ์ของกลุ่มเร่งเฝ้าระวัง ติดตามต่อเนื่อง หรือสำรวจเพิ่มเติมในเดือนนี้",
+      sub:""};
+  });
+  return out;
+}
+
+function signed(v, digits){
+  const s = digits === undefined ? String(v) : v.toFixed(digits);
+  return v > 0 ? "+" + s : s;
+}
+
+// Number of the four FRS drivers past their threshold this month.
+function whyHits(p,m){
+  return [p.risk[m] >= WHY_THRESH.risk, p.sst[m] >= WHY_THRESH.sst,
+          p.chla[m] <= WHY_THRESH.chla, dependencyScore(p) >= WHY_THRESH.dep]
+    .filter(Boolean).length;
+}
+
+// 1-based rank of a province on a metric; lowFirst ranks the smallest value first.
+function rankOf(key, valueOf, lowFirst){
+  const vals = Object.entries(provinces).map(([k,p]) => ({k, v:valueOf(p)}));
+  vals.sort((a,b) => lowFirst ? a.v - b.v : b.v - a.v);
+  return vals.findIndex(x => x.k === key) + 1;
+}
+
+function groupMean(valueOf){
+  const vs = Object.values(provinces).map(valueOf);
+  return vs.reduce((a,b) => a + b, 0) / vs.length;
+}
+
+function renderPolicyPicks(){
+  const target = document.getElementById("policyPicks");
+  if(!target) return;
+  const m = currentMonthIndex();
+  const cls = classifyProvinces(m);
+  const order = ["เร่งเฝ้าระวัง","ติดตามต่อเนื่อง","สำรวจเพิ่มเติม"];
+
+  target.innerHTML = order.map(cat => {
+    const key = Object.keys(cls).find(k => cls[k].cat === cat);
+    const c = cls[key];
+    return `<div class="stat-box ${c.box} ins-pick">
+      <div class="stat-label">${cat}</div>
+      <div class="stat-val">${provinces[key].short}</div>
+      <div class="stat-sub">${c.sub}</div>
+      <button class="ins-link" onclick="openWhy('${key}')">ทำไม? ดูข้อมูลประกอบ →</button>
+    </div>`;
+  }).join("");
+}
+
+function renderWhy(key, m){
+  const target = document.getElementById("whyPanel");
+  if(!target) return;
+
+  const p = provinces[key];
+  const c = classifyProvinces(m)[key];
+  const n = Object.keys(provinces).length;
+  const rank = rankOf(key, q => q.risk[m]);
+  const drivers = getDriverContributions(p,m);
+  const [heat, prod, climate, dep] = drivers;
+  const frs = drivers.reduce((a,d) => a + d.weighted, 0);
+
+  const from = Math.max(0, m - 11);
+  const span = m - from + 1;
+  const hotMonths = p.risk.slice(from, m + 1).filter(v => v >= WHY_THRESH.risk).length;
+  const lastYear = m >= 12 ? p.risk[m - 12] : null;
+
+  const reasons = [
+    {hit:p.risk[m] >= WHY_THRESH.risk,
+     text:`<b>Risk Score ${p.risk[m]}/100</b> อันดับ ${rank} จาก ${n} จังหวัด ${p.risk[m] >= WHY_THRESH.risk ? "อยู่ในระดับสูง (≥ 70)" : `ระดับ${levelTh(p.risk[m])} (ยังต่ำกว่าเกณฑ์ 70)`}`},
+    {hit:p.sst[m] >= WHY_THRESH.sst,
+     text:`<b>น้ำทะเลอุ่นกว่าปกติ ${signed(p.sst[m],1)}°C</b> (อันดับ ${rankOf(key, q => q.sst[m])}/${n}, เกณฑ์ ≥ +1.0°C) ${p.sst[m] >= WHY_THRESH.sst ? "เป็นสัญญาณ marine heat stress ชัดเจน" : "ยังไม่ถึงระดับ heat stress เด่น"}`},
+    {hit:p.chla[m] <= WHY_THRESH.chla,
+     text:`<b>CHL-a ${signed(p.chla[m])}%</b> เทียบค่าปกติ (ต่ำเป็นอันดับ ${rankOf(key, q => q.chla[m], true)}/${n}, เกณฑ์ ≤ −20%) ${p.chla[m] <= WHY_THRESH.chla ? "แพลงก์ตอนพืชลดลง อาหารในห่วงโซ่น้อยลง" : "ผลผลิตขั้นต้นยังใกล้ค่าปกติ"}`},
+    {hit:dep.raw >= WHY_THRESH.dep,
+     text:`<b>การพึ่งพาประมง “${p.dep}”</b> (FDI ${dep.raw}/100) ${dep.raw >= WHY_THRESH.dep ? "ชุมชนพึ่งพารายได้จากประมงมาก ผลกระทบจึงรุนแรงกว่า" : "ผลกระทบต่อรายได้ชุมชนจำกัดกว่าจังหวัดอื่น"}`},
+    {hit:hotMonths >= 3,
+     text:`<b>ความต่อเนื่อง:</b> Risk ≥ 70 มาแล้ว ${hotMonths} จาก ${span} เดือนล่าสุด${lastYear !== null ? ` · เดือนเดียวกันปีก่อน ${lastYear}/100` : ""}${hotMonths >= 3 ? " จึงไม่ใช่เหตุการณ์ครั้งเดียว" : ""}`}
+  ];
+
+  const cei = q => getDriverContributions(q,m)[2].raw;
+  const evidence = [
+    ["Risk Score (FRS)", p.risk[m], rankOf(key, q => q.risk[m]), groupMean(q => q.risk[m]).toFixed(0), "≥ 70 = สูง", p.risk[m] >= 70, "รวม 4 ดัชนีด้านล่าง"],
+    ["Marine Heat Stress (MHSI)", heat.raw, rankOf(key, q => q.heat[m]), groupMean(q => q.heat[m]).toFixed(0), "≥ 70", heat.raw >= 70, "NOAA OISST v2.1 / GISTDA SST"],
+    ["SST anomaly", `${signed(p.sst[m],1)}°C`, rankOf(key, q => q.sst[m]), `${signed(groupMean(q => q.sst[m]),2)}°C`, "≥ +1.0°C", p.sst[m] >= 1, "NOAA OISST v2.1 / GISTDA SST"],
+    ["Low Productivity (LPS)", prod.raw, rankOf(key, q => q.prod[m]), groupMean(q => q.prod[m]).toFixed(0), "≥ 70", prod.raw >= 70, "คำนวณจาก CHL-a"],
+    ["CHL-a anomaly", `${signed(p.chla[m])}%`, rankOf(key, q => q.chla[m], true), `${signed(Math.round(groupMean(q => q.chla[m])))}%`, "≤ −20%", p.chla[m] <= -20, "NASA VIIRS / GISTDA CHL-a"],
+    ["Climate Exposure (CEI)", climate.raw, rankOf(key, cei), groupMean(cei).toFixed(0), "–", false, "Copernicus ERA5"],
+    ["Fishery Dependency (FDI)", dep.raw, rankOf(key, dependencyScore), groupMean(dependencyScore).toFixed(0), "≥ 70", dep.raw >= 70, "กรมประมง (DOF)"]
+  ];
+
+  target.className = `card ins-why ${c.cls === "high" ? "h" : c.cls === "mid" ? "m" : ""}`;
+  target.innerHTML = `
+    <div class="card-title">ทำไมจังหวัดนี้จึงอยู่ในอันดับนี้ · ${months[m]}</div>
+    <h3>${p.name} · <span class="risk-badge ${c.cls}">${c.cat}</span></h3>
+    <div class="ins-why-verdict">จัดอยู่ในกลุ่ม “${c.cat}” เพราะ${c.rule} · ${whyHits(p,m)} จาก 4 ปัจจัยหลักเกินเกณฑ์</div>
+
+    <ul class="ins-why-reasons">
+      ${reasons.map(r => `<li class="${r.hit ? "hit" : ""}">${r.text}</li>`).join("")}
+    </ul>
+
+    <div class="table-scroll">
+      <table class="table">
+        <thead><tr><th>ตัวชี้วัด</th><th>ค่าเดือนนี้</th><th>อันดับ (จาก ${n})</th><th>ค่าเฉลี่ย ${n} จังหวัด</th><th>เกณฑ์</th><th>แหล่งข้อมูล</th></tr></thead>
+        <tbody>
+          ${evidence.map(e => `<tr>
+            <td><b>${e[0]}</b></td>
+            <td class="num">${e[1]} ${e[5] ? '<span class="ins-flag">● เกินเกณฑ์</span>' : ""}</td>
+            <td class="num">${e[2]}</td>
+            <td class="num">${e[3]}</td>
+            <td>${e[4]}</td>
+            <td class="ins-src">${e[6]}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="formula">
+      <b>ที่มาของคะแนน</b>
+      <code>FRS = 0.4 × MHSI + 0.3 × LPS + 0.2 × CEI + 0.1 × FDI
+    = 0.4 × ${heat.raw} + 0.3 × ${prod.raw} + 0.2 × ${climate.raw} + 0.1 × ${dep.raw}
+    = ${heat.weighted.toFixed(1)} + ${prod.weighted.toFixed(1)} + ${climate.weighted.toFixed(1)} + ${dep.weighted.toFixed(1)}
+    ≈ ${frs.toFixed(0)}   (Risk Score ที่ใช้จัดอันดับ: ${p.risk[m]})</code>
+    </div>
+
+    <div class="ins-next-btns" style="margin-top:1rem">
+      <button class="ins-btn" onclick="showInsight('alert')">← กลับไปอันดับความเสี่ยง</button>
+      <button class="ins-btn ghost" onclick="showInsight('policy')">ข้อเสนอนโยบาย →</button>
+    </div>
+  `;
+}
+
+window.showInsight = function(sub){
+  insightSub = sub;
+  document.querySelectorAll(".ins-tab").forEach(t => {
+    const on = t.dataset.sub === sub;
+    t.classList.toggle("active", on);
+    t.setAttribute("aria-selected", on);
+  });
+  document.querySelectorAll(".ins-panel").forEach(p => p.classList.toggle("active", p.id === "ins-" + sub));
+
+  if(sub === "alert"){
+    renderPolicyPicks();
+    updateAlerts();
+  }
+  // Charts need a visible canvas to size themselves.
+  if(sub === "profile") setTimeout(updateProfile, 80);
+};
+
+window.openWhy = function(key){
+  const sel = document.getElementById("provinceSelect");
+  if(sel) sel.value = key;
+  if(activePage !== "insights") showPage("profile");
+  else showInsight("profile");
+  setTimeout(() => document.getElementById("whyPanel").scrollIntoView({behavior:"smooth", block:"start"}), 120);
+};
+
+window.refreshInsights = function(){
+  renderPolicyPicks();
+  updateAlerts();
+  if(insightSub === "profile") updateProfile();
+};
 
 /* ---------- Pipeline CSV Upload → Auto Map ---------- */
 let pipelineRows = [];
@@ -3387,8 +3726,7 @@ window.fmFilterArea = function(area){
 document.addEventListener("DOMContentLoaded", () => {
   initSelectors();
   initHome();
-  updateProfile();
-  updateAlerts();
+  refreshInsights();
 });
 </script>
 <!-- =========================================================

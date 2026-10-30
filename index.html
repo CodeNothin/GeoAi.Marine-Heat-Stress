@@ -897,6 +897,108 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   .hm-track{transition:none}
 }
 
+/* ---------- Community forum ---------- */
+.fm-layout{grid-template-columns:1fr 340px}
+.fm-compose{margin-bottom:1rem}
+.fm-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:.7rem}
+.fm-catch{grid-template-columns:repeat(2,1fr);display:none}
+.fm-catch.show{display:grid}
+.fm-compose label{display:flex;flex-direction:column;gap:.25rem;font-size:12.5px;font-weight:700;color:var(--muted)}
+.fm-full{margin-bottom:.7rem}
+.fm-compose input,.fm-compose select,.fm-compose textarea,.fm-filters input,.fm-filters select,.fm-reply textarea,.fm-status-sel{
+  font:inherit;
+  font-size:14px;
+  font-weight:400;
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:.45rem .55rem;
+  background:white;
+  width:100%;
+  min-width:0;
+}
+.fm-compose textarea,.fm-reply textarea{resize:vertical}
+.fm-form-foot{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.fm-hint{font-size:12.5px;color:var(--muted)}
+.fm-btn{
+  background:var(--teal);
+  color:white;
+  border:0;
+  border-radius:6px;
+  padding:.55rem 1.3rem;
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+}
+.fm-btn:hover{background:var(--green-acc)}
+.fm-btn.small{padding:.35rem .9rem;font-size:13px}
+.fm-filters{display:grid;grid-template-columns:repeat(4,auto) 1fr;gap:.5rem;margin-bottom:.6rem}
+.fm-count{font-size:12.5px;color:var(--muted);margin-bottom:.4rem}
+.fm-post{
+  border:1px solid var(--border);
+  border-left:4px solid var(--sand);
+  border-radius:7px;
+  padding:.9rem 1rem;
+  margin-bottom:.8rem;
+  background:white;
+  transition:box-shadow .3s;
+}
+.fm-post.concern{border-left-color:var(--coral)}
+.fm-post.catch{border-left-color:var(--teal)}
+.fm-post.question{border-left-color:var(--amber)}
+.fm-post.flash{box-shadow:0 0 0 3px var(--teal-pale)}
+.fm-post-head{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;margin-bottom:.35rem}
+.fm-chip{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11.5px;font-weight:800;background:var(--sand-pale);color:var(--muted)}
+.fm-chip.concern{background:var(--coral-pale);color:var(--coral)}
+.fm-chip.catch{background:var(--teal-pale);color:var(--teal)}
+.fm-chip.question{background:var(--amber-pale);color:var(--amber)}
+.fm-chip.sample{background:#ECEAF6;color:#5B4F99}
+.fm-chip.worse{background:var(--coral-pale);color:var(--coral)}
+.fm-chip.better{background:var(--teal-pale);color:var(--teal)}
+.fm-status{margin-left:auto}
+.fm-post h4{font-size:15.5px;line-height:1.45}
+.fm-meta{font-size:12px;color:var(--muted);margin:.15rem 0 .45rem}
+.fm-body{font-size:14px;white-space:pre-wrap;word-break:break-word}
+.fm-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.6rem}
+.fm-act{
+  background:var(--sand-pale);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:.25rem .75rem;
+  font:inherit;
+  font-size:12.5px;
+  cursor:pointer;
+}
+.fm-act:hover{border-color:var(--teal)}
+.fm-act.on{background:var(--teal-pale);border-color:var(--teal);color:var(--teal);font-weight:800}
+.fm-status-sel{width:auto;font-size:12.5px;padding:.25rem .4rem;margin-left:auto}
+.fm-thread{margin-top:.7rem;border-top:1px dashed var(--border);padding-top:.6rem;display:none}
+.fm-thread.open{display:block}
+.fm-reply-item{padding:.5rem .7rem;border-radius:6px;background:var(--sand-pale);margin-bottom:.45rem;font-size:13.5px}
+.fm-reply-item.official{background:#E6F0F7;border:1px solid #BFD6E6}
+.fm-reply-item .fm-meta{margin:0 0 .2rem}
+.fm-badge-official{display:inline-block;background:#1F4E6E;color:white;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:800;margin-right:.3rem}
+.fm-reply{display:flex;gap:.5rem;align-items:flex-end;margin-top:.4rem}
+.fm-empty{text-align:center;color:var(--muted);padding:2rem 0;font-size:14px}
+.fm-role{display:flex;flex-direction:column;gap:.4rem;font-size:14px;margin-bottom:.4rem}
+.fm-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;margin-bottom:.7rem}
+.fm-stat-row div{background:var(--sand-pale);border-radius:6px;padding:.4rem;text-align:center}
+.fm-stat-row b{display:block;font-family:var(--font-head);font-size:20px}
+.fm-stat-row small{font-size:11px;color:var(--muted)}
+.fm-area-table td:not(:first-child),.fm-area-table th:not(:first-child){text-align:right}
+.fm-area-table td,.fm-area-table th{padding:.35rem .4rem;font-size:13px}
+.fm-sub{font-size:12.5px;font-weight:800;color:var(--muted);margin:.8rem 0 .3rem}
+.fm-top{padding-left:1.2rem;margin:0;font-size:13px}
+.fm-top li{margin-bottom:.3rem}
+@media(max-width:1100px){
+  .fm-layout{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .fm-row{grid-template-columns:1fr 1fr}
+  .fm-filters{grid-template-columns:1fr 1fr}
+  .fm-filters input{grid-column:1 / -1}
+}
+
 /* ---------- Grid map layout (forecast page) ---------- */
 .fc-layout{
   display:grid;
@@ -1011,6 +1113,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     <div class="nav-tab" onclick="showPage('map',this)">แผนที่ GeoAI</div>
     <div class="nav-tab" onclick="showPage('forecast',this)">พยากรณ์ปลา · Forecast</div>
     <div class="nav-tab" onclick="showPage('effort',this)">เรือประมง · Fishing effort</div>
+    <div class="nav-tab" onclick="showPage('forum',this)">ชุมชน · Forum</div>
     <div class="nav-tab" onclick="showPage('pipeline',this)">Real Data Pipeline</div>
     <div class="nav-tab" onclick="showPage('profile',this)">ข้อมูลรายจังหวัด</div>
     <div class="nav-tab" onclick="showPage('alert',this)">จัดอันดับความเสี่ยง</div>
@@ -1137,6 +1240,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
       <div class="card">
         <div class="card-title">อัปเดตระบบ · Updates</div>
         <ul class="hm-timeline">
+          <li><b>30 ต.ค. 2569</b>เปิดหน้าชุมชนชาวประมง ส่งข้อร้องเรียนถึงเจ้าหน้าที่ รายงานการจับปลา และติดตามสถานะ (โหมดสาธิต)</li>
           <li><b>30 ต.ค. 2569</b>เพิ่มแผนที่เรือประมง CPUE และเตือนเสี่ยงทำประมงเกินขนาด ใช้ข้อมูลจริงจากกรมประมง</li>
           <li><b>30 ต.ค. 2569</b>แผนที่พยากรณ์แสดง % ของปลาทั้งหมดในพื้นที่ บนสเกลเดียวกันทุกชนิด</li>
           <li><b>30 ต.ค. 2569</b>เปลี่ยนแผนที่พยากรณ์เป็นกริด 0.05° ครอบคลุมทะเลทั้งพื้นที่ศึกษา</li>
@@ -1152,6 +1256,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
           <button onclick="hmGo('alert')"><b>จัดอันดับ</b><small>พื้นที่ควรเฝ้าระวัง</small></button>
           <button onclick="hmGo('pipeline')"><b>Data Pipeline</b><small>อัปโหลด CSV</small></button>
           <button onclick="hmGo('policy')"><b>ข้อเสนอนโยบาย</b><small>สำหรับหน่วยงาน</small></button>
+          <button onclick="hmGo('forum')"><b>ชุมชนชาวประมง</b><small>โพสต์ · ร้องเรียน</small></button>
         </div>
       </div>
     </aside>
@@ -1399,6 +1504,122 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
         <table class="table ef-area" id="efAreaTable"></table>
         <div class="grid-note" id="efAreaNote"></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="page-forum" class="page">
+  <div class="section-title">ชุมชนชาวประมง · Community forum</div>
+  <div class="section-sub">
+    พื้นที่ให้ชาวประมงพื้นบ้านคุยกัน แบ่งปันข่าว รายงานการจับปลาจริง และส่งข้อร้องเรียนถึงหน่วยงานท้องถิ่น
+    เจ้าหน้าที่ตอบกลับและอัปเดตสถานะได้ รายงานการจับปลาช่วยตรวจว่าแผนที่พยากรณ์และการเตือน "เสี่ยงทำประมงเกิน" ตรงกับในทะเลจริงหรือไม่
+  </div>
+  <div class="notice">
+    <b>โหมดสาธิต:</b> โพสต์ที่เขียนจะถูกเก็บไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น คนอื่นยังมองไม่เห็น
+    โพสต์ที่มีป้าย <span class="fm-chip sample">ตัวอย่าง</span> เป็นข้อความสมมติเพื่อแสดงการใช้งาน ไม่ใช่เรื่องจริง ·
+    เมื่อเชื่อมฐานข้อมูลจริงแล้ว ทุกคนจะเห็นโพสต์เดียวกัน และเจ้าหน้าที่ต้องเข้าสู่ระบบก่อนตอบ
+  </div>
+
+  <div class="fc-layout fm-layout">
+    <div>
+      <div class="card fm-compose">
+        <div class="card-title">เขียนโพสต์ใหม่ · New post</div>
+        <form id="fmForm" autocomplete="off">
+          <div class="fm-row">
+            <label>ประเภท
+              <select id="fmType" required>
+                <option value="concern">ข้อร้องเรียนถึงหน่วยงาน</option>
+                <option value="catch">รายงานการจับปลา</option>
+                <option value="question">ถาม-ตอบ</option>
+                <option value="news">แบ่งปันข่าวสาร</option>
+              </select>
+            </label>
+            <label>พื้นที่
+              <select id="fmArea" required></select>
+            </label>
+            <label>ชื่อที่แสดง
+              <input id="fmName" maxlength="40" placeholder="เช่น พี่หนึ่ง (ไม่ใส่ก็ได้)">
+            </label>
+            <label>หมู่บ้าน/ท่าเรือ
+              <input id="fmVillage" maxlength="60" placeholder="ไม่ใส่ก็ได้">
+            </label>
+          </div>
+          <div class="fm-row fm-catch" id="fmCatchRow">
+            <label>ชนิดปลา
+              <select id="fmSpecies"></select>
+            </label>
+            <label>ปริมาณที่จับได้เทียบกับปกติ
+              <select id="fmLevel">
+                <option value="worse">น้อยกว่าปกติ</option>
+                <option value="normal" selected>ปกติ</option>
+                <option value="better">ดีกว่าปกติ</option>
+              </select>
+            </label>
+          </div>
+          <label class="fm-full">หัวข้อ
+            <input id="fmTitle" maxlength="120" required placeholder="สรุปเรื่องสั้น ๆ">
+          </label>
+          <label class="fm-full">รายละเอียด
+            <textarea id="fmBody" maxlength="2000" rows="4" required placeholder="เกิดอะไรขึ้น ที่ไหน เมื่อไร"></textarea>
+          </label>
+          <div class="fm-form-foot">
+            <span class="fm-hint" id="fmHint">ข้อร้องเรียนจะส่งถึงเจ้าหน้าที่และติดตามสถานะได้</span>
+            <button type="submit" class="fm-btn">โพสต์</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="fm-filters">
+          <select id="fmFType" aria-label="กรองประเภท">
+            <option value="">ทุกประเภท</option>
+            <option value="concern">ข้อร้องเรียน</option>
+            <option value="catch">รายงานการจับปลา</option>
+            <option value="question">ถาม-ตอบ</option>
+            <option value="news">ข่าวสาร</option>
+          </select>
+          <select id="fmFArea" aria-label="กรองพื้นที่"></select>
+          <select id="fmFStatus" aria-label="กรองสถานะ">
+            <option value="">ทุกสถานะ</option>
+            <option value="open">ยังไม่แก้ไข</option>
+            <option value="pending">รอรับเรื่อง</option>
+            <option value="received">รับเรื่องแล้ว</option>
+            <option value="in_progress">กำลังดำเนินการ</option>
+            <option value="resolved">แก้ไขแล้ว</option>
+          </select>
+          <select id="fmSort" aria-label="เรียงลำดับ">
+            <option value="new">ล่าสุด</option>
+            <option value="votes">เห็นด้วยมากสุด</option>
+          </select>
+          <input id="fmSearch" type="search" placeholder="ค้นหา…" aria-label="ค้นหา">
+        </div>
+        <div class="fm-count" id="fmCount"></div>
+        <div id="fmList"></div>
+      </div>
+    </div>
+
+    <div class="fc-side">
+      <div class="card">
+        <div class="card-title">ใช้งานในฐานะ · Role</div>
+        <div class="fm-role" role="radiogroup" aria-label="บทบาท">
+          <label><input type="radio" name="fmRole" value="fisher" checked> ชาวประมง</label>
+          <label><input type="radio" name="fmRole" value="official"> เจ้าหน้าที่ (สาธิต)</label>
+        </div>
+        <div class="grid-note">เจ้าหน้าที่ตอบกลับได้พร้อมป้าย 🏛 และเปลี่ยนสถานะข้อร้องเรียนได้ · ระบบจริงจะใช้การเข้าสู่ระบบแทนปุ่มนี้</div>
+      </div>
+      <div class="card">
+        <div class="card-title">สำหรับเจ้าหน้าที่ · Concerns</div>
+        <div class="fm-stat-row" id="fmStatusCounts"></div>
+        <table class="table fm-area-table" id="fmAreaTable"></table>
+        <div class="fm-sub">เรื่องที่ยังไม่แก้ไข เห็นด้วยมากสุด</div>
+        <ol class="fm-top" id="fmTop"></ol>
+      </div>
+      <div class="card">
+        <div class="card-title">เทียบกับการเตือน · Alerts vs reports</div>
+        <table class="table fm-area-table" id="fmLoopTable"></table>
+        <div class="grid-note" id="fmLoopNote">เทียบระดับเตือน "เสี่ยงทำประมงเกิน" จากแผนที่เรือประมง กับรายงานจับปลาน้อยกว่าปกติของชาวประมงในพื้นที่</div>
+      </div>
+      <button class="hm-link-btn" id="fmReset">ล้างข้อมูลสาธิต (กลับเป็นโพสต์ตัวอย่าง)</button>
     </div>
   </div>
 </section>
@@ -1788,6 +2009,10 @@ window.showPage = function(id, tab){
 
   if(id === "effort"){
     setTimeout(ensureEffort, 80);
+  }
+
+  if(id === "forum"){
+    initForum();
   }
 
   if(id === "profile"){
@@ -3182,6 +3407,290 @@ function renderHomeAlerts(data){
       <span class="risk-badge ${levels[r.level][0]}">${levels[r.level][1]}</span></div>`).join("") +
     `<p class="hm-muted" style="margin-top:.5rem">${fcMonthLabel(month)} · เรือหนาแน่นแต่ปลาที่พยากรณ์น้อย = เสี่ยงทำประมงเกินขนาด</p>`;
 }
+
+/* ---------- Community forum ---------- */
+/* Demo storage: this browser only (localStorage, in-memory if blocked). Swap ForumStore for a shared
+   backend (e.g. Supabase) to make posts visible to everyone; the page only talks to ForumStore. */
+const FM_KEY = "forum_v1", FM_VOTES = "forum_votes_v1", FM_ROLE = "forum_role";
+const FM_AREAS = {chumphon:"ชุมพร", surat:"สุราษฎร์ธานี", nakhon:"นครศรีธรรมราช", songkhla:"สงขลา", pattani:"ปัตตานี", other:"อื่น ๆ"};
+const FM_TYPES = {concern:"ข้อร้องเรียน", catch:"รายงานการจับปลา", question:"ถาม-ตอบ", news:"ข่าวสาร"};
+const FM_STATUS = {pending:["รอรับเรื่อง", "mid"], received:["รับเรื่องแล้ว", "mid"], in_progress:["กำลังดำเนินการ", "mid"], resolved:["แก้ไขแล้ว", "low"]};
+const FM_LEVELS = {worse:"น้อยกว่าปกติ", normal:"ปกติ", better:"ดีกว่าปกติ"};
+const FM_SPECIES = ["ปลาทู", "ปลาลัง", "ปลาหลังเขียว", "ปลาทูแขก", "ปลาโอดำ", "ปลาโอลาย", "ปลากะตัก", "หมึก", "อื่น ๆ"];
+const FM_OFFICIAL = "เจ้าหน้าที่ประมงจังหวัด";
+let fmMemory = null, fmReady = false, fmOpen = new Set();
+
+function fmSamples(){
+  const rep = (name, body, at, official) => ({name, body, created:at, official:!!official});
+  return [
+    {id:"s1", type:"concern", area:"songkhla", name:"พี่หนึ่ง", village:"บ้านบ่อเตย", created:"2026-10-24T05:40:00Z", votes:14,
+     title:"เรืออวนลากเข้ามาลากใกล้ฝั่งตอนกลางคืน", status:"in_progress",
+     body:"3 คืนติดกันมีเรืออวนลากเข้ามาในเขตชายฝั่ง ลอบปูกับอวนจมของเราขาดเสียหายหลายลูก อยากให้มีเรือตรวจออกช่วงกลางคืน",
+     history:[{status:"received", at:"2026-10-24T09:00:00Z"}, {status:"in_progress", at:"2026-10-25T02:00:00Z"}],
+     replies:[rep("ลุงเดช", "ฝั่งเราก็เจอเหมือนกัน อวนจมหายไป 2 ผืน", "2026-10-24T07:10:00Z"),
+              rep(FM_OFFICIAL, "รับเรื่องแล้ว ประสานหน่วยตรวจการณ์ออกลาดตระเวนช่วงกลางคืนในสัปดาห์นี้ ถ้าเห็นเรือให้จดเวลา พิกัด หรือถ่ายรูปไว้ แล้วแจ้งในกระทู้นี้", "2026-10-25T02:00:00Z", true)]},
+    {id:"s2", type:"catch", area:"nakhon", name:"ป้าศรี", village:"ปากพนัง", created:"2026-10-27T01:15:00Z", votes:9,
+     title:"ปลาทูน้อยกว่าทุกปีช่วงนี้", species:"ปลาทู", level:"worse",
+     body:"ออกเรือ 4 วัน ได้ปลาทูไม่ถึงครึ่งของปีที่แล้วช่วงเดียวกัน เรือจากที่อื่นมาลงแถวนี้เยอะขึ้น", replies:[]},
+    {id:"s3", type:"catch", area:"nakhon", name:"บังหมาด", village:"ท่าศาลา", created:"2026-10-26T23:30:00Z", votes:5,
+     title:"ปลาลังบางมาก ต้องออกไกลกว่าเดิม", species:"ปลาลัง", level:"worse",
+     body:"ใกล้ฝั่งแทบไม่มี ต้องออกไปไกลขึ้นอีกเกือบชั่วโมง ค่าน้ำมันเพิ่ม",
+     replies:[rep("ป้าศรี", "ตรงกับที่เจอเลย", "2026-10-27T02:00:00Z")]},
+    {id:"s4", type:"question", area:"chumphon", name:"น้องบอส", village:"", created:"2026-10-22T03:00:00Z", votes:7,
+     title:"ปิดอ่าวปีหน้าเริ่มวันไหน เครื่องมืออะไรออกได้บ้าง",
+     body:"ปีนี้ปิด 15 ก.พ.–14 มิ.ย. ปีหน้าจะเหมือนเดิมไหม เรือเล็กใช้อวนลอยปลาออกได้หรือเปล่า",
+     replies:[rep(FM_OFFICIAL, "ช่วงเวลาและเครื่องมือที่ได้รับยกเว้นจะประกาศโดยกรมประมงก่อนเริ่มมาตรการทุกปี เมื่อมีประกาศจะนำมาแจ้งในกระทู้นี้ ระหว่างนี้สอบถามที่สำนักงานประมงอำเภอได้", "2026-10-22T08:30:00Z", true)]},
+    {id:"s5", type:"concern", area:"pattani", name:"แบเลาะ", village:"บ้านตันหยงลุโละ", created:"2026-10-20T04:00:00Z", votes:9,
+     title:"ทางลาดขึ้นเรือชำรุด ขอให้ซ่อม", status:"received",
+     body:"ทางลาดคอนกรีตแตกเป็นหลุม เวลาน้ำลงลากเรือขึ้นไม่ได้ เรือเสียหายไปแล้ว 2 ลำ",
+     history:[{status:"received", at:"2026-10-21T03:00:00Z"}], replies:[]},
+    {id:"s6", type:"news", area:"surat", name:"ครูแอน", village:"เกาะพะงัน", created:"2026-10-18T10:00:00Z", votes:4,
+     title:"น้ำอุ่นผิดปกติ ปะการังแถวเกาะเริ่มซีด",
+     body:"ดำน้ำสัปดาห์นี้เห็นปะการังเริ่มซีดเป็นหย่อม ๆ น้ำอุ่นกว่าปกติ ตรงกับข่าวเตือนเรื่องปะการังฟอกขาว ใครเห็นที่อื่นช่วยแจ้งกัน", replies:[]},
+    {id:"s7", type:"catch", area:"songkhla", name:"ลุงเดช", village:"บ้านบ่อเตย", created:"2026-10-28T00:20:00Z", votes:3,
+     title:"ปลาหลังเขียวเข้าฝั่งดี", species:"ปลาหลังเขียว", level:"better",
+     body:"2 วันนี้ปลาหลังเขียวเข้ามาใกล้ฝั่ง ได้ดีกว่าเดือนก่อน", replies:[]},
+    {id:"s8", type:"concern", area:"nakhon", name:"ชาวประมงปากพนัง", village:"ปากพนัง", created:"2026-10-28T06:00:00Z", votes:6,
+     title:"ขอให้ตรวจเรือปั่นไฟจากนอกพื้นที่", status:"pending",
+     body:"มีเรือปั่นไฟจากต่างจังหวัดมาจับปลากะตักใกล้ฝั่งหลายลำ ปลาเล็กติดไปด้วยเยอะ อยากให้ตรวจว่าทำถูกระเบียบหรือไม่", replies:[]}
+  ].map(p => ({sample:true, village:"", replies:[], history:[], ...p}));
+}
+
+function fmLoad(){
+  if(fmMemory) return fmMemory;
+  try{
+    const raw = localStorage.getItem(FM_KEY);
+    fmMemory = raw ? JSON.parse(raw) : fmSamples();
+  }catch(e){ fmMemory = fmSamples(); }
+  return fmMemory;
+}
+function fmSave(){
+  try{ localStorage.setItem(FM_KEY, JSON.stringify(fmMemory)); }catch(e){ /* storage blocked: keep in memory */ }
+}
+function fmVotes(){
+  try{ return new Set(JSON.parse(localStorage.getItem(FM_VOTES) || "[]")); }catch(e){ return fmVotes.mem || (fmVotes.mem = new Set()); }
+}
+function fmSaveVotes(set){
+  fmVotes.mem = set;
+  try{ localStorage.setItem(FM_VOTES, JSON.stringify([...set])); }catch(e){}
+}
+
+const ForumStore = {
+  async list(){ return fmLoad(); },
+  async create(post){
+    const p = {id:"u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), created:new Date().toISOString(),
+      votes:0, replies:[], history:[], sample:false, ...post};
+    if(p.type === "concern") p.status = "pending";
+    fmLoad().unshift(p); fmSave(); return p;
+  },
+  async reply(id, reply){
+    const p = fmLoad().find(x => x.id === id);
+    if(p){ p.replies.push({created:new Date().toISOString(), ...reply}); fmSave(); }
+    return p;
+  },
+  async vote(id){
+    const votes = fmVotes(), p = fmLoad().find(x => x.id === id);
+    if(!p || votes.has(id)) return p;
+    p.votes++; votes.add(id); fmSaveVotes(votes); fmSave(); return p;
+  },
+  async setStatus(id, status){
+    const p = fmLoad().find(x => x.id === id);
+    if(p && p.type === "concern" && FM_STATUS[status]){
+      p.status = status; p.history.push({status, at:new Date().toISOString()}); fmSave();
+    }
+    return p;
+  },
+  async reset(){
+    fmMemory = fmSamples(); fmSave(); fmSaveVotes(new Set());
+  }
+};
+
+function fmEsc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;"}[c]));
+}
+function fmDate(iso){
+  const d = new Date(iso);
+  if(Number.isNaN(d.getTime())) return "";
+  return `${d.getDate()} ${FC_TH_MONTHS[d.getMonth()]} ${d.getFullYear() + 543} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+function fmRole(){
+  return (document.querySelector('input[name="fmRole"]:checked') || {}).value || "fisher";
+}
+
+window.initForum = function(){
+  if(fmReady){ renderForum(); return; }
+  fmReady = true;
+  const areaOpts = Object.entries(FM_AREAS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+  document.getElementById("fmArea").innerHTML = areaOpts;
+  document.getElementById("fmFArea").innerHTML = `<option value="">ทุกพื้นที่</option>` + areaOpts;
+  document.getElementById("fmSpecies").innerHTML = FM_SPECIES.map(s => `<option>${s}</option>`).join("");
+  try{
+    const role = localStorage.getItem(FM_ROLE);
+    if(role) document.querySelector(`input[name="fmRole"][value="${role}"]`).checked = true;
+  }catch(e){}
+
+  const type = document.getElementById("fmType");
+  const syncType = () => {
+    document.getElementById("fmCatchRow").classList.toggle("show", type.value === "catch");
+    document.getElementById("fmHint").textContent = {
+      concern:"ข้อร้องเรียนจะส่งถึงเจ้าหน้าที่และติดตามสถานะได้",
+      catch:"รายงานการจับปลาช่วยตรวจความแม่นของแผนที่พยากรณ์และการเตือน",
+      question:"ชาวประมงคนอื่นหรือเจ้าหน้าที่ช่วยตอบได้",
+      news:"แบ่งปันสิ่งที่เห็นในทะเลหรือข่าวที่เป็นประโยชน์"}[type.value];
+  };
+  type.addEventListener("change", syncType);
+  syncType();
+
+  document.getElementById("fmForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const v = id => document.getElementById(id).value.trim();
+    if(!v("fmTitle") || !v("fmBody")) return;
+    const post = {type:type.value, area:v("fmArea"), name:v("fmName") || "ไม่ระบุชื่อ", village:v("fmVillage"),
+      title:v("fmTitle"), body:v("fmBody")};
+    if(fmRole() === "official"){ post.name = FM_OFFICIAL; post.official = true; }
+    if(post.type === "catch"){ post.species = v("fmSpecies"); post.level = v("fmLevel"); }
+    const p = await ForumStore.create(post);
+    ["fmTitle", "fmBody"].forEach(id => { document.getElementById(id).value = ""; });
+    ["fmFType", "fmFArea", "fmFStatus", "fmSearch"].forEach(id => { document.getElementById(id).value = ""; });
+    document.getElementById("fmSort").value = "new";
+    renderForum(p.id);
+  });
+
+  ["fmFType", "fmFArea", "fmFStatus", "fmSort"].forEach(id => document.getElementById(id).addEventListener("change", () => renderForum()));
+  document.getElementById("fmSearch").addEventListener("input", () => renderForum());
+  document.querySelectorAll('input[name="fmRole"]').forEach(r => r.addEventListener("change", () => {
+    try{ localStorage.setItem(FM_ROLE, fmRole()); }catch(e){}
+    renderForum();
+  }));
+  document.getElementById("fmReset").addEventListener("click", async () => { fmOpen.clear(); await ForumStore.reset(); renderForum(); });
+
+  const list = document.getElementById("fmList");
+  list.addEventListener("click", async e => {
+    const btn = e.target.closest("[data-act]");
+    if(!btn) return;
+    const id = btn.closest(".fm-post").dataset.id;
+    if(btn.dataset.act === "vote"){ await ForumStore.vote(id); renderForum(); }
+    if(btn.dataset.act === "thread"){ fmOpen.has(id) ? fmOpen.delete(id) : fmOpen.add(id); renderForum(); }
+    if(btn.dataset.act === "reply"){
+      const box = btn.closest(".fm-post").querySelector("textarea");
+      const body = box.value.trim();
+      if(!body) return;
+      const official = fmRole() === "official";
+      await ForumStore.reply(id, {name:official ? FM_OFFICIAL : "ไม่ระบุชื่อ", body:body.slice(0, 1000), official});
+      fmOpen.add(id);
+      renderForum();
+    }
+  });
+  list.addEventListener("change", async e => {
+    if(!e.target.classList.contains("fm-status-sel")) return;
+    await ForumStore.setStatus(e.target.closest(".fm-post").dataset.id, e.target.value);
+    renderForum();
+  });
+  renderForum();
+  loadEffort(() => renderForumLoop());
+};
+
+async function renderForum(flashId){
+  const posts = await ForumStore.list();
+  const f = {type:document.getElementById("fmFType").value, area:document.getElementById("fmFArea").value,
+    status:document.getElementById("fmFStatus").value, sort:document.getElementById("fmSort").value,
+    q:document.getElementById("fmSearch").value.trim().toLowerCase()};
+  const official = fmRole() === "official";
+  const votes = fmVotes();
+  let shown = posts.filter(p =>
+    (!f.type || p.type === f.type) && (!f.area || p.area === f.area) &&
+    (!f.status || (f.status === "open" ? p.type === "concern" && p.status !== "resolved" : p.status === f.status)) &&
+    (!f.q || `${p.title} ${p.body} ${p.name} ${p.village}`.toLowerCase().includes(f.q)));
+  shown = shown.slice().sort(f.sort === "votes" ? (a, b) => b.votes - a.votes : (a, b) => b.created.localeCompare(a.created));
+  document.getElementById("fmCount").textContent = `${shown.length} โพสต์${shown.length !== posts.length ? ` (จากทั้งหมด ${posts.length})` : ""}`;
+
+  document.getElementById("fmList").innerHTML = shown.length ? shown.map(p => {
+    const st = p.type === "concern" ? FM_STATUS[p.status] || FM_STATUS.pending : null;
+    const statusCtl = !st ? "" : official
+      ? `<select class="fm-status-sel" aria-label="สถานะ">${Object.entries(FM_STATUS).map(([k, [lab]]) =>
+          `<option value="${k}"${k === p.status ? " selected" : ""}>${lab}</option>`).join("")}</select>`
+      : `<span class="risk-badge ${st[1]} fm-status">${st[0]}</span>`;
+    const replies = p.replies.map(r => `<div class="fm-reply-item${r.official ? " official" : ""}">
+        <div class="fm-meta">${r.official ? `<span class="fm-badge-official">🏛 เจ้าหน้าที่</span>` : ""}<b>${fmEsc(r.name)}</b> · ${fmDate(r.created)}</div>
+        <div class="fm-body">${fmEsc(r.body)}</div></div>`).join("");
+    const lastStatus = p.history && p.history.length ? ` · อัปเดตสถานะ ${fmDate(p.history[p.history.length - 1].at)}` : "";
+    return `<article class="fm-post ${p.type}${p.id === flashId ? " flash" : ""}" data-id="${fmEsc(p.id)}" id="fm-${fmEsc(p.id)}">
+      <div class="fm-post-head">
+        <span class="fm-chip ${p.type}">${FM_TYPES[p.type] || ""}</span>
+        <span class="fm-chip">${FM_AREAS[p.area] || ""}</span>
+        ${p.type === "catch" ? `<span class="fm-chip">${fmEsc(p.species)}</span><span class="fm-chip ${p.level}">${FM_LEVELS[p.level] || ""}</span>` : ""}
+        ${p.sample ? `<span class="fm-chip sample">ตัวอย่าง</span>` : ""}
+        ${official ? "" : statusCtl}
+      </div>
+      <h4>${fmEsc(p.title)}</h4>
+      <div class="fm-meta">${p.official ? `<span class="fm-badge-official">🏛 เจ้าหน้าที่</span>` : ""}${fmEsc(p.name)}${p.village ? " · " + fmEsc(p.village) : ""} · ${fmDate(p.created)}${lastStatus}</div>
+      <div class="fm-body">${fmEsc(p.body)}</div>
+      <div class="fm-actions">
+        <button class="fm-act${votes.has(p.id) ? " on" : ""}" data-act="vote" aria-pressed="${votes.has(p.id)}">👍 เห็นด้วย ${p.votes}</button>
+        <button class="fm-act" data-act="thread" aria-expanded="${fmOpen.has(p.id)}">💬 ตอบกลับ ${p.replies.length}</button>
+        ${official ? statusCtl : ""}
+      </div>
+      <div class="fm-thread${fmOpen.has(p.id) ? " open" : ""}">
+        ${replies || `<div class="fm-meta">ยังไม่มีคำตอบ</div>`}
+        <div class="fm-reply">
+          <textarea rows="2" maxlength="1000" placeholder="${official ? "ตอบในฐานะเจ้าหน้าที่…" : "เขียนคำตอบ…"}" aria-label="เขียนคำตอบ"></textarea>
+          <button class="fm-btn small" data-act="reply">ส่ง</button>
+        </div>
+      </div>
+    </article>`;
+  }).join("") : `<div class="fm-empty">ไม่พบโพสต์ที่ตรงกับตัวกรอง</div>`;
+
+  if(flashId){
+    const el = document.getElementById("fm-" + flashId);
+    if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+  renderForumOfficial(posts);
+  renderForumLoop();
+}
+
+function renderForumOfficial(posts){
+  const concerns = posts.filter(p => p.type === "concern");
+  document.getElementById("fmStatusCounts").innerHTML = Object.entries(FM_STATUS).map(([k, [lab]]) =>
+    `<div><b>${concerns.filter(p => (p.status || "pending") === k).length}</b><small>${lab}</small></div>`).join("");
+  document.getElementById("fmAreaTable").innerHTML = `<tr><th>พื้นที่</th><th>ยังไม่แก้ไข</th><th>ทั้งหมด</th></tr>` +
+    Object.entries(FM_AREAS).map(([k, name]) => {
+      const c = concerns.filter(p => p.area === k);
+      return c.length ? `<tr><td>${name}</td><td>${c.filter(p => p.status !== "resolved").length}</td><td>${c.length}</td></tr>` : "";
+    }).join("");
+  const top = concerns.filter(p => p.status !== "resolved").sort((a, b) => b.votes - a.votes).slice(0, 5);
+  document.getElementById("fmTop").innerHTML = top.length ? top.map(p =>
+    `<li><span class="ef-link" onclick="fmFocus('${fmEsc(p.id)}')">${fmEsc(p.title)}</span> · 👍 ${p.votes}</li>`).join("")
+    : `<li class="hm-muted">ไม่มีเรื่องค้าง</li>`;
+}
+
+function renderForumLoop(){
+  const posts = fmLoad();
+  const data = window.EFFORT_DATA;
+  const month = data ? data.meta.upcoming_month || data.months[data.months.length - 1] : null;
+  const levels = [["low", "ปกติ"], ["mid", "เฝ้าระวัง"], ["high", "เสี่ยงสูง"]];
+  document.getElementById("fmLoopTable").innerHTML = `<tr><th>พื้นที่</th><th>เตือน</th><th>จับได้น้อย</th></tr>` +
+    Object.entries(FM_AREAS).filter(([k]) => k !== "other").map(([k, name]) => {
+      const a = data && data.areas[k] ? data.areas[k][month] : null;
+      const worse = posts.filter(p => p.type === "catch" && p.area === k && p.level === "worse").length;
+      return `<tr><td><span class="ef-link" onclick="fmFilterArea('${k}')">${name}</span></td>
+        <td>${a ? `<span class="risk-badge ${levels[a.level][0]}">${levels[a.level][1]}</span>` : "—"}</td><td>${worse} รายงาน</td></tr>`;
+    }).join("");
+  if(month) document.getElementById("fmLoopNote").textContent =
+    `ระดับเตือน "เสี่ยงทำประมงเกิน" ${fcMonthLabel(month)} จากแผนที่เรือประมง เทียบกับรายงาน "จับได้น้อยกว่าปกติ" ของชาวประมง · พื้นที่ที่ทั้งสองตรงกันควรได้รับความสำคัญก่อน · คลิกชื่อพื้นที่เพื่อดูโพสต์`;
+}
+
+window.fmFocus = function(id){
+  ["fmFType", "fmFArea", "fmFStatus", "fmSearch"].forEach(x => { document.getElementById(x).value = ""; });
+  fmOpen.add(id);
+  renderForum(id);
+};
+window.fmFilterArea = function(area){
+  document.getElementById("fmFArea").value = area;
+  document.getElementById("fmFType").value = "";
+  document.getElementById("fmFStatus").value = "";
+  renderForum();
+  document.getElementById("fmList").scrollIntoView({behavior:"smooth", block:"start"});
+};
 
 /* ---------- Start ---------- */
 document.addEventListener("DOMContentLoaded", () => {

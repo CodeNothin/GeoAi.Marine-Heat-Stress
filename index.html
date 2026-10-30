@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="province_data.js?v=7d31912476"></script>
 <script src="study_area_data.js?v=0b8d7d3340"></script>
 
 <style>
@@ -1347,16 +1348,16 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   </div>
 
   <div class="hm-head hm-about"><h3>เกี่ยวกับระบบ · About</h3><span>GeoAI · Earth Observation · Climate · Fishery</span></div>
-  <p class="hm-about-lead">ต้นแบบนี้วิเคราะห์พื้นที่และช่วงเวลาที่ประมงชายฝั่งเสี่ยงในภาคใต้ฝั่งอ่าวไทย โดยผสานข้อมูล SST, CHL-a, ERA5, สถิติประมง, ขอบเขตจังหวัด และ OpenStreetMap เพื่อสร้างแผนที่ความเสี่ยงและข้อเสนอเชิงนโยบายที่นำไปใช้ประกอบการตัดสินใจได้</p>
+  <p class="hm-about-lead">ต้นแบบนี้วิเคราะห์พื้นที่และช่วงเวลาที่ประมงชายฝั่งเสี่ยงในภาคใต้ฝั่งอ่าวไทย โดยผสานอุณหภูมิผิวน้ำ NOAA OISST, คลอโรฟิลล์ NOAA VIIRS, ลม ERA5, ความลึกน้ำ ETOPO 2022 และสถิติเรือประมงและปลาขึ้นท่าของกรมประมง เพื่อพยากรณ์การกระจายของปลา ประเมินแรงประมง จัดอันดับจังหวัดที่ควรเฝ้าระวัง และเสนอแนวทางเชิงนโยบาย</p>
 
   <div class="notice">
-    หมายเหตุ: หน้าแผนที่หลักใช้ mock data เพื่อสาธิตหน้าตาระบบ ส่วนหน้า Real Data Pipeline รองรับการอัปโหลด CSV จริงจาก notebook/script
+    หมายเหตุ: ข้อมูลสภาพทะเลและสถิติประมงเป็นข้อมูลจริง ส่วน logbook การจับปลาที่ใช้ฝึกโมเดลพยากรณ์ยังเป็นข้อมูลจำลอง เพราะยังไม่มี logbook หรือ VMS สาธารณะ
   </div>
 
   <div class="grid-3" style="margin-bottom:1rem">
-    <div class="home-card"><small>พื้นที่ศึกษา</small><h3>5 จังหวัดอ่าวไทยตอนใต้</h3><p>ชุมพร สุราษฎร์ธานี นครศรีธรรมราช สงขลา และปัตตานี วิเคราะห์รายเดือน</p></div>
-    <div class="home-card coral"><small>ข้อมูลหลัก</small><h3>SST · CHL-a · ERA5 · DOF</h3><p>อุณหภูมิผิวน้ำทะเล, Chlorophyll-a, ภูมิอากาศรายเดือน และปริมาณ/มูลค่าประมงรายจังหวัด</p></div>
-    <div class="home-card amber"><small>ผลลัพธ์</small><h3>Risk Map · Ranking · Policy</h3><p>แผนที่ความเสี่ยง, ranking จังหวัด, dashboard เฝ้าระวัง และข้อเสนอเชิงพื้นที่</p></div>
+    <div class="home-card"><small>พื้นที่ศึกษา</small><h3>6 จังหวัดอ่าวไทยตอนใต้</h3><p>ชุมพร สุราษฎร์ธานี นครศรีธรรมราช สงขลา ปัตตานี และนราธิวาส วิเคราะห์รายเดือน</p></div>
+    <div class="home-card coral"><small>ข้อมูลหลัก</small><h3>SST · CHL-a · ERA5 · ETOPO · DOF</h3><p>อุณหภูมิผิวน้ำทะเล, Chlorophyll-a, ลม, ความลึกน้ำ และจำนวนเรือ/ปลาขึ้นท่ารายจังหวัด</p></div>
+    <div class="home-card amber"><small>ผลลัพธ์</small><h3>Forecast · Effort · Ranking · Policy</h3><p>แผนที่พยากรณ์ปลา, แผนที่แรงประมง, อันดับจังหวัดที่ควรเฝ้าระวัง และข้อเสนอเชิงพื้นที่</p></div>
   </div>
 
   <div class="grid-3" style="margin-bottom:1rem">
@@ -1373,28 +1374,29 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
     <div class="home-card amber">
       <small>การใช้เชิงนโยบาย</small>
       <h3>จังหวัดและองค์กรท้องถิ่น</h3>
-      <p>ใช้ Risk Score ประกอบการจัดสรรทรัพยากรและการสื่อสารความเสี่ยงกับพื้นที่เป้าหมาย</p>
+      <p>ใช้คะแนนสัญญาณเตือนรายจังหวัดประกอบการจัดสรรทรัพยากรและการสื่อสารความเสี่ยงกับพื้นที่เป้าหมาย</p>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">GeoAI Workflow</div>
     <div class="flow">
-      <div><b>Step 1</b><h4>Study Area</h4><p>5 จังหวัด · coastal buffer 0–50 km จากแนวชายฝั่งจริง + วิเคราะห์รายเดือน</p></div>
-      <div><b>Step 2</b><h4>Data Ingestion</h4><p>SST, CHL-a, ERA5, ประมง, OSM, boundary</p></div>
-      <div><b>Step 3</b><h4>Index</h4><p>Heat Stress, Productivity, Climate Exposure</p></div>
-      <div><b>Step 4</b><h4>AI/ML</h4><p>Anomaly detection, clustering, sensitivity analysis</p></div>
+      <div><b>Step 1</b><h4>Study Area</h4><p>6 จังหวัด · coastal buffer 0–50 km จากแนวชายฝั่งจริง + วิเคราะห์รายเดือน</p></div>
+      <div><b>Step 2</b><h4>Data Ingestion</h4><p>OISST, VIIRS CHL-a, ERA5 ลม, ETOPO ความลึก, สถิติกรมประมง</p></div>
+      <div><b>Step 3</b><h4>Index</h4><p>ความร้อนสะสม 3 เดือน, CHL-a anomaly, ปลาขึ้นท่า, ความหนาแน่นเรือ</p></div>
+      <div><b>Step 4</b><h4>AI/ML</h4><p>โมเดลพยากรณ์ปลาเดือนถัดไป + ทดสอบย้อนหลังทีละเดือน</p></div>
       <div><b>Step 5</b><h4>Action</h4><p>Map, ranking, alert, policy recommendation</p></div>
     </div>
 
     <div class="formula">
-      <b>Fishery Risk Score</b>
-      <code>FRS = 0.4 × Marine Heat Stress Index
-    + 0.3 × Low Productivity Signal
-    + 0.2 × Climate Exposure Index
-    + 0.1 × Fishery Dependency Index
+      <b>คะแนนสัญญาณเตือนรายจังหวัด</b>
+      <code>คะแนน = ค่าเฉลี่ย percentile ของ
+    ความร้อนสะสม 3 เดือน          (NOAA OISST)
+    คลอโรฟิลล์ลดลง                (NOAA VIIRS)
+    ปลาขึ้นท่าลดลงเทียบปีก่อน      (กรมประมง)
+    ความหนาแน่นเรือประมง           (กรมประมง)
 
-หมายเหตุ: น้ำหนักนี้เป็น initial expert-weighted score สำหรับ MVP และจะทดสอบ sensitivity ภายหลัง</code>
+percentile = สูงกว่ากี่ % ของทุกจังหวัด-เดือนในข้อมูล · น้ำหนักเท่ากัน · ไม่มีข้อมูลเดือนใดก็ไม่นำมาคิด</code>
     </div>
   </div>
 
@@ -1404,8 +1406,8 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
       <div class="method-step"><b>01</b><h4>Raster</h4><p>นำเข้าข้อมูลดาวเทียมรายวัน/รายเดือนในรูป raster หรือ tiles</p></div>
       <div class="method-step"><b>02</b><h4>Coastal Buffer</h4><p>ตัดพื้นที่วิเคราะห์เฉพาะเขตประมงชายฝั่ง 0–50 km (แนวชายฝั่งและความลึกจาก ETOPO 2022)</p></div>
       <div class="method-step"><b>03</b><h4>Zonal Stats</h4><p>คำนวณค่ารายจังหวัด/เดือน</p></div>
-      <div class="method-step"><b>04</b><h4>Baseline</h4><p>เทียบค่ากับ baseline เดือนเดียวกัน</p></div>
-      <div class="method-step"><b>05</b><h4>Risk Index</h4><p>รวม Heat Stress, Productivity, Climate และ Dependency</p></div>
+      <div class="method-step"><b>04</b><h4>Baseline</h4><p>SST เทียบค่าเฉลี่ย 1971–2000 · CHL-a และปลาขึ้นท่าเทียบเดือนเดียวกันของปีอื่น</p></div>
+      <div class="method-step"><b>05</b><h4>Risk Index</h4><p>รวมความร้อนสะสม คลอโรฟิลล์ ปลาขึ้นท่า และความหนาแน่นเรือ</p></div>
       <div class="method-step"><b>06</b><h4>Action</h4><p>แปลงเป็นแผนที่ ranking และ insight</p></div>
     </div>
     <div class="grid-note">ระบบเชื่อม raster → spatial statistics → validation → decision support</div>
@@ -1414,9 +1416,9 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   <div class="card" style="margin-top:1rem">
     <div class="card-title">Model / Validation Status</div>
     <div class="status-grid">
-      <div class="status-card"><span class="status-chip ready">Ready</span><h4>Baseline Risk Index</h4><p>คำนวณ FRS รายจังหวัด/รายเดือนจากดัชนีย่อย</p></div>
+      <div class="status-card"><span class="status-chip ready">Ready</span><h4>คะแนนสัญญาณเตือน</h4><p>คำนวณรายจังหวัด/รายเดือนจากข้อมูลจริง 2565–2569</p></div>
       <div class="status-card"><span class="status-chip ready">Ready</span><h4>Real Data Pipeline</h4><p>รองรับ CSV จาก SST-only pipeline และวาดแผนที่อัตโนมัติ</p></div>
-      <div class="status-card"><span class="status-chip planned">Next</span><h4>CHL-a / ERA5 / DOF</h4><p>ต่อยอดเป็น FRS เต็มระบบหลังรวมข้อมูลเพิ่มเติม</p></div>
+      <div class="status-card"><span class="status-chip ready">Ready</span><h4>CHL-a / ERA5 / DOF</h4><p>รวมเข้าโมเดลพยากรณ์และคะแนนรายจังหวัดแล้ว</p></div>
       <div class="status-card"><span class="status-chip planned">Next</span><h4>Explainability</h4><p>เพิ่ม driver contribution / SHAP เมื่อมี target data เพียงพอ</p></div>
     </div>
   </div>
@@ -1654,7 +1656,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   <div class="section-sub">อัปโหลด CSV จาก notebook/script เพื่อ summary cards, ตาราง และแผนที่ choropleth </div>
 
   <div class="notice">
-    ส่วนนี้คือ <b>Preliminary SST-only Real-Data Pipeline Test</b> สำหรับพิสูจน์ workflow: CSV output → province-month table → SST anomaly / MHSI → web map
+    ส่วนนี้คือ <b>Preliminary SST-only Real-Data Pipeline Test</b> สำหรับพิสูจน์ workflow: CSV output → province-month table → SST anomaly / heat-risk score → web map
   </div>
 
   <div class="grid-4" style="margin-bottom:1rem">
@@ -1676,7 +1678,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
         <span class="file-pill">month</span>
         <span class="file-pill">sst_mean_C</span>
         <span class="file-pill">sst_anomaly_C</span>
-        <span class="file-pill">MHSI</span>
+        <span class="file-pill">heat_risk_score</span>
         <span class="file-pill">risk_level</span>
       </div>
 
@@ -1687,8 +1689,8 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
           <tr><td>month</td><td>เดือนของข้อมูล เช่น 2024-06</td><td><span class="status-chip ready">Required</span></td></tr>
           <tr><td>sst_mean_C</td><td>ค่าเฉลี่ย SST รายจังหวัด/เดือน</td><td><span class="status-chip ready">Optional</span></td></tr>
           <tr><td>sst_anomaly_C</td><td>SST anomaly เทียบ baseline เดือนเดียวกัน</td><td><span class="status-chip ready">Required for anomaly map</span></td></tr>
-          <tr><td>MHSI</td><td>Marine Heat Stress Index จาก SST anomaly</td><td><span class="status-chip ready">Required for risk map</span></td></tr>
-          <tr><td>risk_level</td><td>High / Medium / Low หากไม่มี เว็บจะคำนวณจาก MHSI</td><td><span class="status-chip ready">Optional</span></td></tr>
+          <tr><td>heat_risk_score</td><td>คะแนนความร้อน 0–100 จาก SST anomaly (ไฟล์เก่าที่ใช้คอลัมน์ MHSI ยังอ่านได้)</td><td><span class="status-chip ready">Required for risk map</span></td></tr>
+          <tr><td>risk_level</td><td>High / Medium / Low หากไม่มี เว็บจะคำนวณจาก heat_risk_score</td><td><span class="status-chip ready">Optional</span></td></tr>
         </tbody>
       </table>
 
@@ -1708,7 +1710,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
         <input type="file" id="pipelineCsvInput" accept=".csv" onchange="handlePipelineCsv(event)">
         <div class="csv-format-note">
           รองรับไฟล์เช่น <code>sst_province_month.csv</code> หรือ <code>preliminary_heat_risk.csv</code><br>
-          columns ที่แนะนำ: <code>province, month, sst_mean_C, sst_anomaly_C, MHSI, risk_level</code>
+          columns ที่แนะนำ: <code>province, month, sst_mean_C, sst_anomaly_C, heat_risk_score, risk_level</code>
         </div>
       </div>
 
@@ -1725,7 +1727,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 
         <label>แสดงแผนที่:</label>
         <select id="pipelineMapMetric" onchange="renderPipelineMap()">
-          <option value="MHSI">Preliminary heat-risk / MHSI</option>
+          <option value="MHSI">Preliminary heat-risk score</option>
           <option value="sst_anomaly_C">SST anomaly</option>
         </select>
 
@@ -1748,7 +1750,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
             <th>Month</th>
             <th>SST mean</th>
             <th>SST anomaly</th>
-            <th>MHSI</th>
+            <th>Heat-risk score</th>
             <th>Risk level</th>
           </tr>
         </thead>
@@ -1764,7 +1766,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
   <div class="card">
     <div class="card-title">Interpretation Note · ข้อจำกัดของผลลัพธ์หน้านี้</div>
     <p style="font-size:13.5px;color:var(--muted);margin-bottom:.75rem">
-      ผลลัพธ์ในแท็บนี้เป็น <b>SST-only preliminary real-data pipeline test</b> ยังไม่ใช่ Fishery Risk Score ฉบับสมบูรณ์ เพราะ FRS เต็มระบบจะต้องรวม LPS จาก CHL-a, CEI จาก ERA5, FDI จากข้อมูลประมง และข้อมูลบริบทชายฝั่งเพิ่มเติม
+      ผลลัพธ์ในแท็บนี้เป็น <b>SST-only preliminary real-data pipeline test</b> ยังไม่ใช่คะแนนสัญญาณเตือนรายจังหวัดฉบับเต็ม (หน้า “ข้อมูลเชิงลึกรายจังหวัด”) ซึ่งรวม CHL-a, ปลาขึ้นท่า และความหนาแน่นเรือจากกรมประมงด้วย
     </p>
     <div class="formula">
       <b>Current preliminary test</b>
@@ -1772,9 +1774,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 → Monthly SST Mean
 → SST Anomaly
 → Zonal Statistics by Province
-→ Preliminary MHSI / Heat-Risk Map
-
-Final FRS = 0.4 × MHSI + 0.3 × LPS + 0.2 × CEI + 0.1 × FDI</code>
+→ Preliminary Heat-Risk Map</code>
     </div>
   </div>
 </section>
@@ -1811,7 +1811,11 @@ Final FRS = 0.4 × MHSI + 0.3 × LPS + 0.2 × CEI + 0.1 × FDI</code>
   </div>
 
   <div class="ins-panel" id="ins-profile">
-    <div class="notice">ค่าที่แสดงเป็น mock data สำหรับ demo และจะเปลี่ยนตามเดือนที่เลือกด้านบน</div>
+    <div class="notice">
+      ข้อมูลจริงทั้งหมด: อุณหภูมิผิวน้ำ NOAA OISST · คลอโรฟิลล์ NOAA VIIRS · ลม ERA5 · เรือประมงและปลาขึ้นท่าจากกรมประมง
+      เฉลี่ยในน่านน้ำของแต่ละจังหวัด (ทะเลในระยะ 50 กม. จากฝั่ง แบ่งตามท่าเรือหลักที่ใกล้ที่สุด เป็นขอบเขตโดยประมาณ)
+      <span id="provinceDataNote"></span>
+    </div>
 
     <div class="controls">
       <label for="provinceSelect">เลือกจังหวัด:</label>
@@ -1824,35 +1828,23 @@ Final FRS = 0.4 × MHSI + 0.3 × LPS + 0.2 × CEI + 0.1 × FDI</code>
 
     <div class="two-col">
       <div class="card">
-        <div class="card-title">Risk Score รายเดือน</div>
+        <div class="card-title">คะแนนสัญญาณเตือนและความร้อนรายเดือน</div>
         <div class="chart-wrap"><canvas id="provinceChart"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-title">ปัจจัยที่ขับเคลื่อนความเสี่ยง</div>
-        <div id="factorText" style="font-size:13.5px;color:var(--muted)"></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:1rem">
-      <div class="card-title">Risk Driver Contribution · เสี่ยงเพราะอะไร</div>
-      <div class="driver-wrap">
+        <div class="card-title">องค์ประกอบคะแนน · เสี่ยงเพราะอะไร</div>
         <div class="driver-list" id="driverBars"></div>
-        <div>
-          <div class="notice" style="margin-bottom:.8rem">
-            Driver contribution ใน prototype คำนวณจากสัดส่วนของ 4 องค์ประกอบหลักตามสูตร FRS เพื่อช่วยอธิบายคะแนน ไม่ใช่ causal attribution ขั้นสุดท้าย
-          </div>
-          <div class="chart-wrap" style="height:210px"><canvas id="driverChart"></canvas></div>
-        </div>
+        <div class="grid-note" style="margin-top:.6rem">แต่ละองค์ประกอบคือ percentile เทียบกับทุกจังหวัด-เดือนในข้อมูล ใช้จัดลำดับพื้นที่ ไม่ใช่การพิสูจน์สาเหตุ</div>
       </div>
     </div>
   </div>
   <div class="ins-panel" id="ins-policy">
     <div class="section-sub">ข้อเสนอที่ต่อยอดจากอันดับความเสี่ยง ใช้เป็นข้อมูลประกอบการตัดสินใจ ไม่ใช่ผลตัดสินเชิงนโยบายอัตโนมัติ</div>
 
-    <div class="policy"><h4>1. ใช้ Risk Map เป็นเครื่องมือจัดลำดับพื้นที่เฝ้าระวัง</h4><p>หน่วยงานประมงจังหวัดสามารถใช้แผนที่เพื่อดูว่าจังหวัดใดมี SST anomaly สูงร่วมกับ CHL-a anomaly ต่ำ และจัดลำดับพื้นที่สำหรับการติดตามภาคสนามก่อนตัดสินใจออกมาตรการ</p></div>
-    <div class="policy"><h4>2. เพิ่มการสื่อสารความเสี่ยงช่วงมีนาคม–พฤษภาคม</h4><p>ช่วงที่ระบบประเมินว่า marine heat stress สูง ควรเพิ่มการแจ้งเตือนเชิงข้อมูลแก่กลุ่มประมงชายฝั่ง เช่น รายงานรายสัปดาห์จาก SST/CHL-a และแนวโน้มสภาพอากาศทะเล</p></div>
-    <div class="policy"><h4>3. เชื่อมข้อมูลกับการวางแผนงบประมาณเชิงพื้นที่</h4><p>Risk Score และ Fishery Dependency Index สามารถใช้ประกอบการพิจารณาพื้นที่เป้าหมายสำหรับการสนับสนุนชุมชนประมง โดยไม่ใช้แทนการสำรวจภาคสนามหรือการตัดสินใจของผู้เชี่ยวชาญ</p></div>
-    <div class="policy"><h4>4. พัฒนาการเก็บข้อมูลประมงให้ละเอียดขึ้น</h4><p>เพื่อเพิ่มความแม่นยำในอนาคต ควรเก็บข้อมูลปริมาณ/มูลค่าการจับสัตว์น้ำในระดับอำเภอหรือรายเดือน เพื่อเชื่อมกับข้อมูลดาวเทียมและ climate anomaly ได้ตรงขึ้น</p></div>
+    <div class="policy"><h4>1. ใช้อันดับสัญญาณเตือนจัดลำดับพื้นที่เฝ้าระวัง</h4><p>หน่วยงานประมงจังหวัดใช้คะแนนสัญญาณเตือนรายเดือนดูว่าจังหวัดใดมีความร้อนสะสมสูง คลอโรฟิลล์ต่ำกว่าปกติ ปลาขึ้นท่าลดลง หรือเรือหนาแน่น แล้วจัดลำดับการติดตามภาคสนามก่อนตัดสินใจออกมาตรการ</p></div>
+    <div class="policy"><h4>2. เพิ่มการสื่อสารความเสี่ยงช่วงเมษายน–มิถุนายน และเมื่อความร้อนสะสมสูง</h4><p>ข้อมูล OISST ปี 2565–2569 ชี้ว่าน้ำทะเลร้อนที่สุดของปีช่วงเมษายน–มิถุนายน (เฉลี่ย 30.4–30.7°C) และปีที่ผิดปกติอย่าง 2567 ความร้อนสะสมสูงต่อเนื่องหลายเดือน ควรส่งรายงานรายสัปดาห์จาก SST/CHL-a ให้กลุ่มประมงชายฝั่งในช่วงนี้ และเมื่อแผนที่พยากรณ์ชี้ว่าปลาย้ายแหล่ง</p></div>
+    <div class="policy"><h4>3. ดูแรงกดดันจากเรือประมงคู่กับสภาพทะเล</h4><p>จังหวัดที่เรือประมงพาณิชย์หนาแน่นต่อพื้นที่น่านน้ำ (เช่น ปัตตานี) ได้รับผลกระทบเร็วกว่าเมื่อทะเลร้อนหรือปลาน้อยลง ใช้ร่วมกับแผนที่ “เรือประมง · Fishing effort” เพื่อพิจารณาพื้นที่สนับสนุนชุมชนหรือมาตรการลดแรงประมงชั่วคราว โดยไม่ใช้แทนการสำรวจภาคสนาม</p></div>
+    <div class="policy"><h4>4. เผยแพร่ข้อมูลประมงให้ต่อเนื่องและละเอียดขึ้น</h4><p>ข้อมูลปลาขึ้นท่ารายจังหวัดของกรมประมงที่เปิดเผยล่าสุดถึง <span id="policyLandingsLast">–</span> ทำให้เดือนหลังจากนั้นคิดคะแนนได้จากข้อมูลดาวเทียมและจำนวนเรือเท่านั้น ควรเผยแพร่รายเดือนให้ทันสมัย และเก็บระดับอำเภอหรือ logbook/VMS เพื่อเชื่อมกับข้อมูลดาวเทียมได้ตรงขึ้น</p></div>
 
     <div class="ins-next">
       <div><b>กลับไปดูหลักฐาน</b><span>อันดับความเสี่ยงล่าสุด และข้อมูลที่รองรับแต่ละจังหวัด</span></div>
@@ -1865,75 +1857,27 @@ Final FRS = 0.4 × MHSI + 0.3 × LPS + 0.2 × CEI + 0.1 × FDI</code>
 </section>
 
 <section id="page-refs" class="page">
-  <div class="section-title">แหล่งข้อมูลและชั้นข้อมูล</div>
-  <div class="section-sub">ระบุแหล่งข้อมูลให้ชัดตามเงื่อนไขการประกวด</div>
+  <div class="section-title">แหล่งข้อมูลและการอ้างอิง</div>
+  <div class="section-sub">ชุดข้อมูลที่ระบบใช้จริง ระบุว่าใช้ในหน้าใด และรายการอ้างอิง</div>
 
-  <div class="ref-item"><span class="ref-id">SST</span><h4>GISTDA Open Data — SST เฉลี่ยรายวัน / NOAA OISST v2.1</h4><p>ใช้คำนวณ SST anomaly และ Marine Heat Stress Index</p><div class="ref-url">https://opendata.gistda.or.th · https://www.ncei.noaa.gov/products/optimum-interpolation-sst</div></div>
-  <div class="ref-item"><span class="ref-id">CHL-a</span><h4>GISTDA Open Data — CHL-a เฉลี่ยรายวัน / NASA OceanColor</h4><p>ใช้เป็น proxy ของความอุดมสมบูรณ์ทางทะเลและสร้าง Low Productivity Signal</p><div class="ref-url">https://opendata.gistda.or.th · https://oceancolor.gsfc.nasa.gov</div></div>
-  <div class="ref-item"><span class="ref-id">ERA5</span><h4>Copernicus Climate Data Store — ERA5</h4><p>ใช้ตัวแปรลม ฝน อุณหภูมิ และ climate anomaly เพื่อสร้าง Climate Exposure Index</p><div class="ref-url">https://cds.climate.copernicus.eu</div></div>
-  <div class="ref-item"><span class="ref-id">DOF</span><h4>กรมประมง / Government Data Catalog</h4><p>ใช้ปริมาณและมูลค่าการจับสัตว์น้ำรายจังหวัดเพื่อสร้าง Fishery Dependency Index และ validation</p><div class="ref-url">https://catalog.fisheries.go.th · https://gdcatalog.go.th</div></div>
-  <div class="ref-item"><span class="ref-id">BATHYMETRY</span><h4>NOAA NCEI ETOPO 2022 (60 arc-second) / GEBCO 2024</h4><p>ใช้แนวชายฝั่ง ความลึกน้ำ และระยะห่างจากฝั่งเพื่อกำหนด study area (coastal buffer 0–50 km) และเป็นตัวแปรในโมเดลพยากรณ์</p><div class="ref-url">https://www.ncei.noaa.gov/products/etopo-global-relief-model · https://www.gebco.net</div></div>
-  <div class="ref-item"><span class="ref-id">OSM</span><h4>OpenStreetMap Thailand Extract / Geofabrik</h4><p>ใช้ตำแหน่งถนน ท่าเรือ จุดขึ้นปลา ชุมชน และโครงสร้างพื้นฐานชายฝั่ง</p><div class="ref-url">https://download.geofabrik.de/asia/thailand.html</div></div>
-  <div class="ref-item"><span class="ref-id">BOUNDARY</span><h4>Thailand Subnational Administrative Boundaries</h4><p>ใช้ GeoJSON/Shapefile ขอบเขตจังหวัดและอำเภอสำหรับ choropleth map และ aggregate raster</p><div class="ref-url">https://www.geoboundaries.org · https://data.humdata.org/dataset/cod-ab-tha</div></div>
+  <div class="ref-item"><span class="ref-id">SST</span><h4>NOAA OISST v2.1 — อุณหภูมิผิวน้ำทะเลรายวัน 0.25°</h4><p>อุณหภูมิผิวน้ำและค่าผิดปกติ (anomaly เทียบค่าเฉลี่ย 1971–2000 ของ OISST) ใช้ในโมเดลพยากรณ์ปลา ความร้อนสะสม 3 เดือน และคะแนนสัญญาณเตือนรายจังหวัด · ดึงผ่าน NOAA CoastWatch ERDDAP</p><div class="ref-url">Huang, B., Liu, C., Banzon, V., et al. (2021). Improvements of the Daily Optimum Interpolation Sea Surface Temperature (DOISST) Version 2.1. Journal of Climate, 34(8), 2923–2939. https://doi.org/10.1175/JCLI-D-20-0166.1</div></div>
+  <div class="ref-item"><span class="ref-id">CHL-a</span><h4>NOAA CoastWatch — VIIRS chlorophyll-a รายเดือน 0.05°</h4><p>ความเข้มข้นคลอโรฟิลล์ (proxy ของแพลงก์ตอนพืช) ใช้ในโมเดลพยากรณ์ปลาและองค์ประกอบ “คลอโรฟิลล์ลดลง” ของคะแนนรายจังหวัด · ชุดข้อมูล noaacwNPPVIIRSSQchlaMonthly, noaacwNPPVIIRSchlaDaily, noaacwN20VIIRSchlaDaily</p><div class="ref-url">NOAA CoastWatch/OceanWatch. VIIRS (Suomi-NPP, NOAA-20) chlorophyll-a, Science Quality and Near Real-Time. https://coastwatch.noaa.gov/erddap</div></div>
+  <div class="ref-item"><span class="ref-id">ERA5</span><h4>Copernicus Climate Change Service — ERA5</h4><p>ความเร็วลมที่ 10 ม. รายเดือน (เดือนล่าสุดจาก ERA5T รายชั่วโมง) ใช้ในโมเดลพยากรณ์ปลา การกระจายแรงประมง และเป็นบริบทในหน้าข้อมูลรายจังหวัด</p><div class="ref-url">Hersbach, H., Bell, B., Berrisford, P., et al. (2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803 · ข้อมูลจาก https://cds.climate.copernicus.eu</div></div>
+  <div class="ref-item"><span class="ref-id">BATHYMETRY</span><h4>NOAA NCEI — ETOPO 2022 (60 arc-second)</h4><p>ความลึกน้ำและแนวชายฝั่ง ใช้กำหนดพื้นที่ศึกษา (ทะเล 0–50 กม. จากฝั่ง) น่านน้ำรายจังหวัด และเป็นตัวแปรในโมเดลพยากรณ์ · ใช้ GEBCO grid แทนได้เมื่อ ETOPO ไม่พร้อมใช้งาน</p><div class="ref-url">NOAA National Centers for Environmental Information (2022). ETOPO 2022 15 Arc-Second Global Relief Model. https://doi.org/10.25921/fd45-gt74</div></div>
+  <div class="ref-item"><span class="ref-id">DOF</span><h4>กรมประมง — ข้อมูลเปิด (สถิติประมง)</h4><p>จำนวนเรือประมงพาณิชย์ที่มีใบอนุญาตรายจังหวัดรายปี วันทำประมงรายเดือนของอ่าวไทย และปริมาณสัตว์น้ำขึ้นท่ารายจังหวัดรายเดือน ใช้ในหน้าเรือประมง (แรงประมง, CPUE) และองค์ประกอบ “ปลาขึ้นท่าลดลง” กับ “ความหนาแน่นเรือ” ของคะแนนรายจังหวัด</p><div class="ref-url">กรมประมง. แคตตาล็อกข้อมูลเปิด กลุ่มสถิติประมง. https://catalog.fisheries.go.th/group/strategy-stat</div></div>
+  <div class="ref-item"><span class="ref-id">BASEMAP</span><h4>OpenStreetMap — แผนที่พื้นหลัง</h4><p>ใช้เป็นภาพแผนที่พื้นหลังของแผนที่ทุกหน้าเท่านั้น ไม่ได้นำข้อมูลถนน ท่าเรือ หรือชุมชนมาคำนวณ</p><div class="ref-url">© OpenStreetMap contributors. https://www.openstreetmap.org/copyright</div></div>
+  <div class="ref-item"><span class="ref-id">SIMULATED</span><h4>Logbook อวนล้อมจับจำลอง (purse_seine_sim)</h4><p>บันทึกการล้อมอวนจำลองที่ใช้สภาพทะเลจริงข้างต้นเป็นอินพุต ใช้ฝึกและทดสอบโมเดลพยากรณ์ปลา เพราะยังไม่มี logbook หรือ VMS สาธารณะ · ผลที่ได้จึงเป็นการทดสอบ pipeline ไม่ใช่ข้อค้นพบทางชีววิทยา</p><div class="ref-url">สร้างขึ้นในโครงการนี้ (purse_seine_sim/) · ไม่ใช่ข้อมูลจริง</div></div>
 </section>
 
 <script>
-/* ---------- Mock Data ---------- */
-const months = [
-  "ม.ค. 2567","ก.พ. 2567","มี.ค. 2567","เม.ย. 2567","พ.ค. 2567","มิ.ย. 2567",
-  "ก.ค. 2567","ส.ค. 2567","ก.ย. 2567","ต.ค. 2567","พ.ย. 2567","ธ.ค. 2567",
-  "ม.ค. 2568","ก.พ. 2568","มี.ค. 2568","เม.ย. 2568","พ.ค. 2568","มิ.ย. 2568",
-  "ก.ค. 2568","ส.ค. 2568","ก.ย. 2568","ต.ค. 2568","พ.ย. 2568","ธ.ค. 2568",
-  "ม.ค. 2569","ก.พ. 2569","มี.ค. 2569","เม.ย. 2569","พ.ค. 2569","มิ.ย. 2569"
-];
-
-const provinces = {
-  chumphon:{
-    name:"ชุมพร", short:"ชุมพร", center:[10.49,99.18], dep:"ต่ำ",
-    risk:[22,25,30,34,36,31,27,25,23,22,21,22,24,28,35,40,41,34,29,26,24,23,22,24,26,30,38,43,44,36],
-    heat:[20,24,31,35,38,32,27,24,22,20,20,21,23,28,37,42,44,36,30,26,24,22,22,24,25,30,40,45,47,38],
-    prod:[18,22,26,28,30,29,26,24,20,18,19,18,19,24,30,33,35,33,29,26,21,19,20,19,20,25,32,35,36,33],
-    sst:[0.1,0.2,0.4,0.5,0.6,0.3,0.2,0.2,0.1,0.1,0.1,0.1,0.2,0.3,0.6,0.7,0.8,0.4,0.3,0.3,0.1,0.1,0.1,0.2,0.3,0.4,0.7,0.8,0.9,0.5],
-    chla:[4,5,9,12,8,5,2,1,0,-1,0,2,4,4,6,8,5,3,1,0,0,-1,0,2,3,3,5,7,4,2],
-    factor:"ความเสี่ยงต่ำที่สุดในกลุ่ม SST anomaly ยังไม่สูงมากและ CHL-a อยู่ในเกณฑ์ปกติ เหมาะใช้เป็น baseline เปรียบเทียบกับจังหวัดอื่น"
-  },
-  surat:{
-    name:"สุราษฎร์ธานี", short:"สุราษฎร์ฯ", center:[9.14,99.33], dep:"ปานกลาง",
-    risk:[30,35,44,52,55,50,43,38,34,31,29,30,32,38,49,58,60,53,45,39,35,32,30,32,34,40,52,61,63,55],
-    heat:[28,34,48,57,59,52,45,37,33,30,28,29,31,38,54,64,65,56,48,39,35,32,30,32,33,40,57,67,68,58],
-    prod:[25,28,34,38,41,37,32,30,28,25,24,25,26,30,38,43,46,41,35,32,29,26,25,26,27,31,40,45,47,41],
-    sst:[0.2,0.3,0.7,0.9,1.0,0.7,0.4,0.3,0.2,0.1,0.1,0.1,0.3,0.4,0.9,1.1,1.2,0.8,0.5,0.4,0.2,0.1,0.1,0.2,0.4,0.5,1.0,1.2,1.3,0.9],
-    chla:[1,2,4,5,3,1,0,-1,-1,-2,0,1,1,1,1,1,0,-1,-1,-2,-1,-2,0,1,0,0,0,0,-1,-2],
-    factor:"SST anomaly ปานกลางและมี fishery dependency ระดับปานกลาง จึงควรเฝ้าระวังเป็นระยะ โดยเฉพาะช่วง มี.ค.–พ.ค."
-  },
-  nakhon:{
-    name:"นครศรีธรรมราช", short:"นครศรีฯ", center:[8.43,99.97], dep:"สูง",
-    risk:[46,55,70,82,80,72,63,55,49,45,42,44,48,58,75,88,85,75,65,56,50,46,43,46,50,60,78,91,88,77],
-    heat:[42,53,76,88,85,76,64,54,48,44,40,42,45,57,82,95,91,80,67,56,50,46,42,45,47,59,85,98,94,82],
-    prod:[38,48,68,80,82,74,60,52,46,42,40,41,39,50,72,85,87,78,63,54,47,43,41,42,40,51,74,87,88,78],
-    sst:[0.4,0.7,1.2,1.6,1.5,1.1,0.8,0.6,0.4,0.3,0.2,0.3,0.5,0.8,1.4,1.8,1.7,1.2,0.9,0.7,0.4,0.3,0.2,0.4,0.6,0.9,1.5,1.9,1.8,1.3],
-    chla:[-5,-10,-22,-34,-30,-24,-18,-12,-8,-6,-4,-5,-5,-11,-25,-38,-33,-26,-19,-13,-8,-6,-4,-5,-6,-12,-26,-39,-34,-27],
-    factor:"ความเสี่ยงสูงจากหลายปัจจัยร่วมกัน ได้แก่ SST anomaly สูง CHL-a ต่ำกว่าปกติ และระดับการพึ่งพาประมงสูง เหมาะเป็นพื้นที่เฝ้าระวังลำดับแรก"
-  },
-  songkhla:{
-    name:"สงขลา", short:"สงขลา", center:[7.2,100.59], dep:"สูง",
-    risk:[42,50,66,76,78,70,60,52,46,42,40,41,44,53,71,82,83,73,62,53,47,43,41,43,46,55,74,85,86,75],
-    heat:[48,60,78,92,90,80,66,56,48,44,42,43,51,64,84,99,96,84,69,58,50,46,44,46,53,66,87,100,99,86],
-    prod:[32,40,55,66,70,62,52,46,40,36,35,36,33,42,59,71,75,66,55,48,41,37,36,37,34,43,61,73,76,66],
-    sst:[0.5,0.8,1.4,1.8,1.7,1.2,0.8,0.6,0.4,0.3,0.2,0.3,0.6,0.9,1.6,2.0,1.9,1.3,0.9,0.7,0.4,0.3,0.2,0.4,0.7,1.0,1.7,2.1,2.0,1.4],
-    chla:[-2,-8,-15,-22,-26,-20,-15,-10,-6,-4,-3,-3,-2,-9,-18,-26,-29,-22,-16,-11,-6,-4,-3,-3,-3,-10,-19,-27,-30,-23],
-    factor:"SST anomaly สูงที่สุดในกลุ่ม โดยเฉพาะช่วงเมษายน–พฤษภาคม แม้ CHL-a ต่ำไม่สุดแต่มี heat stress เด่นและมีความสำคัญด้านประมง"
-  },
-  pattani:{
-    name:"ปัตตานี", short:"ปัตตานี", center:[6.86,101.25], dep:"ปานกลาง-สูง",
-    risk:[38,47,70,72,68,62,55,48,43,39,37,38,40,50,75,78,73,65,57,49,44,40,38,40,42,52,78,81,76,67],
-    heat:[34,45,66,73,70,62,54,46,40,36,34,35,37,49,72,80,76,66,57,48,42,38,36,38,39,51,75,83,79,68],
-    prod:[44,55,82,86,78,68,58,50,44,40,38,39,45,57,86,91,83,72,61,52,45,41,39,40,46,58,88,93,84,72],
-    sst:[0.3,0.5,1.2,1.3,1.1,0.9,0.6,0.4,0.3,0.2,0.2,0.2,0.4,0.6,1.4,1.5,1.3,1.0,0.7,0.5,0.3,0.2,0.2,0.3,0.5,0.7,1.5,1.6,1.4,1.1],
-    chla:[-10,-18,-42,-38,-34,-26,-18,-12,-8,-6,-5,-5,-10,-19,-45,-42,-37,-28,-19,-13,-8,-6,-5,-5,-11,-20,-46,-43,-38,-29],
-    factor:"CHL-a anomaly ต่ำเด่นมาก โดยเฉพาะเดือนมีนาคม–เมษายน จึงควรตรวจสอบภาคสนามเพิ่มเติม"
-  }
-};
+/* ---------- Province data (province_data.js, export_province_web.py) ---------- */
+const PROVINCE_DATA = window.PROVINCE_DATA || {meta:{}, months:[], provinces:{}};
+const TH_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+function thMonth(ym){
+  return `${TH_MONTHS[Number(ym.slice(5, 7)) - 1]} ${Number(ym.slice(0, 4)) + 543}`;
+}
+const months = PROVINCE_DATA.months.map(thMonth);
+const provinces = PROVINCE_DATA.provinces;
 
 /* Approximate polygons for prototype only */
 const provinceGeo = {
@@ -1984,7 +1928,7 @@ function addStudyAreaOutline(m){
 }
 
 let pipelineMap, pipelineMapLayer, pipelineBufferLayer;
-let provinceChart, driverChart;
+let provinceChart;
 let activePage = "home";
 const INSIGHT_SUBS = ["alert","profile","policy"];
 let insightSub = "alert";
@@ -2060,7 +2004,90 @@ window.showPage = function(id, tab){
   }
 };
 
-/* ---------- Initial UI ---------- */
+/* ---------- Province insights ---------- */
+/* Ranking is the face; the profile explains why a province sits where it does,
+   the policy panel says what to do about it. The warning score and its parts come from
+   export_province_web.py: each part is the percentile of this month's value among all
+   province-months on file, the score is their mean. */
+const PART_SIGN = 75;   // a part at or above this percentile counts as a warning sign
+const PARTS = [
+  {key:"heat",  name:"ความร้อนสะสม 3 เดือน", color:"#B5614A", src:"NOAA OISST v2.1"},
+  {key:"chl",   name:"คลอโรฟิลล์ลดลง (CHL-a)", color:"#5B5DAE", src:"NOAA VIIRS"},
+  {key:"catch", name:"ปลาขึ้นท่าลดลง",        color:"#A07B3A", src:"กรมประมง"},
+  {key:"fleet", name:"ความหนาแน่นเรือประมง",   color:"#2E7D6E", src:"กรมประมง"}
+];
+
+function signed(v, digits){
+  if(v === null || v === undefined) return "–";
+  const s = digits === undefined ? String(v) : v.toFixed(digits);
+  return v > 0 ? "+" + s : s;
+}
+function fmt(v, digits, unit){
+  return v === null || v === undefined ? "ไม่มีข้อมูล" : `${digits === undefined ? v.toLocaleString() : v.toFixed(digits)}${unit || ""}`;
+}
+
+// Latest year on file at or before this month's year (vessel counts are yearly).
+function vesselsIn(p, m){
+  const y = Number(PROVINCE_DATA.months[m].slice(0, 4));
+  const years = Object.keys(p.vessels).map(Number).filter(v => v <= y);
+  const yr = years.length ? Math.max(...years) : Math.max(...Object.keys(p.vessels).map(Number));
+  return {year:yr, n:p.vessels[yr]};
+}
+
+// Latest month with DOF landings at or before m.
+function lastLandings(p, m){
+  for(let i = m; i >= 0; i--) if(p.landings_t[i] !== null) return i;
+  return null;
+}
+
+function signCount(p, m){
+  return PARTS.filter(q => (p.parts[q.key][m] ?? -1) >= PART_SIGN).length;
+}
+function partsAvailable(p, m){
+  return PARTS.filter(q => p.parts[q.key][m] !== null).length;
+}
+
+function classifyProvinces(m){
+  const rows = Object.entries(provinces).map(([key,p]) => ({key, p}));
+  const out = {};
+  const pick = (cmp) => rows.filter(r => !out[r.key]).sort(cmp)[0];
+
+  const urgent = pick((a,b) => (b.p.score[m] ?? -1) - (a.p.score[m] ?? -1));
+  out[urgent.key] = {cat:"เร่งเฝ้าระวัง", cls:"high", box:"red",
+    rule:"มีคะแนนสัญญาณเตือนสูงสุดในเดือนนี้",
+    sub:`คะแนน ${urgent.p.score[m]}/100 สูงสุดในกลุ่ม · ${signCount(urgent.p,m)} จาก ${partsAvailable(urgent.p,m)} สัญญาณเตือน`};
+
+  const monitor = pick((a,b) => (b.p.heat_3m[m] ?? -1) - (a.p.heat_3m[m] ?? -1));
+  out[monitor.key] = {cat:"ติดตามต่อเนื่อง", cls:"mid", box:"amber",
+    rule:"มีความร้อนสะสม 3 เดือนสูงสุดในจังหวัดที่เหลือ",
+    sub:`ความร้อนสะสม ${fmt(monitor.p.heat_3m[m], 2)} °C·เดือน สูงสุดในจังหวัดที่เหลือ`};
+
+  const survey = pick((a,b) => (a.p.chl_anom[m] ?? 1e9) - (b.p.chl_anom[m] ?? 1e9));
+  const low = (survey.p.chl_anom[m] ?? 0) <= -20;
+  out[survey.key] = {cat:"สำรวจเพิ่มเติม", cls:"low", box:"",
+    rule:"มี CHL-a ต่ำกว่าปกติมากที่สุดในจังหวัดที่เหลือ (ควรยืนยันภาคสนาม)",
+    sub:`CHL-a ${signed(survey.p.chl_anom[m])}% เทียบค่าปกติ` + (low ? " ต่ำเด่น" : " ต่ำสุดในจังหวัดที่เหลือ (ยังไม่ต่ำกว่า −20%)")};
+
+  rows.filter(r => !out[r.key]).forEach(r => {
+    out[r.key] = {cat:"ติดตามตามปกติ", cls:"low", box:"",
+      rule:"ไม่เข้าเกณฑ์ของกลุ่มเร่งเฝ้าระวัง ติดตามต่อเนื่อง หรือสำรวจเพิ่มเติมในเดือนนี้", sub:""};
+  });
+  return out;
+}
+
+// 1-based rank of a province on a metric; lowFirst ranks the smallest value first.
+function rankOf(key, valueOf, lowFirst){
+  const vals = Object.entries(provinces).map(([k,p]) => ({k, v:valueOf(p)})).filter(x => x.v !== null && x.v !== undefined);
+  vals.sort((a,b) => lowFirst ? a.v - b.v : b.v - a.v);
+  const i = vals.findIndex(x => x.k === key);
+  return i < 0 ? "–" : i + 1;
+}
+
+function groupMean(valueOf){
+  const vs = Object.values(provinces).map(valueOf).filter(v => v !== null && v !== undefined);
+  return vs.length ? vs.reduce((a,b) => a + b, 0) / vs.length : null;
+}
+
 function initSelectors(){
   const monthSelect = document.getElementById("monthSelect");
   if(monthSelect && monthSelect.children.length === 0){
@@ -2079,93 +2106,52 @@ function initSelectors(){
       const opt = document.createElement("option");
       opt.value = key;
       opt.textContent = p.name;
-      if(key === "nakhon") opt.selected = true;
       provinceSelect.appendChild(opt);
     });
   }
+
+  const meta = PROVINCE_DATA.meta;
+  const landed = meta.landings_last_month ? thMonth(meta.landings_last_month) : "–";
+  const note = document.getElementById("provinceDataNote");
+  if(note && meta.sst_last_day){
+    note.textContent = `· SST ถึง ${thMonth(meta.sst_last_day.slice(0, 7))} · ปลาขึ้นท่าจากกรมประมงล่าสุด ${landed}`;
+  }
+  const policyLast = document.getElementById("policyLandingsLast");
+  if(policyLast) policyLast.textContent = landed;
 }
 
-/* ---------- Profile ---------- */
-function dependencyScore(p){
-  if(p.dep === "สูง") return 85;
-  if(p.dep.includes("ปานกลาง-สูง")) return 70;
-  if(p.dep.includes("ปานกลาง")) return 55;
-  return 35;
-}
-
-function getDriverContributions(p,m){
-  const heatWeighted = 0.4 * p.heat[m];
-  const prodWeighted = 0.3 * p.prod[m];
-
-  const monthInYear = m % 12;
-  const seasonalBoost = (monthInYear >= 2 && monthInYear <= 5) ? 12 : 4;
-  const climate = Math.min(100, Math.round(0.55 * p.heat[m] + seasonalBoost));
-  const climateWeighted = 0.2 * climate;
-
-  const depScore = dependencyScore(p);
-
-  const depWeighted = 0.1 * depScore;
-  const total = heatWeighted + prodWeighted + climateWeighted + depWeighted || 1;
-
-  return [
-    {name:"Marine Heat Stress", raw:p.heat[m], weighted:heatWeighted, pct:Math.round(heatWeighted/total*100), color:"#B5614A"},
-    {name:"Low Productivity Signal", raw:p.prod[m], weighted:prodWeighted, pct:Math.round(prodWeighted/total*100), color:"#5B5DAE"},
-    {name:"Climate Exposure", raw:climate, weighted:climateWeighted, pct:Math.round(climateWeighted/total*100), color:"#A07B3A"},
-    {name:"Fishery Dependency", raw:depScore, weighted:depWeighted, pct:Math.round(depWeighted/total*100), color:"#2E7D6E"}
-  ];
-}
-
-function updateDriverPanel(p,m){
-  const drivers = getDriverContributions(p,m);
+function updatePartBars(p, m){
   const target = document.getElementById("driverBars");
   if(!target) return;
-
-  target.innerHTML = drivers.map(d=>`
-    <div class="driver-row">
+  target.innerHTML = PARTS.map(q => {
+    const v = p.parts[q.key][m];
+    return `<div class="driver-row">
       <div class="driver-top">
-        <span class="driver-name">${d.name}</span>
-        <span class="driver-value">${d.pct}%</span>
+        <span class="driver-name">${q.name}</span>
+        <span class="driver-value">${v === null ? "–" : v}</span>
       </div>
-      <div class="driver-bar"><div class="driver-fill" style="width:${d.pct}%;background:${d.color}"></div></div>
-      <div class="grid-note">Raw index: ${Math.round(d.raw)}/100 · Weighted contribution: ${d.weighted.toFixed(1)}</div>
-    </div>
-  `).join("");
-
-  const ctx = document.getElementById("driverChart");
-  if(!ctx || typeof Chart === "undefined") return;
-
-  if(driverChart) driverChart.destroy();
-
-  driverChart = new Chart(ctx, {
-    type:"doughnut",
-    data:{
-      labels:drivers.map(d=>d.name),
-      datasets:[{
-        data:drivers.map(d=>d.pct),
-        backgroundColor:drivers.map(d=>d.color)
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{legend:{position:"bottom"}}
-    }
-  });
+      <div class="driver-bar"><div class="driver-fill" style="width:${v ?? 0}%;background:${q.color}"></div></div>
+      <div class="grid-note">${v === null ? "ไม่มีข้อมูลเดือนนี้ จึงไม่นำมาคิดคะแนน" : `สูงกว่า ${v}% ของทุกจังหวัด-เดือนในข้อมูล`} · ${q.src}</div>
+    </div>`;
+  }).join("");
 }
 
 function updateProfile(){
   const sel = document.getElementById("provinceSelect");
-  if(!sel) return;
+  if(!sel || !sel.value) return;
 
-  const key = sel.value || "nakhon";
+  const key = sel.value;
   const p = provinces[key];
   const m = currentMonthIndex();
+  const v = vesselsIn(p, m);
+  const li = lastLandings(p, m);
 
   const cards = [
-    ["Risk Score", `${p.risk[m]}/100`, levelTh(p.risk[m])],
-    ["SST anomaly", `${p.sst[m] > 0 ? "+" : ""}${p.sst[m].toFixed(1)}°C`, "เทียบค่าเฉลี่ยย้อนหลัง"],
-    ["CHL-a anomaly", `${p.chla[m] > 0 ? "+" : ""}${p.chla[m]}%`, "productivity signal"],
-    ["Fishery dependency", p.dep, "จากข้อมูลประมงรายจังหวัด"]
+    ["คะแนนสัญญาณเตือน", `${fmt(p.score[m])}/100`, p.score[m] === null ? "" : `ระดับ${levelTh(p.score[m])}`],
+    ["SST anomaly", `${signed(p.sst_anom[m], 2)}°C`, `ความร้อนสะสม 3 เดือน ${fmt(p.heat_3m[m], 2)} °C·เดือน`],
+    ["CHL-a", fmt(p.chl[m], 2, " mg/m³"), `${signed(p.chl_anom[m])}% เทียบเดือนเดียวกันปีอื่น`],
+    ["ปลาขึ้นท่า (กรมประมง)", li === null ? "ไม่มีข้อมูล" : `${p.landings_t[li].toLocaleString()} ตัน`,
+      li === null ? "" : `${months[li]}${li !== m ? " (ล่าสุดที่มี)" : ""} · เรือ ${v.n.toLocaleString()} ลำ (${v.year + 543})`]
   ];
 
   document.getElementById("profileCards").innerHTML = cards.map(c=>`
@@ -2176,18 +2162,11 @@ function updateProfile(){
     </div>
   `).join("");
 
-  document.getElementById("factorText").innerHTML = `
-    <p>${p.factor}</p>
-    <br>
-    <p><b>Actionable interpretation:</b> ใช้เพื่อจัดลำดับพื้นที่เฝ้าระวังและสำรวจภาคสนาม ไม่ใช่ทำนายตำแหน่งปลารายจุด</p>
-  `;
-
   renderWhy(key, m);
-  updateDriverPanel(p,m);
+  updatePartBars(p, m);
 
   const ctx = document.getElementById("provinceChart");
   if(!ctx || typeof Chart === "undefined") return;
-
   if(provinceChart) provinceChart.destroy();
 
   provinceChart = new Chart(ctx, {
@@ -2195,15 +2174,19 @@ function updateProfile(){
     data:{
       labels:months,
       datasets:[
-        {label:"Risk Score",data:p.risk,tension:.35,borderWidth:2,pointRadius:3},
-        {label:"Heat Stress",data:p.heat,tension:.35,borderWidth:2,pointRadius:2},
-        {label:"Low Productivity",data:p.prod,tension:.35,borderWidth:2,pointRadius:2}
+        {label:"คะแนนสัญญาณเตือน", data:p.score, yAxisID:"y", tension:.3, borderWidth:2, pointRadius:0, borderColor:"#1B2B3A"},
+        {label:"ความร้อนสะสม 3 เดือน (°C·เดือน)", data:p.heat_3m, yAxisID:"y1", tension:.3, borderWidth:2, pointRadius:0, borderColor:"#B5614A"},
+        {label:"SST anomaly (°C)", data:p.sst_anom, yAxisID:"y1", tension:.3, borderWidth:1.5, pointRadius:0, borderColor:"#A07B3A", borderDash:[4,3]}
       ]
     },
     options:{
       responsive:true,
       maintainAspectRatio:false,
-      scales:{y:{min:0,max:100}}
+      interaction:{mode:"index", intersect:false},
+      scales:{
+        y:{min:0, max:100, title:{display:true, text:"คะแนน"}},
+        y1:{position:"right", grid:{drawOnChartArea:false}, title:{display:true, text:"°C / °C·เดือน"}}
+      }
     }
   });
 }
@@ -2213,94 +2196,34 @@ function updateAlerts(){
   const m = currentMonthIndex();
   const groups = classifyProvinces(m);
   const ranked = Object.entries(provinces)
-    .map(([key,p]) => ({key, ...p, score:p.risk[m]}))
-    .sort((a,b) => b.score - a.score);
+    .map(([key,p]) => ({key, ...p, s:p.score[m] ?? 0}))
+    .sort((a,b) => b.s - a.s);
 
   const target = document.getElementById("alertList");
   if(!target) return;
 
   target.innerHTML = ranked.map(r=>{
-    const lv = level(r.score);
+    const lv = level(r.s);
     const cls = lv === "high" ? "h" : lv === "mid" ? "m" : "l";
-    const action = r.score >= 70
+    const action = r.s >= 70
       ? "แนะนำ: เฝ้าระวังรายสัปดาห์ · ประสานประมงจังหวัด · สำรวจภาคสนามเพิ่มเติม"
-      : r.score >= 40
+      : r.s >= 40
       ? "แนะนำ: ติดตามต่อเนื่อง · เตรียมข้อมูลสนับสนุนการวางแผน"
       : "แนะนำ: ใช้เป็น baseline และติดตามตามปกติ";
 
     return `<div class="alert ${cls}">
       <div>
         <h4>${r.name} <span class="risk-badge ${groups[r.key].cls}">${groups[r.key].cat}</span></h4>
-        <p>${months[m]} · SST anomaly ${r.sst[m] > 0 ? "+" : ""}${r.sst[m].toFixed(1)}°C · CHL-a anomaly ${r.chla[m] > 0 ? "+" : ""}${r.chla[m]}% · dependency ${r.dep}</p>
+        <p>${months[m]} · SST anomaly ${signed(r.sst_anom[m], 2)}°C · ความร้อนสะสม ${fmt(r.heat_3m[m], 2)} °C·เดือน · CHL-a ${signed(r.chl_anom[m])}% · เรือ ${fmt(r.fleet_density[m], 1)} ลำ/100 กม²</p>
         <span class="action">${action}</span>
         <div><button class="ins-link" onclick="openWhy('${r.key}')">ทำไม? ดูข้อมูลประกอบ →</button></div>
       </div>
       <div>
-        <div class="score-big" style="color:${colorByScore(r.score)}">${r.score}</div>
-        <span class="risk-badge ${lv}">${levelTh(r.score)}</span>
+        <div class="score-big" style="color:${colorByScore(r.s)}">${r.score[m] ?? "–"}</div>
+        <span class="risk-badge ${lv}">${levelTh(r.s)}</span>
       </div>
     </div>`;
   }).join("");
-}
-
-/* ---------- Province insights folder ---------- */
-/* Ranking is the face; the profile explains why a province sits where it does,
-   the policy panel says what to do about it. */
-const WHY_THRESH = {risk:70, sst:1.0, chla:-20, dep:70};
-
-function classifyProvinces(m){
-  const rows = Object.entries(provinces).map(([key,p]) => ({key, p}));
-  const out = {};
-  const pick = (cmp) => rows.filter(r => !out[r.key]).sort(cmp)[0];
-
-  const urgent = pick((a,b) => b.p.risk[m] - a.p.risk[m]);
-  out[urgent.key] = {cat:"เร่งเฝ้าระวัง", cls:"high", box:"red",
-    rule:"มี Risk Score สูงสุดในเดือนนี้",
-    sub:`Risk ${urgent.p.risk[m]}/100 สูงสุดในกลุ่ม · ${whyHits(urgent.p,m)} จาก 4 ปัจจัยเกินเกณฑ์` +
-      (urgent.p.risk[m] < WHY_THRESH.risk ? " (ยังต่ำกว่าเกณฑ์สูง 70)" : "")};
-
-  const monitor = pick((a,b) => b.p.sst[m] - a.p.sst[m]);
-  out[monitor.key] = {cat:"ติดตามต่อเนื่อง", cls:"mid", box:"amber",
-    rule:"มี SST anomaly สูงสุดในจังหวัดที่เหลือ (น้ำทะเลอุ่นผิดปกติ)",
-    sub:`SST anomaly ${signed(monitor.p.sst[m],1)}°C สูงสุดในจังหวัดที่เหลือ` +
-      (monitor.p.sst[m] < WHY_THRESH.sst ? " (ยังต่ำกว่าเกณฑ์ +1.0°C)" : "")};
-
-  const survey = pick((a,b) => a.p.chla[m] - b.p.chla[m]);
-  out[survey.key] = {cat:"สำรวจเพิ่มเติม", cls:"low", box:"",
-    rule:"มี CHL-a anomaly ต่ำสุดในจังหวัดที่เหลือ (ผลผลิตขั้นต้นลดลง ควรยืนยันภาคสนาม)",
-    sub:`CHL-a anomaly ${signed(survey.p.chla[m])}% ` +
-      (survey.p.chla[m] <= WHY_THRESH.chla ? "ต่ำเด่น" : "ต่ำสุดในจังหวัดที่เหลือ (ยังไม่ถึงเกณฑ์ −20%)")};
-
-  rows.filter(r => !out[r.key]).forEach(r => {
-    out[r.key] = {cat:"ติดตามตามปกติ", cls:"low", box:"",
-      rule:"ไม่เข้าเกณฑ์ของกลุ่มเร่งเฝ้าระวัง ติดตามต่อเนื่อง หรือสำรวจเพิ่มเติมในเดือนนี้",
-      sub:""};
-  });
-  return out;
-}
-
-function signed(v, digits){
-  const s = digits === undefined ? String(v) : v.toFixed(digits);
-  return v > 0 ? "+" + s : s;
-}
-
-// Number of the four FRS drivers past their threshold this month.
-function whyHits(p,m){
-  return [p.risk[m] >= WHY_THRESH.risk, p.sst[m] >= WHY_THRESH.sst,
-          p.chla[m] <= WHY_THRESH.chla, dependencyScore(p) >= WHY_THRESH.dep]
-    .filter(Boolean).length;
-}
-
-// 1-based rank of a province on a metric; lowFirst ranks the smallest value first.
-function rankOf(key, valueOf, lowFirst){
-  const vals = Object.entries(provinces).map(([k,p]) => ({k, v:valueOf(p)}));
-  vals.sort((a,b) => lowFirst ? a.v - b.v : b.v - a.v);
-  return vals.findIndex(x => x.k === key) + 1;
-}
-
-function groupMean(valueOf){
-  const vs = Object.values(provinces).map(valueOf);
-  return vs.reduce((a,b) => a + b, 0) / vs.length;
 }
 
 function renderPolicyPicks(){
@@ -2329,45 +2252,53 @@ function renderWhy(key, m){
   const p = provinces[key];
   const c = classifyProvinces(m)[key];
   const n = Object.keys(provinces).length;
-  const rank = rankOf(key, q => q.risk[m]);
-  const drivers = getDriverContributions(p,m);
-  const [heat, prod, climate, dep] = drivers;
-  const frs = drivers.reduce((a,d) => a + d.weighted, 0);
+  const rank = rankOf(key, q => q.score[m]);
+  const v = vesselsIn(p, m);
+  const li = lastLandings(p, m);
+  const hit = q => (p.parts[q][m] ?? -1) >= PART_SIGN;
 
   const from = Math.max(0, m - 11);
   const span = m - from + 1;
-  const hotMonths = p.risk.slice(from, m + 1).filter(v => v >= WHY_THRESH.risk).length;
-  const lastYear = m >= 12 ? p.risk[m - 12] : null;
+  const hotMonths = p.score.slice(from, m + 1).filter(s => s !== null && s >= 70).length;
+  const lastYear = m >= 12 ? p.score[m - 12] : null;
 
   const reasons = [
-    {hit:p.risk[m] >= WHY_THRESH.risk,
-     text:`<b>Risk Score ${p.risk[m]}/100</b> อันดับ ${rank} จาก ${n} จังหวัด ${p.risk[m] >= WHY_THRESH.risk ? "อยู่ในระดับสูง (≥ 70)" : `ระดับ${levelTh(p.risk[m])} (ยังต่ำกว่าเกณฑ์ 70)`}`},
-    {hit:p.sst[m] >= WHY_THRESH.sst,
-     text:`<b>น้ำทะเลอุ่นกว่าปกติ ${signed(p.sst[m],1)}°C</b> (อันดับ ${rankOf(key, q => q.sst[m])}/${n}, เกณฑ์ ≥ +1.0°C) ${p.sst[m] >= WHY_THRESH.sst ? "เป็นสัญญาณ marine heat stress ชัดเจน" : "ยังไม่ถึงระดับ heat stress เด่น"}`},
-    {hit:p.chla[m] <= WHY_THRESH.chla,
-     text:`<b>CHL-a ${signed(p.chla[m])}%</b> เทียบค่าปกติ (ต่ำเป็นอันดับ ${rankOf(key, q => q.chla[m], true)}/${n}, เกณฑ์ ≤ −20%) ${p.chla[m] <= WHY_THRESH.chla ? "แพลงก์ตอนพืชลดลง อาหารในห่วงโซ่น้อยลง" : "ผลผลิตขั้นต้นยังใกล้ค่าปกติ"}`},
-    {hit:dep.raw >= WHY_THRESH.dep,
-     text:`<b>การพึ่งพาประมง “${p.dep}”</b> (FDI ${dep.raw}/100) ${dep.raw >= WHY_THRESH.dep ? "ชุมชนพึ่งพารายได้จากประมงมาก ผลกระทบจึงรุนแรงกว่า" : "ผลกระทบต่อรายได้ชุมชนจำกัดกว่าจังหวัดอื่น"}`},
+    {hit:(p.score[m] ?? 0) >= 70,
+     text:`<b>คะแนนสัญญาณเตือน ${fmt(p.score[m])}/100</b> อันดับ ${rank} จาก ${n} จังหวัด (ระดับ${levelTh(p.score[m] ?? 0)})`},
+    {hit:hit("heat"),
+     text:`<b>ความร้อนสะสม 3 เดือน ${fmt(p.heat_3m[m], 2)} °C·เดือน</b> (SST anomaly เดือนนี้ ${signed(p.sst_anom[m], 2)}°C) ` +
+          `สูงกว่า ${p.parts.heat[m] ?? "–"}% ของข้อมูลทั้งหมด ${hit("heat") ? "น้ำทะเลร้อนสะสมต่อเนื่องผิดปกติ" : "ยังไม่ถึงกลุ่ม 25% สูงสุด"}`},
+    {hit:hit("chl"),
+     text:`<b>CHL-a ${fmt(p.chl[m], 2, " mg/m³")} (${signed(p.chl_anom[m])}% เทียบเดือนเดียวกันปีอื่น)</b> ` +
+          `${(p.chl_anom[m] ?? 0) < 0 ? "แพลงก์ตอนพืชน้อยกว่าปกติ อาหารในห่วงโซ่ลดลง" : "แพลงก์ตอนพืชไม่ต่ำกว่าปกติ ไม่ใช่ปัจจัยเสี่ยงเดือนนี้"}`},
+    {hit:hit("catch"),
+     text:p.landings_yoy[m] !== null
+       ? `<b>ปลาขึ้นท่า ${p.landings_t[m].toLocaleString()} ตัน (${signed(p.landings_yoy[m])}% เทียบปีก่อน)</b> ${p.landings_yoy[m] < 0 ? "ปริมาณจับลดลง" : "ปริมาณจับไม่ลดลง"}`
+       : `<b>ปลาขึ้นท่า:</b> ไม่มีข้อมูลกรมประมงเดือนนี้${li !== null ? ` (ล่าสุด ${months[li]}: ${p.landings_t[li].toLocaleString()} ตัน)` : ""} จึงไม่นำมาคิดคะแนน`},
+    {hit:hit("fleet"),
+     text:`<b>เรือประมงพาณิชย์ ${v.n.toLocaleString()} ลำ (${v.year + 543})</b> = ${fmt(p.fleet_density[m], 1)} ลำ/100 กม² ของน่านน้ำจังหวัด ` +
+          `${hit("fleet") ? "แรงกดดันการประมงสูง" : "แรงกดดันการประมงไม่สูงเมื่อเทียบจังหวัดอื่น"}`},
     {hit:hotMonths >= 3,
-     text:`<b>ความต่อเนื่อง:</b> Risk ≥ 70 มาแล้ว ${hotMonths} จาก ${span} เดือนล่าสุด${lastYear !== null ? ` · เดือนเดียวกันปีก่อน ${lastYear}/100` : ""}${hotMonths >= 3 ? " จึงไม่ใช่เหตุการณ์ครั้งเดียว" : ""}`}
+     text:`<b>ความต่อเนื่อง:</b> คะแนน ≥ 70 มาแล้ว ${hotMonths} จาก ${span} เดือนล่าสุด${lastYear !== null ? ` · เดือนเดียวกันปีก่อน ${lastYear}/100` : ""}`}
   ];
 
-  const cei = q => getDriverContributions(q,m)[2].raw;
   const evidence = [
-    ["Risk Score (FRS)", p.risk[m], rankOf(key, q => q.risk[m]), groupMean(q => q.risk[m]).toFixed(0), "≥ 70 = สูง", p.risk[m] >= 70, "รวม 4 ดัชนีด้านล่าง"],
-    ["Marine Heat Stress (MHSI)", heat.raw, rankOf(key, q => q.heat[m]), groupMean(q => q.heat[m]).toFixed(0), "≥ 70", heat.raw >= 70, "NOAA OISST v2.1 / GISTDA SST"],
-    ["SST anomaly", `${signed(p.sst[m],1)}°C`, rankOf(key, q => q.sst[m]), `${signed(groupMean(q => q.sst[m]),2)}°C`, "≥ +1.0°C", p.sst[m] >= 1, "NOAA OISST v2.1 / GISTDA SST"],
-    ["Low Productivity (LPS)", prod.raw, rankOf(key, q => q.prod[m]), groupMean(q => q.prod[m]).toFixed(0), "≥ 70", prod.raw >= 70, "คำนวณจาก CHL-a"],
-    ["CHL-a anomaly", `${signed(p.chla[m])}%`, rankOf(key, q => q.chla[m], true), `${signed(Math.round(groupMean(q => q.chla[m])))}%`, "≤ −20%", p.chla[m] <= -20, "NASA VIIRS / GISTDA CHL-a"],
-    ["Climate Exposure (CEI)", climate.raw, rankOf(key, cei), groupMean(cei).toFixed(0), "–", false, "Copernicus ERA5"],
-    ["Fishery Dependency (FDI)", dep.raw, rankOf(key, dependencyScore), groupMean(dependencyScore).toFixed(0), "≥ 70", dep.raw >= 70, "กรมประมง (DOF)"]
+    ["คะแนนสัญญาณเตือน", fmt(p.score[m]), rank, fmt(groupMean(q => q.score[m]), 0), "≥ 70 = สูง", (p.score[m] ?? 0) >= 70, "ค่าเฉลี่ย 4 องค์ประกอบ"],
+    ["SST anomaly", `${signed(p.sst_anom[m], 2)}°C`, rankOf(key, q => q.sst_anom[m]), `${signed(groupMean(q => q.sst_anom[m]), 2)}°C`, "–", false, "NOAA OISST v2.1 (เทียบ 1971–2000)"],
+    ["ความร้อนสะสม 3 เดือน", fmt(p.heat_3m[m], 2, " °C·ด."), rankOf(key, q => q.heat_3m[m]), fmt(groupMean(q => q.heat_3m[m]), 2), "percentile ≥ 75", hit("heat"), "NOAA OISST v2.1"],
+    ["CHL-a", fmt(p.chl[m], 2, " mg/m³"), rankOf(key, q => q.chl[m], true), fmt(groupMean(q => q.chl[m]), 2), "–", false, "NOAA VIIRS (CoastWatch)"],
+    ["CHL-a anomaly", `${signed(p.chl_anom[m])}%`, rankOf(key, q => q.chl_anom[m], true), `${signed(Math.round(groupMean(q => q.chl_anom[m]) ?? 0))}%`, "percentile ≥ 75", hit("chl"), "NOAA VIIRS (CoastWatch)"],
+    ["ลมเฉลี่ย", fmt(p.wind[m], 1, " ม./วินาที"), rankOf(key, q => q.wind[m]), fmt(groupMean(q => q.wind[m]), 1), "บริบท", false, "Copernicus ERA5"],
+    ["ปลาขึ้นท่าเทียบปีก่อน", p.landings_yoy[m] === null ? "ไม่มีข้อมูล" : `${signed(p.landings_yoy[m])}%`, p.landings_yoy[m] === null ? "–" : rankOf(key, q => q.landings_yoy[m], true), p.landings_yoy[m] === null ? "–" : `${signed(Math.round(groupMean(q => q.landings_yoy[m]) ?? 0))}%`, "percentile ≥ 75", hit("catch"), "กรมประมง"],
+    ["ความหนาแน่นเรือ", fmt(p.fleet_density[m], 1, " ลำ/100 กม²"), rankOf(key, q => q.fleet_density[m]), fmt(groupMean(q => q.fleet_density[m]), 1), "percentile ≥ 75", hit("fleet"), "กรมประมง"]
   ];
 
+  const used = PARTS.filter(q => p.parts[q.key][m] !== null);
   target.className = `card ins-why ${c.cls === "high" ? "h" : c.cls === "mid" ? "m" : ""}`;
   target.innerHTML = `
     <div class="card-title">ทำไมจังหวัดนี้จึงอยู่ในอันดับนี้ · ${months[m]}</div>
     <h3>${p.name} · <span class="risk-badge ${c.cls}">${c.cat}</span></h3>
-    <div class="ins-why-verdict">จัดอยู่ในกลุ่ม “${c.cat}” เพราะ${c.rule} · ${whyHits(p,m)} จาก 4 ปัจจัยหลักเกินเกณฑ์</div>
+    <div class="ins-why-verdict">จัดอยู่ในกลุ่ม “${c.cat}” เพราะ${c.rule} · ${signCount(p,m)} จาก ${used.length} สัญญาณเตือนอยู่ในกลุ่ม 25% สูงสุดของข้อมูล</div>
 
     <ul class="ins-why-reasons">
       ${reasons.map(r => `<li class="${r.hit ? "hit" : ""}">${r.text}</li>`).join("")}
@@ -2379,7 +2310,7 @@ function renderWhy(key, m){
         <tbody>
           ${evidence.map(e => `<tr>
             <td><b>${e[0]}</b></td>
-            <td class="num">${e[1]} ${e[5] ? '<span class="ins-flag">● เกินเกณฑ์</span>' : ""}</td>
+            <td class="num">${e[1]} ${e[5] ? '<span class="ins-flag">● สัญญาณเตือน</span>' : ""}</td>
             <td class="num">${e[2]}</td>
             <td class="num">${e[3]}</td>
             <td>${e[4]}</td>
@@ -2391,10 +2322,10 @@ function renderWhy(key, m){
 
     <div class="formula">
       <b>ที่มาของคะแนน</b>
-      <code>FRS = 0.4 × MHSI + 0.3 × LPS + 0.2 × CEI + 0.1 × FDI
-    = 0.4 × ${heat.raw} + 0.3 × ${prod.raw} + 0.2 × ${climate.raw} + 0.1 × ${dep.raw}
-    = ${heat.weighted.toFixed(1)} + ${prod.weighted.toFixed(1)} + ${climate.weighted.toFixed(1)} + ${dep.weighted.toFixed(1)}
-    ≈ ${frs.toFixed(0)}   (Risk Score ที่ใช้จัดอันดับ: ${p.risk[m]})</code>
+      <code>คะแนนสัญญาณเตือน = ค่าเฉลี่ยของ percentile แต่ละองค์ประกอบที่มีข้อมูล
+    = (${used.map(q => `${q.name} ${p.parts[q.key][m]}`).join(" + ")}) / ${used.length}
+    = ${fmt(p.score[m])}
+percentile = เดือนนี้สูงกว่ากี่ % ของทุกจังหวัด-เดือน (${months[0]}–${months[months.length - 1]})</code>
     </div>
 
     <div class="ins-next-btns" style="margin-top:1rem">
@@ -2430,6 +2361,7 @@ window.openWhy = function(key){
 };
 
 window.refreshInsights = function(){
+  if(!months.length) return;
   renderPolicyPicks();
   updateAlerts();
   if(insightSub === "profile") updateProfile();
@@ -2440,17 +2372,17 @@ let pipelineRows = [];
 let pipelineMode = "waiting for csv";
 
 const samplePipelineRows = [
-  {province:"Pattani Province", month:"2024-06", sst_mean_C:"31.21", sst_anomaly_C:"0.88", MHSI:"100", risk_level:"High"},
-  {province:"Songkhla Province", month:"2024-06", sst_mean_C:"31.24", sst_anomaly_C:"0.90", MHSI:"100", risk_level:"High"},
-  {province:"Surat Thani Province", month:"2024-06", sst_mean_C:"30.85", sst_anomaly_C:"0.91", MHSI:"100", risk_level:"High"},
-  {province:"Chumphon Province", month:"2024-06", sst_mean_C:"30.56", sst_anomaly_C:"0.86", MHSI:"99.90", risk_level:"High"},
-  {province:"Nakhon Si Thammarat Province", month:"2024-06", sst_mean_C:"31.14", sst_anomaly_C:"0.83", MHSI:"95.42", risk_level:"High"},
+  {province:"Pattani Province", month:"2024-06", sst_mean_C:"31.21", sst_anomaly_C:"0.88", heat_risk_score:"100", risk_level:"High"},
+  {province:"Songkhla Province", month:"2024-06", sst_mean_C:"31.24", sst_anomaly_C:"0.90", heat_risk_score:"100", risk_level:"High"},
+  {province:"Surat Thani Province", month:"2024-06", sst_mean_C:"30.85", sst_anomaly_C:"0.91", heat_risk_score:"100", risk_level:"High"},
+  {province:"Chumphon Province", month:"2024-06", sst_mean_C:"30.56", sst_anomaly_C:"0.86", heat_risk_score:"99.90", risk_level:"High"},
+  {province:"Nakhon Si Thammarat Province", month:"2024-06", sst_mean_C:"31.14", sst_anomaly_C:"0.83", heat_risk_score:"95.42", risk_level:"High"},
 
-  {province:"Songkhla Province", month:"2024-12", sst_mean_C:"28.68", sst_anomaly_C:"0.34", MHSI:"38.98", risk_level:"Low"},
-  {province:"Nakhon Si Thammarat Province", month:"2024-12", sst_mean_C:"28.46", sst_anomaly_C:"0.31", MHSI:"36.33", risk_level:"Low"},
-  {province:"Chumphon Province", month:"2024-12", sst_mean_C:"28.33", sst_anomaly_C:"0.29", MHSI:"34.08", risk_level:"Low"},
-  {province:"Surat Thani Province", month:"2024-12", sst_mean_C:"28.46", sst_anomaly_C:"0.29", MHSI:"33.94", risk_level:"Low"},
-  {province:"Pattani Province", month:"2024-12", sst_mean_C:"28.57", sst_anomaly_C:"0.22", MHSI:"25.32", risk_level:"Low"}
+  {province:"Songkhla Province", month:"2024-12", sst_mean_C:"28.68", sst_anomaly_C:"0.34", heat_risk_score:"38.98", risk_level:"Low"},
+  {province:"Nakhon Si Thammarat Province", month:"2024-12", sst_mean_C:"28.46", sst_anomaly_C:"0.31", heat_risk_score:"36.33", risk_level:"Low"},
+  {province:"Chumphon Province", month:"2024-12", sst_mean_C:"28.33", sst_anomaly_C:"0.29", heat_risk_score:"34.08", risk_level:"Low"},
+  {province:"Surat Thani Province", month:"2024-12", sst_mean_C:"28.46", sst_anomaly_C:"0.29", heat_risk_score:"33.94", risk_level:"Low"},
+  {province:"Pattani Province", month:"2024-12", sst_mean_C:"28.57", sst_anomaly_C:"0.22", heat_risk_score:"25.32", risk_level:"Low"}
 ];
 
 const provinceNameToKey = {
@@ -2717,7 +2649,7 @@ function renderPipelineSummary(rows){
       <div class="stat-box">
         <div class="stat-label">High Risk</div>
         <div class="stat-val">—</div>
-        <div class="stat-sub">MHSI ≥70</div>
+        <div class="stat-sub">heat-risk score ≥70</div>
       </div>
     `;
     return;
@@ -2736,7 +2668,7 @@ function renderPipelineSummary(rows){
     <div class="stat-box red">
       <div class="stat-label">Top Province</div>
       <div class="stat-val" style="font-size:22px">${top.province || "-"}</div>
-      <div class="stat-sub">MHSI ${formatNum(getMhsiValue(top))}</div>
+      <div class="stat-sub">heat-risk score ${formatNum(getMhsiValue(top))}</div>
     </div>
     <div class="stat-box amber">
       <div class="stat-label">Max Anomaly</div>
@@ -2746,7 +2678,7 @@ function renderPipelineSummary(rows){
     <div class="stat-box">
       <div class="stat-label">High Risk</div>
       <div class="stat-val">${highCount}</div>
-      <div class="stat-sub">MHSI ≥70</div>
+      <div class="stat-sub">heat-risk score ≥70</div>
     </div>
   `;
 }
@@ -2828,7 +2760,7 @@ function renderPipelineMap(){
       Month: <b>${r.month || "-"}</b><br>
       SST mean: <b>${formatNum(r.sst_mean_C)}°C</b><br>
       SST anomaly: <b>${formatSigned(r.sst_anomaly_C)}°C</b><br>
-      Preliminary MHSI: <b>${formatNum(mhsi)}</b><br>
+      Preliminary heat-risk score: <b>${formatNum(mhsi)}</b><br>
       Risk level: <b>${getRiskLevel(r)}</b><br>
       <hr style="border:none;border-top:1px solid #ddd">
       <span style="color:#666">Map generated directly from uploaded CSV</span>

@@ -2892,7 +2892,7 @@ window.ensureForecast = function(){
   if(fcLoading) return;
   fcLoading = true;
   const s = document.createElement("script");
-  s.src = "forecast_data.js?v=d5300dfe45";
+  s.src = "forecast_data.js?v=8eec86ea90";
   s.onload = () => {
     fcLoading = false;
     if(window.FORECAST_DATA) initForecast(window.FORECAST_DATA);
@@ -3110,7 +3110,7 @@ function loadEffort(cb){
   if(efLoading) return;
   efLoading = true;
   const s = document.createElement("script");
-  s.src = "effort_data.js?v=75ab922a83";
+  s.src = "effort_data.js?v=71d15022f0";
   s.onload = () => {
     efLoading = false;
     const waiting = efWaiting.splice(0);

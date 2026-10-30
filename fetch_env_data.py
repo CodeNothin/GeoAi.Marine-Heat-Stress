@@ -54,10 +54,18 @@ ERDDAP_SERVERS = [
 PSL_URL = "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres"
 PSL_LTM = "sst.day.mean.ltm.1991-2020.nc"
 OISST_DATASET = "ncdcOisst21Agg_LonPM180"
-# (dataset id, variable, has an altitude dimension) tried in order.
+NOAA_CW = "https://coastwatch.noaa.gov/erddap/griddap"     # NOAA CoastWatch central (VIIRS)
+# (server, dataset id, variable, has an altitude dimension) tried in order.
 CHL_DATASETS = [
-    ("erdMH1chlamday", "chlorophyll", False),       # MODIS Aqua, 4 km, monthly
-    ("nesdisVHNSQchlaMonthly", "chlor_a", True),     # VIIRS SNPP, 4 km, monthly
+    (NOAA_CW, "noaacwNPPVIIRSSQchlaMonthly", "chlor_a", True),           # VIIRS S-NPP, science quality, 4 km
+    (ERDDAP_SERVERS[0], "nesdisVHNSQchlaMonthly", "chlor_a", True),     # same product, older copy
+    (ERDDAP_SERVERS[0], "erdMH1chlamday", "chlorophyll", False),        # MODIS Aqua, 4 km, monthly
+]
+# Near-real-time daily VIIRS (S-NPP and NOAA-20, 4 km), averaged for months the monthly product lacks.
+# The same sensors as GISTDA's daily CHL-a map (opendata.gistda.or.th/dataset/chl-a), which is WMS only.
+CHL_NRT_DAILY = [
+    (NOAA_CW, "noaacwNPPVIIRSchlaDaily", "chlor_a", True),
+    (NOAA_CW, "noaacwN20VIIRSchlaDaily", "chlor_a", True),
 ]
 PAD_DEG = 0.25      # fetch a little beyond the region so interpolation works at the edges
 BATHY_SERVERS = ["https://oceanwatch.pifsc.noaa.gov/erddap/griddap"]
@@ -226,28 +234,86 @@ def read_oisst_nc(paths, region, ltm_path=None, verbose=True):
     return out
 
 
-def fetch_chl(region, months, res=0.05, verbose=True):
-    """Monthly CHL-a, averaged onto a `res` grid. Returns None if no dataset answers."""
-    t0, t1 = f"{months[0]}-01T00:00:00Z", f"{months[-1]}-28T00:00:00Z"
+def chl_cube(server, dataset, var, has_alt, region, d0, d1):
+    """CHL-a between two dates from one ERDDAP dataset -> (unix days, lat, lon, cube), lat ascending."""
     lon0, lon1 = region.lon_min - PAD_DEG, region.lon_max + PAD_DEG
-    for dataset, var, has_alt in CHL_DATASETS:
-        alt = "[(0.0)]" if has_alt else ""
-        # Some datasets store latitude north-to-south; ERDDAP wants the range in storage order.
-        for lat0, lat1 in ((region.lat_max + PAD_DEG, region.lat_min - PAD_DEG),
-                           (region.lat_min - PAD_DEG, region.lat_max + PAD_DEG)):
-            query = f"{dataset}.csv?{var}[({t0}):1:({t1})]{alt}[({lat0}):1:({lat1})][({lon0}):1:({lon1})]"
-            try:
-                text = erddap(query)
-            except urllib.error.HTTPError:
+    alt = "[(0.0)]" if has_alt else ""
+    # Some datasets store latitude north-to-south; ERDDAP wants the range in storage order.
+    for lat0, lat1 in ((region.lat_max + PAD_DEG, region.lat_min - PAD_DEG),
+                       (region.lat_min - PAD_DEG, region.lat_max + PAD_DEG)):
+        query = f"{dataset}.csv?{var}[({d0}T00:00:00Z):1:({d1}T23:59:59Z)]{alt}[({lat0}):1:({lat1})][({lon0}):1:({lon1})]"
+        try:
+            return parse_griddap_csv(fetch(f"{server}/{query}", retries=2, timeout=300), var)
+        except urllib.error.HTTPError:
+            continue
+    raise urllib.error.URLError(f"{dataset}: no data for {d0} .. {d1}")
+
+
+def last_time(server, dataset):
+    text = fetch(f"{server}/{dataset}.csv?time[last]", retries=2, timeout=60)
+    return np.datetime64(text.strip().splitlines()[-1].rstrip("Z"), "D")
+
+
+def fetch_chl(region, months, res=0.05, verbose=True):
+    """Monthly CHL-a, averaged onto a `res` grid. Returns None if no dataset answers.
+
+    Tries each (server, dataset) in CHL_DATASETS, one year per request. Months newer than the
+    monthly product are averaged from the near-real-time daily VIIRS files in CHL_NRT_DAILY.
+    """
+    for server, dataset, var, has_alt in CHL_DATASETS:
+        try:
+            end = last_time(server, dataset)
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            print(f"  CHL-a {dataset}: {server.split('/')[2]} did not answer ({e})")
+            continue
+        by_month = {}
+        for year in sorted({m[:4] for m in months}):
+            d0 = max(np.datetime64(f"{year}-01-01"), np.datetime64(months[0], "D"))
+            d1 = min(np.datetime64(f"{year}-12-31"), end)
+            if d1 < d0:
                 continue
-            except ConnectionError:
-                print("  CHL-a: ERDDAP unreachable; skipping (the simulator keeps its analytic CHL-a)")
-                return None
-            t, la, lo, chl = parse_griddap_csv(text, var)
-            la, lo, chl = bin_to_grid(la, lo, chl, res)
+            try:
+                t, la, lo, cube = chl_cube(server, dataset, var, has_alt, region, d0, d1)
+            except (urllib.error.URLError, TimeoutError, OSError) as e:
+                print(f"  CHL-a {dataset} {year}: {e}")
+                break
+            for d, field in zip(t.astype("int64").astype("datetime64[D]").astype("datetime64[M]").astype(str), cube):
+                if d in months:
+                    by_month[d] = field
             if verbose:
-                print(f"  CHL-a from {dataset}: {t.size} months, {la.size} x {lo.size} cells")
-            return {"time": t, "lat": la, "lon": lo, "chl": chl, "source": np.array(dataset)}
+                print(f"  CHL-a {dataset} {year}: {t.size} months")
+        if not by_month:
+            continue
+        source = [dataset]
+        for m in [m for m in months if m not in by_month]:
+            first = np.datetime64(m, "D")
+            last = np.datetime64(m, "M") + np.timedelta64(1, "M") - np.timedelta64(1, "D")
+            days = []
+            for nrt_server, nrt, nvar, nalt in CHL_NRT_DAILY:
+                try:
+                    t, la_n, lo_n, cube = chl_cube(nrt_server, nrt, nvar, nalt, region, first,
+                                                   min(last, last_time(nrt_server, nrt)))
+                except (urllib.error.URLError, TimeoutError, OSError) as e:
+                    print(f"  CHL-a {nrt} {m}: {e}")
+                    continue
+                # Nearest cell of the monthly product's grid (the two grids can be offset slightly).
+                i = np.clip(np.round((la_n - la[0]) / (la[1] - la[0])).astype(int), 0, la.size - 1)
+                j = np.clip(np.round((lo_n - lo[0]) / (lo[1] - lo[0])).astype(int), 0, lo.size - 1)
+                on_grid = np.full((cube.shape[0], la.size, lo.size), np.nan)
+                on_grid[:, i[:, None], j[None, :]] = cube
+                days.append(on_grid)
+                source.append(nrt)
+                if verbose:
+                    print(f"  CHL-a {m} from {nrt}: {t.size} days")
+            if days:
+                with np.errstate(all="ignore"):
+                    by_month[m] = np.nanmean(np.concatenate(days), axis=0)
+        got = [m for m in months if m in by_month]
+        la, lo, chl = bin_to_grid(la, lo, np.stack([by_month[m] for m in got]), res)
+        if verbose:
+            print(f"  CHL-a: {len(got)} months ({got[0]} .. {got[-1]}), {la.size} x {lo.size} cells")
+        times = np.array([unix_days(m + "-01") + 14.0 for m in got])        # mid-month
+        return {"time": times, "lat": la, "lon": lo, "chl": chl, "source": np.array(" + ".join(dict.fromkeys(source)))}
     print("  CHL-a: no ERDDAP dataset answered; skipping (the simulator keeps its analytic CHL-a)")
     return None
 
@@ -297,33 +363,96 @@ def read_bathy_nc(path, region, verbose=True):
     return {"lat": lat, "lon": lon, "elevation": elev.astype(np.float32), "source": np.array(Path(path).name)}
 
 
-def fetch_era5_wind(region, months, out_dir, verbose=True):
-    """ERA5 monthly mean 10 m wind speed (needs cdsapi + a CDS key, and xarray + netcdf4 to read it)."""
-    import cdsapi
-    import xarray as xr
+ERA5T_LAG_DAYS = 6          # hourly ERA5T reaches about 5 days behind real time
+ERA5_MONTHLY_LAG_DAYS = 8   # monthly means of month M are out by about the 6th of M+1
 
-    years = sorted({m[:4] for m in months})
-    target = Path(out_dir) / "era5_wind_monthly.nc"
-    cdsapi.Client().retrieve("reanalysis-era5-single-levels-monthly-means", {
-        "product_type": ["monthly_averaged_reanalysis"],
-        "variable": ["10m_wind_speed"],
-        "year": years,
-        "month": [f"{i:02d}" for i in range(1, 13)],
-        "time": ["00:00"],
-        "area": [region.lat_max + PAD_DEG, region.lon_min - PAD_DEG, region.lat_min - PAD_DEG, region.lon_max + PAD_DEG],
-        "data_format": "netcdf",
-        "download_format": "unarchived",
-    }, str(target))
-    ds = xr.open_dataset(target)
+
+def _era5_open(path, var):
+    import xarray as xr
+    ds = xr.open_dataset(path)
     tname = "valid_time" if "valid_time" in ds.coords else "time"
     ds = ds.sortby("latitude").sortby("longitude").sortby(tname)
-    times = ds[tname].values.astype("datetime64[s]").astype("int64") / 86400.0 + 14.0   # mid-month
-    keep = np.isin(ds[tname].values.astype("datetime64[M]").astype(str), months)
-    wind = np.asarray(ds["si10"].values, float)[keep]
+    v = ds[var]
+    if "expver" in v.dims:                  # ERA5 + ERA5T mixed: take whichever version has data
+        v = v.max("expver")
+    return ds[tname].values.astype("datetime64[D]"), ds.latitude.values.astype(float), \
+        ds.longitude.values.astype(float), np.asarray(v.values, float)
+
+
+def fetch_era5_wind(region, months, out_dir, verbose=True):
+    """ERA5 monthly mean 10 m wind speed (needs cdsapi + a CDS key, and xarray + netcdf4 to read it).
+
+    Months already in <out_dir>/wind_monthly.npz are kept, so only new months are requested.
+    Monthly means appear about a week into the next month. A month the monthly-means product
+    does not have yet is averaged from hourly ERA5T 10 m u/v instead, over the days published
+    so far (the mean hourly speed, as the monthly product computes it); such months are listed
+    as `partial` and fetched again next time.
+    """
+    import cdsapi
+
+    area = [region.lat_max + PAD_DEG, region.lon_min - PAD_DEG, region.lat_min - PAD_DEG, region.lon_max + PAD_DEG]
+    by_month, lat, lon, partial = {}, None, None, []
+    existing = Path(out_dir) / "wind_monthly.npz"
+    if existing.exists():
+        old = np.load(existing)
+        redo = set(old["partial"].tolist()) if "partial" in old.files else set()
+        lat, lon = old["lat"], old["lon"]
+        for d, field in zip(old["time"].astype("int64").astype("datetime64[D]").astype("datetime64[M]").astype(str),
+                            old["wind"]):
+            if d in months and d not in redo:
+                by_month[d] = field
+        if verbose and by_month:
+            print(f"  ERA5 wind: {len(by_month)} months already in {existing.name}")
+    missing = [m for m in months if m not in by_month]
+    client = cdsapi.Client() if missing else None
+    # Monthly means for month M come out about a week into M+1; later months go to the hourly path.
+    published = np.datetime64("today", "D") - np.timedelta64(ERA5_MONTHLY_LAG_DAYS, "D")
+    monthly = [m for m in missing
+               if np.datetime64(m, "M") + np.timedelta64(1, "M") <= published.astype("datetime64[M]")]
+    for year in sorted({m[:4] for m in monthly}):
+        wanted = [m[5:] for m in monthly if m[:4] == year]
+        target = Path(out_dir) / f"era5_wind_monthly_{year}.nc"
+        try:
+            client.retrieve("reanalysis-era5-single-levels-monthly-means", {
+                "product_type": ["monthly_averaged_reanalysis"],
+                "variable": ["10m_wind_speed"],
+                "year": [year], "month": wanted, "time": ["00:00"], "area": area,
+                "data_format": "netcdf", "download_format": "unarchived",
+            }, str(target))
+        except Exception as e:                  # e.g. none of this year's months published yet
+            print(f"  ERA5 monthly means {year}: {e}")
+            continue
+        t, lat, lon, si10 = _era5_open(target, "si10")
+        for d, field in zip(t.astype("datetime64[M]").astype(str), si10):
+            by_month[d] = field
+
+    last_day = np.datetime64("today", "D") - np.timedelta64(ERA5T_LAG_DAYS, "D")
+    for m in [m for m in months if m not in by_month]:
+        first = np.datetime64(m, "D")
+        end = min(np.datetime64(m, "M") + np.timedelta64(1, "M") - np.timedelta64(1, "D"), last_day)
+        if end < first:
+            print(f"  ERA5 {m}: not published yet")
+            continue
+        days = [str(d)[8:] for d in np.arange(first, end + np.timedelta64(1, "D"))]
+        target = Path(out_dir) / f"era5_wind_hourly_{m}.nc"
+        client.retrieve("reanalysis-era5-single-levels", {
+            "product_type": ["reanalysis"],
+            "variable": ["10m_u_component_of_wind", "10m_v_component_of_wind"],
+            "year": [m[:4]], "month": [m[5:]], "day": days, "time": [f"{h:02d}:00" for h in range(24)],
+            "area": area, "data_format": "netcdf", "download_format": "unarchived",
+        }, str(target))
+        _, lat, lon, u = _era5_open(target, "u10")
+        _, _, _, v = _era5_open(target, "v10")
+        by_month[m] = np.nanmean(np.hypot(u, v), axis=0)
+        partial.append(m)
+        print(f"  ERA5 {m}: monthly mean from hourly ERA5T, days {days[0]}-{days[-1]}")
+
+    got = [m for m in months if m in by_month]
     if verbose:
-        print(f"  ERA5 wind: {int(keep.sum())} months, {ds.latitude.size} x {ds.longitude.size} cells")
-    return {"time": times[keep], "lat": ds.latitude.values.astype(float), "lon": ds.longitude.values.astype(float),
-            "wind": wind}
+        print(f"  ERA5 wind: {len(got)} months ({got[0]} .. {got[-1]}), {lat.size} x {lon.size} cells")
+    times = np.array([unix_days(m + "-01") + 14.0 for m in got])      # mid-month
+    return {"time": times, "lat": lat, "lon": lon, "wind": np.stack([by_month[m] for m in got]),
+            "partial": np.array(partial, dtype=str)}
 
 
 # =========================

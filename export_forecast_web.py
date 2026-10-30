@@ -1,7 +1,7 @@
-"""Export the one-month-ahead species forecast to forecast_data.js for the Forecast tab in index.html.
+"""Export the one-month-ahead species forecast (MAP 1 workflow) to forecast_data.js for the Forecast tab.
 
-    python -m bycatch_model forecast --data sim_output --out forecast_output
-    python export_forecast_web.py
+    python -m bycatch_model map1 --data sim_output --env real_env --out forecast_output
+    python export_forecast_web.py --forecast forecast_output --data sim_output
 
 Like the EcoCast export, only the map's sea cells of the 0.05 deg grid are written (land and
 islands are left out), quantised to 0-254 and base64-encoded.
@@ -60,6 +60,12 @@ def encode_u8(values, vmax):
     return base64.b64encode(q.ravel().tobytes()).decode("ascii")
 
 
+def layer_max(arrays):
+    vals = [v[np.isfinite(v)] for v in arrays.values()]
+    vals = [v for v in vals if v.size]
+    return float(np.nanpercentile(np.concatenate(vals), 99)) if vals else 1.0
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--forecast", default=str(FORECAST_DIR))
@@ -79,54 +85,69 @@ def main():
     def legal(mp, key):
         return np.asarray(mp[key], float).ravel()[cells]
 
+    def layer(key):
+        return {m: legal(mp, key) for m, mp in maps.items() if key in mp.files}
+
     names = {r["code"]: r for r in checklist()}
     codes = sorted({k[2:] for mp in maps.values() for k in mp.files if k.startswith("p_")})
-    summary = read_csv(fdir / "forecast_summary.csv")
-    curves = json.loads((fdir / "response_curves.json").read_text(encoding="utf-8"))["species"]
+    cls = read_csv(fdir / "map1_classification.csv")
+    reg = {r["species_code"]: {k: num(v) for k, v in r.items() if k != "species_code"}
+           for r in read_csv(fdir / "map1_regression.csv")}
+    shap = json.loads((fdir / "map1_shap.json").read_text(encoding="utf-8"))
+    col = json.loads((fdir / "map1_collinearity.json").read_text(encoding="utf-8"))
     shares = catch_shares(a.data)
+    metric_keys = ("auc", "brier", "mae", "rmse", "spearman", "jsd", "taylor_r", "taylor_sd_ratio", "taylor_crmsd",
+                   "taylor_skill", "mean_rank", "map_rho", "n")
 
     species = []
     for code in codes:
         info = names.get(code, {"name_en": code, "name_th": code, "group": ""})
-        fc = {m: legal(mp, f"p_{code}") for m, mp in maps.items() if f"p_{code}" in mp.files}
-        tr = {m: legal(mp, f"lambda_{code}") for m, mp in maps.items() if f"lambda_{code}" in mp.files}
-        sd = {m: legal(mp, f"sd_{code}") for m, mp in maps.items() if f"sd_{code}" in mp.files}
-        vmax = float(np.nanpercentile(np.concatenate([v[np.isfinite(v)] for v in fc.values()]), 99))
-        tmax = float(np.nanpercentile(np.concatenate([v[np.isfinite(v)] for v in tr.values()]), 99)) if tr else 1.0
-        smax = float(np.nanpercentile(np.concatenate([v[np.isfinite(v)] for v in sd.values()]), 99)) if sd else 1.0
-        skill = {r["method"]: {k: num(r[k]) for k in ("auc", "brier", "map_rho", "brier_skill_vs_persistence",
-                                                     "brier_skill_vs_climatology")}
-                 for r in summary if r["species_code"] == code}
-        # The maps use the no-heat model when the heat terms did not earn their place; score that one.
-        if not meta["heat_terms_kept"].get(code) and "forecast_no_heat" in skill:
-            skill["forecast"] = skill["forecast_no_heat"]
+        fc, tr, sd, bm = layer(f"p_{code}"), layer(f"lambda_{code}"), layer(f"sd_{code}"), layer(f"b_{code}")
+        # Model spread only for the upcoming month (the one people act on), to keep the file small.
+        sd = {m: v for m, v in sd.items() if m == meta.get("upcoming_month")}
+        vmax, tmax, smax, bmax = layer_max(fc), layer_max(tr), layer_max(sd), layer_max(bm)
+        models = {r["model"]: {k: num(r[k]) for k in metric_keys} for r in cls if r["species_code"] == code}
         species.append({
             "code": code, "group": info["group"], "name_en": info["name_en"], "name_th": info["name_th"],
-            "heat_terms_kept": bool(meta["heat_terms_kept"].get(code)),
-            "vmax": vmax, "tmax": tmax, "smax": smax,
+            "vmax": vmax, "tmax": tmax, "smax": smax, "bmax": bmax,
             "share": shares.get(code),
             "forecast": {m: encode_u8(v, vmax) for m, v in fc.items()},
             "truth": {m: encode_u8(v, tmax) for m, v in tr.items()},
             "sd": {m: encode_u8(v, smax) for m, v in sd.items()},
-            "skill": skill,
-            "curves": curves.get(code, {}),
+            "biomass": {m: encode_u8(v, bmax) for m, v in bm.items()},
+            "best": meta["best_model"].get(code),
+            "models": models,
+            "regression": reg.get(code),
+            "shap": shap.get(code),
         })
+
+    fronts = {}
+    for key in ("sst_front_km", "chl_front_km"):
+        lay = layer(key)
+        vmax = layer_max(lay)
+        fronts[key] = {"vmax": vmax, "months": {m: encode_u8(np.minimum(v, vmax), vmax) for m, v in lay.items()}}
 
     sim_cfg = {}
     if a.data and (Path(a.data) / "config_used.json").exists():
         sim_cfg = json.loads((Path(a.data) / "config_used.json").read_text(encoding="utf-8"))
     env_cfg, region_cfg = sim_cfg.get("env", {}), sim_cfg.get("region", {})
     payload = {
-        "meta": {"generated": date.today().isoformat(), "simulated": meta.get("simulated", True), "real_sst": bool(env_cfg.get("sst_override_npz")),
+        "meta": {"generated": date.today().isoformat(), "method": meta.get("method", "map1"),
+                 "simulated": meta.get("simulated", True), "real_sst": bool(env_cfg.get("sst_override_npz")),
                  "real_chl": bool(env_cfg.get("chl_override_npz")), "real_wind": bool(env_cfg.get("wind_override_npz")),
                  "real_bathy": bool(region_cfg.get("bathy_npz")),
-                 "train_sets": meta["train_sets"], "kernel_km": meta["kernel_km"], "n_boot": meta["n_boot"],
+                 "train_sets": meta["train_sets"], "validation_sets": meta["validation_sets"], "sets": meta["sets"],
+                 "train_share": meta["train_share"], "n_zones": meta["n_zones"], "ring_km": meta["ring_km"],
+                 "buffer_km": meta["buffer_km"], "fine_deg": meta["fine_deg"], "models": meta["models"],
+                 "features": meta["features"], "features_th": meta["features_th"],
+                 "collinearity": {"dropped": col["dropped"], "vif_after": col["vif_after"], "max_vif": col["max_vif"]},
                  "upcoming_month": meta.get("upcoming_month")},
         "grid": {"lat0": float(lat[0]), "lon0": float(lon[0]), "res": res,
                  "nlat": int(lat.size), "nlon": int(lon.size)},
         "cells": base64.b64encode(cells.astype(np.uint16).tobytes()).decode("ascii"),
         "months": months,
         "species": species,
+        "fronts": fronts,
     }
     js = ("/* Generated by export_forecast_web.py: do not edit by hand. */\n"
           "window.FORECAST_DATA = " + json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + ";\n")

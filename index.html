@@ -1041,6 +1041,11 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
 .fc-skill td:not(:first-child),.fc-skill th:not(:first-child){text-align:right;font-family:var(--font-num)}
 .fc-best{font-weight:900;color:var(--teal)}
 .fc-chart-wrap{position:relative;height:230px}
+.fc-taylor-wrap{position:relative;height:250px;margin:.6rem 0 .3rem}
+.fc-taylor-wrap canvas{width:100%;height:100%;display:block}
+.fc-shap-wrap{position:relative;height:270px}
+.fc-steps{padding-left:1.2rem;margin:0;font-size:13px}
+.fc-steps li{margin-bottom:.3rem}
 
 /* ---------- Fishing effort page ---------- */
 #effortMap{
@@ -1224,7 +1229,7 @@ select,input[type=checkbox]{accent-color:var(--green-acc)}
         <div class="hm-slide-text">
           <span class="hm-kicker">พยากรณ์ · Forecast</span>
           <h2>ปลาจะอยู่ตรงไหนเดือนหน้า?<br><span>พยากรณ์ล่วงหน้า 1 เดือน</span></h2>
-          <p>โมเดลใช้อุณหภูมิผิวน้ำ ค่าผิดปกติ ความร้อนสะสม และลม ทำนายการกระจายของปลาทู ปลาลัง ปลาหลังเขียว ปลาโอ และสัตว์น้ำหายาก ทุกช่อง 0.05° ในพื้นที่ศึกษา</p>
+          <p>หาแนวหน้าน้ำอุณหภูมิและสีน้ำจากดาวเทียม เทียบ 4 โมเดล (GLM, GAM, Boosted tree, Random forest) แล้วใช้ตัวที่ดีที่สุดทำนายการกระจายของปลาทู ปลาลัง ปลาหลังเขียว ปลาโอ และสัตว์น้ำหายาก ทุกช่อง 0.05°</p>
           <button class="hm-btn" onclick="hmGo('forecast')">ดูแผนที่พยากรณ์ →</button>
         </div>
         <div class="hm-slide-img"><img src="home_img/slide_forecast.jpg" alt="แผนที่พยากรณ์ปลาบนกริดชายฝั่งอ่าวไทย" loading="eager"></div>
@@ -1427,9 +1432,9 @@ percentile = สูงกว่ากี่ % ของทุกจังหว�
 <section id="page-forecast" class="page">
   <div class="section-title">พยากรณ์การกระจายตัวของปลาเดือนถัดไป · One-month-ahead Forecast</div>
   <div class="section-sub">
-    ใช้สภาพทะเลของเดือนที่ผ่านมา (SST, ค่าผิดปกติของ SST, ความร้อนสะสม 3 เดือน, CHL-a, ลม) ทำนายโอกาสจับได้ของแต่ละชนิดในเดือนถัดไป
-    แสดงเป็นกริด 0.05° ครอบคลุมทะเลทั้งหมดในพื้นที่ศึกษา (ไม่รวมแผ่นดินและเกาะ เช่น เกาะสมุย เกาะพะงัน)
-    ข้อมูลดาวเทียมมีความละเอียด ~0.25° จึงไม่ควรอ่านค่ารายช่องว่าแม่นยำ
+    หาแนวหน้าน้ำอุณหภูมิ (SST) และแนวหน้าน้ำสีน้ำ (CHL-a) จากข้อมูลดาวเทียมของเดือนที่ผ่านมา สรุปค่ารายโซน (วงระยะจากฝั่ง × ช่อง 0.05°)
+    ร่วมกับลม ความลึก และความชันพื้นทะเล แล้วเทียบ 4 โมเดล (GLM, GAM, Boosted tree, Random forest) เพื่อเลือกตัวที่ทำนายโอกาสพบปลาเดือนถัดไปได้ดีที่สุด
+    พร้อมโมเดลชีวมวล (Random forest regression) และอธิบายผลด้วย SHAP · ไม่รวมแผ่นดินและเกาะ
   </div>
   <div class="notice" id="fcNotice">
     <b>ข้อมูลจำลอง (simulated):</b> logbook และการตอบสนองของสัตว์น้ำต่อสภาพแวดล้อมยังเป็นค่าสมมติจากตัวจำลอง
@@ -1447,9 +1452,12 @@ percentile = สูงกว่ากี่ % ของทุกจังหว�
         <select id="fcSpeciesSelect" onchange="renderForecast()"></select>
         <label for="fcViewSelect">แสดง:</label>
         <select id="fcViewSelect" onchange="renderForecast()">
-          <option value="forecast">ค่าพยากรณ์ (โอกาสจับได้)</option>
+          <option value="forecast">ค่าพยากรณ์ (โอกาสพบ)</option>
+          <option value="biomass">ชีวมวลที่คาด (กก./ครั้ง)</option>
           <option value="truth">ค่าจริงในตัวจำลอง</option>
-          <option value="sd">ความไม่แน่นอน (เดือนล่วงหน้า)</option>
+          <option value="sd">ความไม่แน่นอน (4 โมเดล, เดือนล่วงหน้า)</option>
+          <option value="sst_front">ระยะถึงแนวหน้าน้ำอุณหภูมิ</option>
+          <option value="chl_front">ระยะถึงแนวหน้าน้ำสีน้ำ (CHL-a)</option>
         </select>
         <label class="fc-risk-toggle"><input type="checkbox" id="fcRiskToggle" onchange="renderForecastRisk()"> แสดงจุดเสี่ยงทำประมงเกิน</label>
       </div>
@@ -1464,21 +1472,44 @@ percentile = สูงกว่ากี่ % ของทุกจังหว�
 
     <div class="fc-side">
       <div class="card">
-        <div class="card-title">ความแม่นของการพยากรณ์ · <span id="fcSkillName">—</span></div>
+        <div class="card-title">เปรียบเทียบโมเดล · <span id="fcSkillName">—</span></div>
         <table class="table fc-skill" id="fcSkillTable"></table>
-        <div class="grid-note">
-          ทดสอบแบบเดินหน้าทีละเดือน: ฝึกด้วยข้อมูลก่อนเดือนนั้นเท่านั้น แล้วเทียบกับ set ที่จับจริง ·
-          <b>คงที่</b> = ใช้อัตราการจับเดือนก่อน · <b>ค่าเฉลี่ยฤดู</b> = อัตราการจับเดือนเดียวกันของปีก่อน ·
-          AUC สูงดี, Brier ต่ำดี
+        <div class="fc-taylor-wrap"><canvas id="fcTaylor" aria-label="Taylor diagram"></canvas></div>
+        <div class="grid-note" id="fcSkillNote">
+          ทดสอบกับข้อมูล 30% ที่แยกไว้ (validation) ไม่ได้ใช้ฝึก · เทียบอัตราการจับจริงกับค่าพยากรณ์ในแต่ละโซน-เดือน ·
+          MAE, RMSE, JSD ต่ำดี · ρ (Spearman), AUC สูงดี · ★ = โมเดลที่ดีที่สุด (อันดับเฉลี่ยของ MAE, RMSE, ρ, JSD, Taylor skill) ใช้วาดแผนที่
         </div>
       </div>
       <div class="card">
-        <div class="card-title">ความสัมพันธ์กับสภาพทะเล · Response curve</div>
+        <div class="card-title">ปัจจัยที่มีผล · SHAP</div>
         <div class="controls" style="margin-bottom:.4rem">
-          <select id="fcCurveSelect" onchange="renderForecastCurve()"></select>
+          <select id="fcShapModel" onchange="renderForecastCurveOptions()" aria-label="โมเดล">
+            <option value="classification">โอกาสพบ (โมเดลที่ดีที่สุด)</option>
+            <option value="regression">ชีวมวล (Random forest regression)</option>
+          </select>
+        </div>
+        <div class="fc-shap-wrap"><canvas id="fcShapChart"></canvas></div>
+        <div class="controls" style="margin:.6rem 0 .4rem">
+          <select id="fcCurveSelect" onchange="renderForecastCurve()" aria-label="ตัวแปร"></select>
         </div>
         <div class="fc-chart-wrap"><canvas id="fcCurveChart"></canvas></div>
-        <div class="grid-note">แกนตั้ง = โอกาสจับได้เพิ่มขึ้นกี่เท่า (odds) เมื่อค่านี้เปลี่ยน โดยตัวแปรอื่นคงที่ · เส้นประ = ไม่มีผล</div>
+        <div class="grid-note" id="fcShapNote">แท่ง = ค่า |SHAP| เฉลี่ย (ตัวแปรนี้ดันค่าพยากรณ์ขึ้นหรือลงมากแค่ไหน) · เส้น = ผลของตัวแปรที่เลือกตามค่าของมัน (เหนือ 0 = เพิ่มโอกาส)</div>
+      </div>
+      <div class="card">
+        <div class="card-title">ขั้นตอนคำนวณ · MAP 1 pipeline</div>
+        <ol class="fc-steps">
+          <li>ปรับระบบพิกัด (CRS) ของ CHL-a, SST, ลม ERA5, ความลึก และแนวชายฝั่งให้ตรงกัน</li>
+          <li>ตัดเฉพาะพื้นที่ศึกษา แบ่งเป็นโซน: วงระยะจากฝั่งทุก <span id="fcRingKm">10</span> กม. × ช่อง 0.05° (<span id="fcZones">—</span> โซน)</li>
+          <li>Resample ทุกชั้นข้อมูลลงกริด 0.01° (~1.1 กม.)</li>
+          <li>คำนวณความชัน (gradient) ของ SST, CHL-a, ลม และพื้นทะเล</li>
+          <li>แยกพิกเซลแนวหน้าน้ำด้วย adaptive threshold (Otsu รายหน้าต่าง ~35 กม.)</li>
+          <li>เก็บเฉพาะแนวหน้าน้ำระดับ mesoscale ของอุณหภูมิและสีน้ำ แล้ววัดระยะใกล้สุดถึงแนวหน้าน้ำ</li>
+          <li>สรุปค่ารายโซน (zonal statistics) ของเดือนก่อนหน้า จับคู่กับปลาที่จับได้ใน logbook (ชีวมวล)</li>
+          <li>ตรวจ collinearity (VIF ≤ <span id="fcMaxVif">5</span>): <span id="fcDropped">—</span></li>
+          <li>แบ่งข้อมูล 70% ฝึก / 30% ทดสอบ (<span id="fcSplit">—</span>) แล้วเทียบ GLM, GAM, Boosted tree, Random forest และ Random forest regression</li>
+          <li>เลือกโมเดลที่ดีที่สุด อธิบายด้วย SHAP แล้ววาดแผนที่</li>
+        </ol>
+        <div class="grid-note" id="fcFeatures"></div>
       </div>
     </div>
   </div>
@@ -2831,16 +2862,6 @@ function fcRealDataNote(m){
 /* ---------- Forecast Page ---------- */
 /* Data: forecast_data.js, generated by export_forecast_web.py from bycatch_model.forecast. */
 let fcMap = null, fcOverlay = null, fc = null, fcLoading = false, fcChart = null;
-const FC_TERMS = {
-  sst_anom_l1: "ค่าผิดปกติ SST เดือนก่อน (°C)",
-  heat_3m: "ความร้อนสะสม 3 เดือน (°C·เดือน)",
-  anom_trend: "การเปลี่ยนของค่าผิดปกติ SST (°C)",
-  sst_l1: "SST เดือนก่อน (°C)",
-  log10chl_l1: "log10 CHL-a เดือนก่อน",
-  wind_l1: "ลมเดือนก่อน (ม./วินาที)"
-};
-const FC_METHODS = [["forecast", "โมเดลพยากรณ์"], ["persistence", "คงที่ (เดือนก่อน)"], ["climatology", "ค่าเฉลี่ยฤดู"]];
-
 window.ensureForecast = function(){
   if(fc){
     fcMap.invalidateSize();
@@ -2854,7 +2875,7 @@ window.ensureForecast = function(){
   if(fcLoading) return;
   fcLoading = true;
   const s = document.createElement("script");
-  s.src = "forecast_data.js?v=8eec86ea90";
+  s.src = "forecast_data.js?v=f5b000fa32";
   s.onload = () => {
     fcLoading = false;
     if(window.FORECAST_DATA) initForecast(window.FORECAST_DATA);
@@ -2890,6 +2911,7 @@ function initForecast(data){
     spSel.appendChild(o);
   });
   document.getElementById("fcNotice").insertAdjacentHTML("beforeend", fcRealDataNote(data.meta));
+  fcPipelineCard(data.meta);
 
   fcMap = L.map("forecastMap", { zoomControl:true }).setView([8.9, 100.6], 7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -2908,8 +2930,16 @@ function fcValues(sp, view, month){
   const src = sp[view] && sp[view][month];
   if(!src) return null;
   const q = fcB64(src);
-  const vmax = view === "forecast" ? sp.vmax : view === "truth" ? sp.tmax : sp.smax;
+  const vmax = {forecast:sp.vmax, truth:sp.tmax, sd:sp.smax, biomass:sp.bmax}[view];
   return Array.from(q, v => v === 255 ? NaN : (v / 254) * vmax);
+}
+
+// Distance (km) to the nearest thermal / ocean-colour front, the month before `month` (same for every species).
+function fcFront(view, month){
+  const L = fc.data.fronts && fc.data.fronts[view === "sst_front" ? "sst_front_km" : "chl_front_km"];
+  const src = L && L.months[month];
+  if(!src) return null;
+  return {vmax:L.vmax, vals:Array.from(fcB64(src), v => v === 255 ? NaN : (v / 254) * L.vmax)};
 }
 
 // Study-area mean of a layer: P(A in study area). The sd layer is scaled by the forecast's mean.
@@ -2937,8 +2967,14 @@ window.renderForecast = function(){
   const sp = fc.species[document.getElementById("fcSpeciesSelect").value];
   const view = document.getElementById("fcViewSelect").value;
   const g = fc.grid;
-  const vals = fcValues(sp, view, month);
+  const isFront = view === "sst_front" || view === "chl_front";
+  const front = isFront ? fcFront(view, month) : null;
+  const vals = isFront ? (front && front.vals) : fcValues(sp, view, month);
   const cmap = view === "sd" ? "risk" : "sequential";
+  // Colour position 0..1 of a cell value for this view.
+  const pos = isFront ? v => 1 - Math.min(v / front.vmax, 1)
+    : view === "biomass" ? v => Math.min(v / sp.bmax, 1)
+    : v => fcShare(sp, view, month, v) || 0;
 
   const canvas = document.createElement("canvas");
   canvas.width = g.nlon;
@@ -2951,7 +2987,7 @@ window.renderForecast = function(){
       if(Number.isNaN(v)) continue;
       const flat = fc.cells[k];
       const row = Math.floor(flat / g.nlon), col = flat % g.nlon;
-      const c = fcColor(cmap, fcShare(sp, view, month, v) || 0);
+      const c = fcColor(cmap, pos(v));
       img.data.set([c[0], c[1], c[2], 235], ((g.nlat - 1 - row) * g.nlon + col) * 4);
     }
   }
@@ -2961,71 +2997,190 @@ window.renderForecast = function(){
   else fcOverlay = L.imageOverlay(url, fc.bounds, {opacity:0.85, className:"fc-pixelated"}).addTo(fcMap);
 
   document.getElementById("fcLegendBar").style.background = `linear-gradient(to right, ${FC_CMAPS[cmap].join(",")})`;
-  document.getElementById("fcLegendMin").textContent = "0%";
-  document.getElementById("fcLegendMax").textContent = "100%";
-  const viewNote = {
-    forecast: "% ของปลาทั้งหมดในพื้นที่ศึกษาที่เป็นชนิดนี้ ในช่องนี้ = (โอกาสจับได้ในช่อง ÷ โอกาสเฉลี่ยทั้งพื้นที่) × สัดส่วนชนิดนี้ในพื้นที่ศึกษา",
-    truth: "แบบเดียวกัน แต่ใช้ความหนาแน่นจริงในตัวจำลอง (ใช้ตรวจความแม่นเท่านั้น ข้อมูลจริงจะไม่มีชั้นนี้)",
-    sd: `ความไม่แน่นอนของ % นี้ = ส่วนเบี่ยงเบนของค่าพยากรณ์จากการฝึกซ้ำ ${fc.data.meta.n_boot} รอบ (สุ่มเที่ยวเรือ)`
-  }[view] + ` · ${sp.name_th} = ${fcPct(sp.share)} ของปลาทั้งหมดในพื้นที่ศึกษา (น้ำหนักที่จับได้ใน logbook)`;
+  let lo = "0%", hi = "100%", note;
+  const prev = fcMonthLabel(fcAddMonths(month, -1));
+  if(isFront){
+    lo = `≥ ${fcNum(front ? front.vmax : NaN, 0)} กม.`;
+    hi = "0 กม. (บนแนวหน้าน้ำ)";
+    note = `ระยะใกล้สุดถึงแนวหน้าน้ำ${view === "sst_front" ? "อุณหภูมิ (SST)" : "สีน้ำ (CHL-a)"} ของ ${prev} ที่ใช้พยากรณ์เดือนนี้ · ` +
+      (view === "sst_front" ? "SST จากดาวเทียมละเอียด ~25 กม. จึงเห็นเฉพาะแนวหน้าน้ำขนาดใหญ่" : "CHL-a ละเอียด ~5 กม.");
+  } else if(view === "biomass"){
+    hi = `${fcNum(sp.bmax, 0)}+ กก./ครั้ง`;
+    lo = "0";
+    note = `ชีวมวลที่คาดว่าจะจับได้ต่อการล้อมอวน 1 ครั้ง (Random forest regression) · ${sp.name_th}`;
+  } else {
+    note = {
+      forecast: `% ของปลาทั้งหมดในพื้นที่ศึกษาที่เป็นชนิดนี้ ในช่องนี้ = (โอกาสพบในช่อง ÷ โอกาสเฉลี่ยทั้งพื้นที่) × สัดส่วนชนิดนี้ · โมเดล ${fc.data.meta.models[sp.best] || sp.best}`,
+      truth: "แบบเดียวกัน แต่ใช้ความหนาแน่นจริงในตัวจำลอง (ใช้ตรวจความแม่นเท่านั้น ข้อมูลจริงจะไม่มีชั้นนี้)",
+      sd: "ความไม่แน่นอน = ความต่างของคำตอบจาก 4 โมเดล (GLM, GAM, Boosted tree, Random forest) · เข้ม = โมเดลเห็นไม่ตรงกัน"
+    }[view] + ` · ${sp.name_th} = ${fcPct(sp.share)} ของปลาทั้งหมดในพื้นที่ศึกษา`;
+  }
+  document.getElementById("fcLegendMin").textContent = lo;
+  document.getElementById("fcLegendMax").textContent = hi;
   document.getElementById("fcLegendNote").textContent = vals
-    ? `${viewNote} · ${fcMonthLabel(month)} · ช่อง 0.05°`
-    : (view === "sd" ? "ความไม่แน่นอนมีเฉพาะเดือนพยากรณ์ล่วงหน้า" : "เดือนพยากรณ์ล่วงหน้ายังไม่มีค่าจริงให้เทียบ");
+    ? `${note} · ${fcMonthLabel(month)} · ช่อง 0.05°`
+    : view === "sd" ? "ความไม่แน่นอนมีเฉพาะเดือนพยากรณ์ล่วงหน้า"
+    : view === "biomass" ? "ชนิดนี้นับเป็นตัว (สัตว์หายาก) จึงไม่มีโมเดลชีวมวลเป็นกิโลกรัม"
+    : view === "truth" ? "เดือนพยากรณ์ล่วงหน้ายังไม่มีค่าจริงให้เทียบ" : "ไม่มีข้อมูลเดือนนี้";
 
   renderForecastSkill(sp);
-  renderForecastCurveOptions(sp);
+  renderForecastCurveOptions();
   renderForecastRisk();
 };
 
-function renderForecastSkill(sp){
-  document.getElementById("fcSkillName").textContent = sp.name_th;
-  const rows = FC_METHODS.filter(([k]) => sp.skill[k]).map(([k, label]) => ({k, label, ...sp.skill[k]}));
-  const bestAuc = Math.max(...rows.map(r => r.auc ?? -1));
-  const bestBrier = Math.min(...rows.map(r => r.brier ?? 9));
-  document.getElementById("fcSkillTable").innerHTML =
-    `<tr><th>วิธี</th><th>AUC</th><th>Brier</th><th>Map ρ</th></tr>` +
-    rows.map(r => `<tr><td>${r.label}</td>
-      <td class="${r.auc === bestAuc ? "fc-best" : ""}">${fcNum(r.auc, 2)}</td>
-      <td class="${r.brier === bestBrier ? "fc-best" : ""}">${fcNum(r.brier, 3)}</td>
-      <td>${fcNum(r.map_rho, 2)}</td></tr>`).join("") +
-    `<tr><td colspan="4" style="font-size:12px;color:var(--muted)">ตัวแปรความร้อน (ความร้อนสะสม, แนวโน้ม): ${sp.heat_terms_kept ? "ใช้ เพราะช่วยลด Brier ≥0.5%" : "ไม่ใช้ เพราะไม่ช่วยให้แม่นขึ้น"}</td></tr>`;
+function fcAddMonths(m, k){
+  const [y, mm] = m.split("-").map(Number);
+  const i = y * 12 + mm - 1 + k;
+  return `${Math.floor(i / 12)}-${String(i % 12 + 1).padStart(2, "0")}`;
 }
 
-function renderForecastCurveOptions(sp){
+const FC_MODEL_ORDER = ["GLM", "GAM", "BRT", "RF"];
+const FC_MODEL_SHORT = {GLM:"GLM", GAM:"GAM", BRT:"Boosted tree", RF:"Random forest"};
+const FC_MODEL_COLOR = {GLM:"#3b528b", GAM:"#21918c", BRT:"#B5614A", RF:"#A07B3A"};
+
+function renderForecastSkill(sp){
+  document.getElementById("fcSkillName").textContent = sp.name_th;
+  const rows = FC_MODEL_ORDER.filter(k => sp.models[k]).map(k => ({k, ...sp.models[k]}));
+  const bestOf = (key, dir) => {
+    const v = rows.map(r => r[key]).filter(x => x !== null && x !== undefined);
+    return v.length ? (dir > 0 ? Math.max(...v) : Math.min(...v)) : null;
+  };
+  const cols = [["auc", "AUC", 2, 1], ["mae", "MAE", 3, -1], ["rmse", "RMSE", 3, -1], ["spearman", "ρ", 2, 1], ["jsd", "JSD", 3, -1]];
+  const best = Object.fromEntries(cols.map(([k, , , dir]) => [k, bestOf(k, dir)]));
+  const r = sp.regression;
+  document.getElementById("fcSkillTable").innerHTML =
+    `<tr><th>โมเดล</th>${cols.map(c => `<th>${c[1]}</th>`).join("")}</tr>` +
+    rows.map(row => `<tr><td>${row.k === sp.best ? "★ " : ""}${FC_MODEL_SHORT[row.k]}</td>` +
+      cols.map(([k, , d]) => `<td class="${row[k] === best[k] ? "fc-best" : ""}">${fcNum(row[k], d)}</td>`).join("") + "</tr>").join("") +
+    (r ? `<tr><td colspan="6" style="font-size:12px;color:var(--muted)">ชีวมวล · Random forest regression: R² (5-fold CV) ${fcNum(r.cv_r2, 2)} ·
+      ทดสอบ 30%: MAE ${fcNum(r.val_mae_kg, 0)} กก./ครั้ง, ρ ${fcNum(r.val_spearman, 2)}</td></tr>` : "") +
+    (sp.models[sp.best] && sp.models[sp.best].map_rho !== null
+      ? `<tr><td colspan="6" style="font-size:12px;color:var(--muted)">แผนที่เทียบค่าจริงในตัวจำลอง (Spearman ρ เฉลี่ยรายเดือน): ${fcNum(sp.models[sp.best].map_rho, 2)}</td></tr>` : "");
+  drawTaylor(rows, sp.best);
+}
+
+// Taylor diagram: radius = SD of the model / SD of the observations, angle = arccos(correlation).
+function drawTaylor(rows, best){
+  const cv = document.getElementById("fcTaylor");
+  const W = cv.clientWidth || 300, H = cv.clientHeight || 230, dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const pts = rows.filter(r => r.taylor_r !== null && r.taylor_sd_ratio !== null);
+  const smax = Math.max(1.5, ...pts.map(r => r.taylor_sd_ratio * 1.1));
+  const ox = 34, oy = H - 26, R = Math.min(W - ox - 14, oy - 12);
+  const xy = (s, r) => [ox + (s / smax) * R * r, oy - (s / smax) * R * Math.sqrt(Math.max(1 - r * r, 0))];
+  ctx.font = "10px sans-serif";
+  ctx.strokeStyle = "#cfc7bc"; ctx.fillStyle = "#5A6A78"; ctx.lineWidth = 1;
+  for(const s of [0.5, 1, 1.5, 2].filter(s => s <= smax)){
+    ctx.beginPath(); ctx.setLineDash(s === 1 ? [] : [3, 3]);
+    ctx.arc(ox, oy, (s / smax) * R, -Math.PI / 2, 0); ctx.stroke();
+    ctx.fillText(s.toFixed(1), ox + (s / smax) * R - 6, oy + 12);
+  }
+  ctx.setLineDash([2, 3]);
+  for(const c of [0.2, 0.4, 0.6, 0.8, 0.9, 0.95]){
+    const [x, y] = xy(smax, c);
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(x, y); ctx.stroke();
+    ctx.fillText(c.toString(), x + 2, y - 2);
+  }
+  ctx.setLineDash([]);
+  ctx.strokeStyle = "#5A6A78";
+  ctx.beginPath(); ctx.moveTo(ox, oy - R); ctx.lineTo(ox, oy); ctx.lineTo(ox + R, oy); ctx.stroke();
+  ctx.fillText("SD โมเดล / SD จริง", ox + R / 2 - 40, oy + 22);
+  ctx.save(); ctx.translate(10, oy - R / 2 + 30); ctx.rotate(-Math.PI / 2); ctx.fillText("correlation (มุม)", 0, 0); ctx.restore();
+  // Observation reference point.
+  const [rx, ry] = xy(1, 1);
+  ctx.fillStyle = "#1B2B3A"; ctx.beginPath(); ctx.arc(rx, ry, 4, 0, 2 * Math.PI); ctx.fill();
+  ctx.fillText("จริง", rx - 8, ry - 7);
+  pts.forEach(r => {
+    const [x, y] = xy(r.taylor_sd_ratio, Math.max(Math.min(r.taylor_r, 1), 0));
+    ctx.fillStyle = FC_MODEL_COLOR[r.k];
+    ctx.beginPath(); ctx.arc(x, y, r.k === best ? 6 : 4.5, 0, 2 * Math.PI); ctx.fill();
+    if(r.k === best){ ctx.strokeStyle = "#1B2B3A"; ctx.lineWidth = 1.5; ctx.stroke(); ctx.lineWidth = 1; }
+  });
+  // Legend.
+  pts.forEach(r => {
+    ctx.fillStyle = FC_MODEL_COLOR[r.k];
+    ctx.beginPath(); ctx.arc(W - 92, 12 + FC_MODEL_ORDER.indexOf(r.k) * 13, 4, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = "#1B2B3A";
+    ctx.fillText((r.k === best ? "★ " : "") + FC_MODEL_SHORT[r.k], W - 84, 15 + FC_MODEL_ORDER.indexOf(r.k) * 13);
+  });
+}
+
+let fcShapChart = null;
+window.renderForecastCurveOptions = function(){
+  const sp = fc.species[document.getElementById("fcSpeciesSelect").value];
+  const which = document.getElementById("fcShapModel");
+  const regOpt = which.querySelector('option[value="regression"]');
+  regOpt.disabled = !(sp.shap && sp.shap.regression);
+  if(regOpt.disabled && which.value === "regression") which.value = "classification";
+  const S = sp.shap && sp.shap[which.value];
   const sel = document.getElementById("fcCurveSelect");
   const prev = sel.value;
-  sel.innerHTML = Object.keys(FC_TERMS).filter(t => sp.curves[t])
-    .map(t => `<option value="${t}">${FC_TERMS[t]}</option>`).join("");
+  const names = fc.data.meta.features_th;
+  sel.innerHTML = S ? S.importance.filter(i => S.dependence[i.feature])
+    .map(i => `<option value="${i.feature}">${names[i.feature] || i.feature}</option>`).join("") : "";
   if([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  if(fcShapChart) fcShapChart.destroy();
+  if(S){
+    const top = S.importance.slice(0, 10);
+    fcShapChart = new Chart(document.getElementById("fcShapChart"), {
+      type:"bar",
+      data:{labels:top.map(i => names[i.feature] || i.feature),
+        datasets:[{data:top.map(i => i.mean_abs_shap), backgroundColor:"#21918c"}]},
+      options:{indexAxis:"y", responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:i => `|SHAP| ${i.parsed.x.toFixed(4)} (${S.unit})`}}},
+        scales:{x:{title:{display:true, text:`ค่า |SHAP| เฉลี่ย (${S.unit})`}}, y:{ticks:{font:{size:10}}}}}
+    });
+    document.getElementById("fcShapNote").textContent =
+      (which.value === "classification" ? `โมเดล ${fc.data.meta.models[sp.shap.classifier] || sp.shap.classifier} · ` : "Random forest regression · ") +
+      "แท่ง = ตัวแปรนี้ดันค่าพยากรณ์ขึ้นหรือลงมากแค่ไหนโดยเฉลี่ย · เส้น = ผลของตัวแปรที่เลือกตามค่าของมัน (เหนือ 0 = เพิ่ม)";
+  }
   renderForecastCurve();
-}
+};
 
 window.renderForecastCurve = function(){
   const sp = fc.species[document.getElementById("fcSpeciesSelect").value];
+  const which = document.getElementById("fcShapModel").value;
+  const S = sp.shap && sp.shap[which];
   const term = document.getElementById("fcCurveSelect").value;
-  const c = sp.curves[term];
+  const c = S && S.dependence[term];
   if(fcChart) fcChart.destroy();
   if(!c) return;
   fcChart = new Chart(document.getElementById("fcCurveChart"), {
     type:"line",
     data:{
-      labels:c.x.map(v => v.toFixed(2)),
+      labels:c.x.map(v => Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(2)),
       datasets:[
-        {data:c.odds, borderColor:"#21918c", borderWidth:2, pointRadius:0, tension:.3},
-        {data:c.x.map(() => 1), borderColor:"#999", borderDash:[4,4], borderWidth:1, pointRadius:0}
+        {data:c.shap, borderColor:"#21918c", borderWidth:2, pointRadius:2, tension:.3},
+        {data:c.x.map(() => 0), borderColor:"#999", borderDash:[4,4], borderWidth:1, pointRadius:0}
       ]
     },
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
       plugins:{legend:{display:false}, tooltip:{filter:i => i.datasetIndex === 0,
-        callbacks:{label:i => `×${i.parsed.y.toFixed(2)}`}}},
+        callbacks:{label:i => `SHAP ${i.parsed.y >= 0 ? "+" : ""}${i.parsed.y.toFixed(4)} (${S.unit})`}}},
       scales:{
-        x:{title:{display:true, text:FC_TERMS[term]}, ticks:{maxTicksLimit:6}},
-        y:{type:"logarithmic", title:{display:true, text:"odds ×"}}
+        x:{title:{display:true, text:fc.data.meta.features_th[term] || term}, ticks:{maxTicksLimit:6}},
+        y:{title:{display:true, text:`SHAP (${S.unit})`}}
       }
     }
   });
 };
+
+function fcPipelineCard(meta){
+  document.getElementById("fcRingKm").textContent = meta.ring_km;
+  document.getElementById("fcZones").textContent = meta.n_zones.toLocaleString("en-US");
+  document.getElementById("fcMaxVif").textContent = meta.collinearity.max_vif;
+  document.getElementById("fcDropped").textContent = meta.collinearity.dropped.length
+    ? "ตัดออก " + meta.collinearity.dropped.map(d => `${meta.features_th[d.feature] || d.feature} (VIF ${d.vif.toFixed(1)})`).join(", ")
+    : "ไม่มีตัวแปรที่ต้องตัด";
+  document.getElementById("fcSplit").textContent =
+    `${meta.train_sets.toLocaleString("en-US")} / ${meta.validation_sets.toLocaleString("en-US")} set`;
+  document.getElementById("fcFeatures").textContent =
+    `ตัวแปรใน X proxy matrix (${meta.features.length}): ` + meta.features.map(f => meta.features_th[f] || f).join(" · ");
+}
 
 function fcCellPopup(e){
   const g = fc.grid;
@@ -3041,11 +3196,13 @@ function fcCellPopup(e){
   const lines = fc.data.species.map(sp => {
     const v = fcValues(sp, "forecast", month);
     const x = v ? v[k] : NaN;
-    return `<tr><td>${sp.name_th}</td><td>${Number.isNaN(x) ? "—" : fcPct(fcShare(sp, "forecast", month, x))}</td></tr>`;
+    const b = fcValues(sp, "biomass", month);
+    const kg = b && !Number.isNaN(b[k]) ? `${Math.round(b[k]).toLocaleString("en-US")} กก.` : "—";
+    return `<tr><td>${sp.name_th}</td><td>${Number.isNaN(x) ? "—" : fcPct(fcShare(sp, "forecast", month, x))}</td><td>${kg}</td></tr>`;
   }).join("");
   L.popup().setLatLng(e.latlng).setContent(
     `<div class="fc-popup"><b>${e.latlng.lat.toFixed(2)}°N, ${e.latlng.lng.toFixed(2)}°E</b> · ${fcMonthLabel(month)}<br>
-     % ของปลาทั้งหมดในพื้นที่ศึกษาที่เป็นชนิดนี้ (ช่อง 0.05°)<table style="margin-top:.4rem">${lines}</table></div>`).openOn(fcMap);
+     % ของปลาทั้งหมดในพื้นที่ศึกษา · ชีวมวลที่คาดต่อการล้อมอวน 1 ครั้ง (ช่อง 0.05°)<table style="margin-top:.4rem">${lines}</table></div>`).openOn(fcMap);
 }
 
 /* ---------- Fishing effort page ---------- */
@@ -3072,7 +3229,7 @@ function loadEffort(cb){
   if(efLoading) return;
   efLoading = true;
   const s = document.createElement("script");
-  s.src = "effort_data.js?v=71d15022f0";
+  s.src = "effort_data.js?v=fe0c8e7026";
   s.onload = () => {
     efLoading = false;
     const waiting = efWaiting.splice(0);

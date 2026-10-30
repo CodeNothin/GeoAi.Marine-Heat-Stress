@@ -2,6 +2,7 @@
     python -m bycatch_model train  --data sim_output --out model_output
     python -m bycatch_model power  --out power_output            (simulates its own data)
     python -m bycatch_model forecast --data sim_output --out forecast_output
+    python -m bycatch_model map1 --data sim_output --env real_env --out forecast_output   (MAP 1 workflow)
 """
 from __future__ import annotations
 
@@ -25,6 +26,11 @@ def main(argv=None):
     f.add_argument("--start-month", help="first month to forecast in the rolling test (default: Jan of the 2nd year)")
     f.add_argument("--bootstrap", type=int, default=10, help="refits for the upcoming month's uncertainty")
 
+    m1 = sub.add_parser("map1", help="MAP 1: fronts + multi-buffer mesh + GLM/GAM/BRT/RF comparison + SHAP")
+    m1.add_argument("--data", required=True, help="logbook folder (biomass data) in the logbook/env schema")
+    m1.add_argument("--env", default="real_env", help="folder with sst_daily / chl_monthly / wind_monthly / bathy npz")
+    m1.add_argument("--out", default="forecast_output")
+
     w = sub.add_parser("power", help="how many sets are needed? (learning curves)")
     w.add_argument("--data", help="existing simulated folder; omitted = simulate one")
     w.add_argument("--out", default="power_output")
@@ -44,6 +50,11 @@ def main(argv=None):
     if a.cmd == "forecast":
         from .forecast import run_forecast
         run_forecast(a.data, a.out, start_month=a.start_month, n_boot=a.bootstrap)
+        return 0
+
+    if a.cmd == "map1":
+        from .map1 import run_map1
+        run_map1(a.data, a.env, a.out)
         return 0
 
     from .power import power_analysis

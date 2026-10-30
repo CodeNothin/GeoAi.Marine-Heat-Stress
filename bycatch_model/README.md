@@ -41,7 +41,32 @@ Protected-species layers with fewer than **40 sets with a catch** in the trainin
 of the score (`MIN_POSITIVES_SCORE`), because the power analysis shows their maps are noise. In the
 10-vessel run this raised the score's agreement with the truth from 0.49 to 0.56.
 
-## One-month-ahead forecast
+## MAP 1 forecast (used by the website)
+
+```bash
+pip install -r requirements.txt
+python -m bycatch_model map1 --data sim_output --env real_env --out forecast_output
+python export_forecast_web.py --forecast forecast_output --data sim_output
+```
+
+`bycatch_model/map1.py` follows the project's MAP 1 workflow diagram:
+1. CRS harmonizing of CHL-a, SST, ERA5 wind, bathymetry and coastline.
+2. Raster clipping to the study area, split into a multi-buffer mesh (10 km coast-distance rings × 0.05° cells).
+3. Resampling to a 0.01° working grid.
+4. Gradient estimation.
+5. Adaptive (Otsu) foreground/background thresholding of the gradients.
+6. Mesoscale thermal and ocean-colour fronts.
+7. Minimum distance to the fronts.
+8. Zonal statistics per mesh zone.
+9. Collinearity assessment (VIF ≤ 5).
+10. A 70/30 train/validation split.
+11. GLM, GAM, boosted trees and random-forest classification, scored with Taylor statistics, MAE, RMSE, Spearman and Jensen-Shannon divergence; the best model by mean rank draws the map.
+12. Random-forest regression of kg per set with 5-fold cross-validation.
+13. SHAP for both models.
+
+Predictors are the previous month's zone statistics, so the map stays a one-month-ahead forecast. The older rolling-GAM forecast (`forecast` command) is kept for comparison.
+
+## One-month-ahead forecast (previous method)
 
 ```bash
 python -m bycatch_model forecast --data sim_output --out forecast_output

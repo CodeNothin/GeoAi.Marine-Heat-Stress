@@ -1,0 +1,9 @@
+# Python packages for the simulator, models and web exports.
+numpy
+matplotlib
+xarray
+netCDF4
+# MAP 1 forecast (bycatch_model/map1.py): fronts, GLM / boosted trees / random forest, SHAP
+scipy
+scikit-learn
+shap

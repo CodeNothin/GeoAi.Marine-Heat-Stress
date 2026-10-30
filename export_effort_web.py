@@ -181,7 +181,10 @@ def main():
         ndays = calendar.monthrange(y, mm)[1]
         dpv, dpv_src = days_per_vessel(month)
 
-        prev_fish = sum(np.nan_to_num(tget(month_shift(month, -1), f"lambda_{c}")) for c in TARGETS)
+        prev = month_shift(month, -1)
+        if tget(prev, "wind") is None:   # first month of the run: no earlier truth map, use this month's
+            prev = month
+        prev_fish = sum(np.nan_to_num(tget(prev, f"lambda_{c}")) for c in TARGETS)
         fish_w = (prev_fish / max(prev_fish.mean(), 1e-9)) ** FISH_FOLLOW
         wind = tget(month, "wind")
         if wind is None:   # upcoming month: that calendar month's mean over the earlier years
